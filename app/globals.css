@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+}
+
+/* Full-viewport game: no page scroll, no rubber-banding, no pinch/double-tap zoom. */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+body {
+  background: #bfe0fb;
+  color: #3d3452;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+#game,
+#game canvas {
+  touch-action: none;
+  display: block;
+}

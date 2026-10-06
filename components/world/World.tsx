@@ -1,0 +1,27 @@
+'use client';
+
+import { Suspense } from 'react';
+import { ISLANDS } from '@/data/world';
+import Bridges from './Bridge';
+import CloudLayer from './Clouds';
+import Island from './Island';
+import Landmark from './Landmark';
+import Scenery from './Scenery';
+
+export default function World() {
+  return (
+    <>
+      {ISLANDS.map((def) => (
+        <Island key={def.id} def={def} />
+      ))}
+      <Bridges />
+      <Scenery />
+      {ISLANDS.map((def) => (
+        <Landmark key={def.id} def={def} />
+      ))}
+      <Suspense fallback={null}>
+        <CloudLayer />
+      </Suspense>
+    </>
+  );
+}
