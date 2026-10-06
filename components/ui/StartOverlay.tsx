@@ -1,28 +1,17 @@
 'use client';
 
+import { requestGameLock } from '@/lib/pointerLock';
 import { useUi } from '@/store/ui';
 
 /** Desktop "Click to explore" card. Shown whenever pointer lock is off (e.g. after Esc). */
 export default function StartOverlay() {
   const visible = useUi((s) => !s.pointerLocked && s.mode === 'explore' && s.worldReady);
 
-  const start = () => {
-    const canvas = document.querySelector<HTMLCanvasElement>('#game canvas');
-    if (!canvas) return;
-    try {
-      // Chrome rejects re-locking within ~1s of Esc; the user can simply click again.
-      const result = canvas.requestPointerLock() as unknown as Promise<void> | undefined;
-      result?.catch?.(() => {});
-    } catch {
-      /* ignore */
-    }
-  };
-
   if (!visible) return null;
 
   return (
     <div
-      onClick={start}
+      onClick={requestGameLock}
       className="fixed inset-0 z-20 flex cursor-pointer items-center justify-center bg-violet-950/25 p-4 backdrop-blur-[2px]"
     >
       <div className="w-full max-w-sm rounded-3xl border-4 border-white bg-white/90 p-6 text-center shadow-2xl">
@@ -40,6 +29,10 @@ export default function StartOverlay() {
           <dd>Jump</dd>
           <dt className="font-semibold">Shift</dt>
           <dd>Sprint</dd>
+          <dt className="font-semibold">E</dt>
+          <dd>Explore a landmark</dd>
+          <dt className="font-semibold">P</dt>
+          <dd>Skill Passport</dd>
           <dt className="font-semibold">Esc</dt>
           <dd>Pause / free the mouse</dd>
         </dl>

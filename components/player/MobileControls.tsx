@@ -15,6 +15,7 @@ export default function MobileControls() {
   const baseRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
   const mode = useUi((s) => s.mode);
+  const nearby = useUi((s) => s.nearbyPhaseId !== null);
 
   // iOS Safari pinch-zoom gestures ignore touch-action; block them explicitly.
   useEffect(() => {
@@ -132,7 +133,9 @@ export default function MobileControls() {
           type="button"
           aria-label="Interact"
           onPointerDown={press('interact')}
-          className="h-16 w-16 rounded-full border-2 border-white/80 bg-violet-400/60 text-lg font-bold text-white shadow-lg active:scale-95"
+          className={`h-16 w-16 rounded-full border-2 text-lg font-bold text-white shadow-lg transition-all active:scale-95 ${
+            nearby ? 'scale-110 animate-[interact-pulse_1.2s_ease-in-out_infinite] border-white bg-violet-500' : 'border-white/80 bg-violet-400/60'
+          }`}
         >
           E
         </button>

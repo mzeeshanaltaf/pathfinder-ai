@@ -27,3 +27,35 @@ body {
   touch-action: none;
   display: block;
 }
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes interact-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(167 139 250 / 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgb(167 139 250 / 0);
+  }
+}

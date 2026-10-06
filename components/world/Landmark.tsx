@@ -3,10 +3,11 @@
 import { Suspense, useMemo, type ReactNode } from 'react';
 import { Billboard, Outlines, Text } from '@react-three/drei';
 import { CylinderCollider, RigidBody } from '@react-three/rapier';
-import { ISLAND_LABELS, ISLAND_TRACK, type IslandDef } from '@/data/world';
+import { getPhase } from '@/data/roadmap';
+import { ISLAND_TRACK, type IslandDef } from '@/data/world';
 import { COLORS, TRACK_COLORS } from '@/lib/palette';
 import { getToonGradient } from '@/lib/toon';
-import { landmarkOffset } from '@/lib/worldLayout';
+import { landmarkPosition, landmarkRadius, landmarkScale } from '@/lib/worldLayout';
 
 export const LABEL_FONT = '/fonts/Geist-Regular.ttf';
 
@@ -55,9 +56,9 @@ function Label({ text, height }: { text: string; height: number }) {
 }
 
 export default function Landmark({ def }: { def: IslandDef }) {
-  const [ox, oz] = useMemo(() => landmarkOffset(def), [def]);
-  const tall = def.landmark === 'summit-plaza';
-  const s = tall ? 1.5 : 1;
+  const position = useMemo(() => landmarkPosition(def), [def]);
+  const s = landmarkScale(def);
+  const tall = s > 1;
 
   let body: ReactNode;
   switch (def.landmark) {
@@ -67,13 +68,13 @@ export default function Landmark({ def }: { def: IslandDef }) {
   }
 
   return (
-    <group position={[def.position[0] + ox, def.position[1], def.position[2] + oz]}>
+    <group position={position}>
       {body}
       <RigidBody type="fixed" colliders={false}>
-        <CylinderCollider args={[2.5 * s, 1.3 * s]} position={[0, 2.5 * s, 0]} />
+        <CylinderCollider args={[2.5 * s, landmarkRadius(def)]} position={[0, 2.5 * s, 0]} />
       </RigidBody>
       <Suspense fallback={null}>
-        <Label text={ISLAND_LABELS[def.id]} height={tall ? 10.5 : 7.5} />
+        <Label text={getPhase(def.id).title} height={tall ? 10.5 : 7.5} />
       </Suspense>
     </group>
   );

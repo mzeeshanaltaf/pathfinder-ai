@@ -10,7 +10,13 @@ import Player from '@/components/player/Player';
 import { clearInput, KEYBOARD_MAP } from '@/components/player/useInput';
 import DebugHud from '@/components/ui/DebugHud';
 import FadeOverlay from '@/components/ui/FadeOverlay';
+import GemToast from '@/components/ui/GemToast';
+import HUD from '@/components/ui/HUD';
+import InteractPrompt from '@/components/ui/InteractPrompt';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import Minimap from '@/components/ui/Minimap';
+import Passport from '@/components/ui/Passport';
+import PhasePanel from '@/components/ui/PhasePanel';
 import StartOverlay from '@/components/ui/StartOverlay';
 import World from '@/components/world/World';
 import { hasQueryFlag, isCoarsePointer } from '@/lib/device';
@@ -127,6 +133,12 @@ export default function Game() {
       </KeyboardControls>
 
       {touch ? <MobileControls /> : <StartOverlay />}
+      <Minimap />
+      <HUD />
+      <InteractPrompt />
+      <GemToast />
+      <PhasePanel />
+      <Passport />
       <FadeOverlay />
       <LoadingScreen fading={worldReady} />
       {debug && <DebugHud />}

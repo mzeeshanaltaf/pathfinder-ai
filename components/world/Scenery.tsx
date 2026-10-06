@@ -15,7 +15,7 @@ import {
 } from 'three';
 import { ISLANDS } from '@/data/world';
 import { COLORS } from '@/lib/palette';
-import { scatterOnIsland, type ScatterPoint } from '@/lib/worldLayout';
+import { sceneryObstacles, scatterOnIsland, type ScatterPoint } from '@/lib/worldLayout';
 import ToonInstances from './ToonInstances';
 
 const TRUNK_HEIGHT = 1.6;
@@ -47,7 +47,7 @@ function buildScenery() {
   const rockColliders: { p: ScatterPoint; r: number }[] = [];
 
   for (const def of ISLANDS) {
-    const trees = scatterOnIsland(def, Math.round(def.radius * 0.5), 'trees', 3);
+    const { trees, rocks: rockPts } = sceneryObstacles(def);
     for (const t of trees) {
       const s = 0.85 + t.rng() * 0.5;
       trunks.matrices.push(compose(t.x, t.y + (TRUNK_HEIGHT * s) / 2, t.z, 0, s));
@@ -62,7 +62,6 @@ function buildScenery() {
       treeColliders.push(t);
     }
 
-    const rockPts = scatterOnIsland(def, 4, 'rocks', 2.5, { avoid: trees, avoidDist: 2 });
     for (const p of rockPts) {
       const s = 0.6 + p.rng() * 0.6;
       rocks.matrices.push(compose(p.x, p.y + 0.15 * s, p.z, p.rng() * Math.PI, s, s * (0.6 + p.rng() * 0.3), s));

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useKeyboardControls, type KeyboardControlsEntry } from '@react-three/drei';
 
 export type ControlName = 'forward' | 'back' | 'left' | 'right' | 'jump' | 'sprint' | 'interact';
@@ -26,7 +26,7 @@ export const touchState = {
   /** Accumulated drag-look pixels since the last frame. */
   lookDX: 0,
   lookDY: 0,
-  /** One-shot presses, consumed by the reader. */
+  /** One-shot presses, consumed by the reader (`interact` is also set by the E key). */
   jump: false,
   interact: false,
 };
@@ -54,7 +54,6 @@ export interface InputFrame {
 /** Returns a reader to call once per frame inside useFrame. */
 export function useInput(): () => InputFrame {
   const [, getKeys] = useKeyboardControls<ControlName>();
-  const prevInteract = useRef(false);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -64,8 +63,16 @@ export function useInput(): () => InputFrame {
       mouseState.dx += e.movementX;
       mouseState.dy += e.movementY;
     };
+    // Interact is event-driven so a quick tap (down + up within one frame) is never missed.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'KeyE' && !e.repeat) touchState.interact = true;
+    };
     document.addEventListener('mousemove', onMove);
-    return () => document.removeEventListener('mousemove', onMove);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      window.removeEventListener('keydown', onKey);
+    };
   }, []);
 
   return useCallback((): InputFrame => {
@@ -87,9 +94,7 @@ export function useInput(): () => InputFrame {
     const jump = k.jump || touchState.jump;
     touchState.jump = false;
 
-    const interactHeld = k.interact;
-    const interact = (interactHeld && !prevInteract.current) || touchState.interact;
-    prevInteract.current = interactHeld;
+    const interact = touchState.interact;
     touchState.interact = false;
 
     // Mobile sprints when the stick is pushed to the rim.

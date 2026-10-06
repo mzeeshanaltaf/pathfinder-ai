@@ -8,6 +8,14 @@ export const TRACK_COLORS: Record<Track, { base: string; light: string; dark: st
   engineer: { base: '#82bdf2', light: '#c6e0fa', dark: '#4b8fd6' },
 };
 
+/** Saturated gem colours per track, so Skill Gems pop against the pastel islands. */
+export const GEM_COLORS: Record<Track, string> = {
+  meta: '#a07cf2',
+  common: '#ffa940',
+  developer: '#38c86b',
+  engineer: '#3f9cf0',
+};
+
 export const COLORS = {
   grass: '#8ad466',
   dirt: '#c99e78',
@@ -28,4 +36,8 @@ export const COLORS = {
   outline: '#3d3452',
   label: '#3d3452',
   fade: '#ffffff',
+  signBoard: '#f3dcb4',
+  robotShell: '#f7f4ff',
+  robotScreen: '#2f2a45',
+  robotEyes: '#8ff7ff',
 } as const;

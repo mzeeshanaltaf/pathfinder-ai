@@ -30,6 +30,9 @@ export interface ProgressData {
 interface ProgressActions {
   /** Player is standing on an island: move the checkpoint there and mark it visited. */
   reachIsland: (id: PhaseId) => void;
+  /** Returns true if the gem was newly collected. */
+  collectGem: (id: string) => boolean;
+  setProjectBuilt: (projectId: string, built: boolean) => void;
 }
 
 export type ProgressState = ProgressData & ProgressActions;
@@ -61,6 +64,12 @@ export const useProgress = create<ProgressState>()(
           visited: s.visited[id] ? s.visited : { ...s.visited, [id]: true },
         });
       },
+      collectGem: (id) => {
+        if (get().gems[id]) return false;
+        set((s) => ({ gems: { ...s.gems, [id]: true } }));
+        return true;
+      },
+      setProjectBuilt: (projectId, built) => set((s) => ({ projects: { ...s.projects, [projectId]: built } })),
     }),
     {
       name: 'pathfinder-ai-progress',

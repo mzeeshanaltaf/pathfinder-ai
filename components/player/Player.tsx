@@ -11,11 +11,12 @@ import {
 } from '@react-three/rapier';
 import { Euler, Vector3 } from 'three';
 import type { PhaseId } from '@/data/roadmap';
-import { BRIDGES, ISLAND_BY_ID, ISLANDS, RESPAWN_Y } from '@/data/world';
+import { BRIDGES, INTERACT_RADIUS, ISLAND_BY_ID, ISLANDS, RESPAWN_Y } from '@/data/world';
 import { hasQueryFlag, isCoarsePointer } from '@/lib/device';
-import { islandAt } from '@/lib/worldLayout';
+import { getGemSpawns, islandAt, landmarkPosition, landmarkScale, mentorPosition } from '@/lib/worldLayout';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
+import { playerPose, takeTravelRequest } from './playerState';
 import { useInput } from './useInput';
 
 // Capsule: 2 × 0.35 + 2 × 0.5 = 1.7 tall. Body origin is the capsule centre.
@@ -39,13 +40,29 @@ const PITCH_LIMIT = 1.45;
 
 export const RESPAWN_FADE_MS = 350;
 
-type CharacterController = ReturnType<ReturnType<typeof useRapier>['world']['createCharacterController']>;
+/** Interaction zones around each landmark (horizontal radius). */
+const LANDMARKS = ISLANDS.map((def) => {
+  const [x, y, z] = landmarkPosition(def);
+  return { id: def.id, x, y, z, radius: INTERACT_RADIUS * landmarkScale(def) };
+});
+
+type CharacterController =ReturnType<ReturnType<typeof useRapier>['world']['createCharacterController']>;
 
 /** Centre of the last island stood on (falls back to the raw persisted checkpoint). */
 function spawnPoint(): Vector3 {
   const { lastIsland, checkpoint } = useProgress.getState();
   const p = ISLAND_BY_ID[lastIsland]?.position ?? checkpoint;
   return new Vector3(p[0], p[1] + CENTER_HEIGHT + 0.1, p[2]);
+}
+
+/** First-time players spawn facing Byte (the guide) so the greeting is seen; everyone else faces −Z. */
+function firstVisitYaw(): number {
+  const { onboardingDone, visited, gems } = useProgress.getState();
+  const fresh = !onboardingDone && Object.keys(gems).length === 0 && Object.keys(visited).length <= 1;
+  if (!fresh) return 0;
+  const harbor = ISLAND_BY_ID.harbor;
+  const [mx, , mz] = mentorPosition(harbor);
+  return Math.atan2(-(mx - harbor.position[0]), -(mz - harbor.position[2]));
 }
 
 export default function Player() {
@@ -64,11 +81,14 @@ export default function Player() {
   const pos = useRef(spawn.clone());
   const vel = useRef(new Vector3());
   const desired = useRef(new Vector3());
-  const look = useRef({ yaw: 0, pitch: 0 });
+  const [initialYaw] = useState(firstVisitYaw);
+  const look = useRef({ yaw: initialYaw, pitch: 0 });
   const euler = useRef(new Euler(0, 0, 0, 'YXZ'));
   const timers = useRef({ coyote: 0, jumpBuffer: 0 });
   const grounded = useRef(false);
   const currentIsland = useRef<PhaseId | null>(null);
+  const nearLandmark = useRef<PhaseId | null>(null);
+  const travelYaw = useRef<number | null>(null);
   const respawning = useRef(false);
   const pendingTeleport = useRef(false);
   const fadeTimer = useRef<number | undefined>(undefined);
@@ -96,7 +116,7 @@ export default function Player() {
     if (!hasQueryFlag('debug')) return;
     const w = window as unknown as Record<string, unknown>;
     w.__aiQuest = {
-      world: { islands: ISLANDS, bridges: BRIDGES },
+      world: { islands: ISLANDS, bridges: BRIDGES, landmarks: LANDMARKS, gems: getGemSpawns() },
       state: () => ({
         position: pos.current.toArray(),
         feetY: pos.current.y - CENTER_HEIGHT,
@@ -143,6 +163,11 @@ export default function Player() {
       v.set(0, 0, 0);
       body.setTranslation(p, true);
       body.setNextKinematicTranslation(p);
+      if (travelYaw.current !== null) {
+        look.current.yaw = travelYaw.current;
+        look.current.pitch = 0;
+        travelYaw.current = null;
+      }
       ui.setFading(false);
     }
 
@@ -191,12 +216,46 @@ export default function Player() {
     camera.position.set(p.x, p.y - CENTER_HEIGHT + EYE_HEIGHT, p.z);
     camera.quaternion.setFromEuler(euler.current.set(pitch, yaw, 0, 'YXZ'));
 
+    const feetY = p.y - CENTER_HEIGHT;
+    playerPose.x = p.x;
+    playerPose.y = feetY;
+    playerPose.z = p.z;
+    playerPose.yaw = yaw;
+
     // Island tracking → checkpoint (store writes only when the island changes).
-    const island = islandAt(p.x, p.y - CENTER_HEIGHT, p.z)?.id ?? null;
+    const island = islandAt(p.x, feetY, p.z)?.id ?? null;
     if (island !== currentIsland.current) {
       currentIsland.current = island;
-      ui.setNearby(island);
+      ui.setCurrentIsland(island);
       if (island) useProgress.getState().reachIsland(island);
+    }
+
+    // Landmark proximity → interact prompt (store writes only on change).
+    let near: PhaseId | null = null;
+    for (const l of LANDMARKS) {
+      if (Math.abs(feetY - l.y) < 3 && Math.hypot(p.x - l.x, p.z - l.z) < l.radius) {
+        near = l.id;
+        break;
+      }
+    }
+    if (near !== nearLandmark.current) {
+      nearLandmark.current = near;
+      ui.setNearby(near);
+    }
+    if (input.interact && active && near) ui.openPanel(near);
+
+    // Fast travel (Passport): fade out, then reappear at the island centre facing its landmark.
+    const travel = takeTravelRequest();
+    if (travel && !respawning.current) {
+      useProgress.getState().reachIsland(travel);
+      const def = ISLAND_BY_ID[travel];
+      const [lx, , lz] = landmarkPosition(def);
+      travelYaw.current = Math.atan2(-(lx - def.position[0]), -(lz - def.position[2]));
+      respawning.current = true;
+      ui.setFading(true);
+      fadeTimer.current = window.setTimeout(() => {
+        pendingTeleport.current = true;
+      }, RESPAWN_FADE_MS);
     }
 
     // Fell off the world: fade to white, then teleport to the checkpoint.

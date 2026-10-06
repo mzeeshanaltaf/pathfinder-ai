@@ -76,7 +76,8 @@ components/player/   Player (rapier kinematic character controller), useInput, M
 components/ui/       HUD, InteractPrompt, PhasePanel, GemToast, Passport, Minimap, Onboarding, Settings, Certificate
 components/minigames/ registry.ts, MiniGameHost.tsx, engines (PipelineOrder, SortBins, Quiz) + bespoke sims
 data/roadmap.ts      typed roadmap content (phases, topics + bites, projects, comparison, timelines)
-data/world.ts        island positions, sizes, landmark type, bridges, gem spawn points, spawn/checkpoints
+data/world.ts        island positions, sizes, landmark type, bridges, spawn/checkpoints, interaction radii
+lib/worldLayout.ts   derived geometry: bridge frames, landmark/mentor positions, sign layouts, seeded gem spawns
 data/minigames.ts    per-phase mini-game id + config
 store/progress.ts    persisted (localStorage) progress
 store/ui.ts          non-persisted UI/game mode
@@ -96,7 +97,10 @@ export interface Phase {
   duration?: string; summary: string; groups: TopicGroup[];
   tools?: string[]; antiPatterns?: string[]; keyQuestion?: string;
   project?: Project; mentor: { name: string; lines: string[] };
+  diagrams?: { title: string; steps: string[] }[];                            // non-project flows from the doc
 }
+// Pipeline / diagram steps containing " | " are parallel boxes (e.g. 'Web Search | RAG Agent').
+// Meta content (comparison, timelines, build ladder, career ladder…) is exported alongside PHASES.
 // Gem id = `${phaseId}:${topic.id}`
 
 // data/world.ts
@@ -112,7 +116,9 @@ settings: { muted: boolean; sensitivity: number; invertY: boolean; quality: 'aut
 
 // store/ui.ts (not persisted)
 mode: 'explore' | 'panel' | 'minigame' | 'passport' | 'menu';
-nearbyPhaseId: PhaseId | null; activePhaseId: PhaseId | null;
+nearbyPhaseId: PhaseId | null;   // landmark within interact range (drives the E prompt)
+currentIsland: PhaseId | null;   // island the player is standing on (HUD)
+activePhaseId: PhaseId | null;
 
 // components/minigames
 export interface MiniGameProps<C = unknown> {

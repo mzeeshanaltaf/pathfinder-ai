@@ -1,4 +1,4 @@
-import type { PhaseId, Track } from '@/data/roadmap';
+import { PHASE_IDS, PHASES, type PhaseId, type Track } from '@/data/roadmap';
 import { TRACK_COLORS } from '@/lib/palette';
 
 // World layout. The trunk runs along −Z from the Harbor to the Fork; the
@@ -41,52 +41,21 @@ export interface BridgeDef {
   to: PhaseId;
 }
 
-export const ISLAND_TRACK: Record<PhaseId, Track> = {
-  harbor: 'meta',
-  'code-village': 'common',
-  'math-mountain': 'common',
-  'ml-meadow': 'common',
-  fork: 'meta',
-  'dev-llm-lighthouse': 'developer',
-  'dev-prompt-workshop': 'developer',
-  'dev-rag-library': 'developer',
-  'dev-agent-hq': 'developer',
-  'dev-app-factory': 'developer',
-  'dev-shield-fort': 'developer',
-  'eng-neural-garden': 'engineer',
-  'eng-transformer-tower': 'engineer',
-  'eng-model-forge': 'engineer',
-  'eng-deep-archive': 'engineer',
-  'eng-clockwork-keep': 'engineer',
-  'eng-gpu-plant': 'engineer',
-  'eng-mlops-conveyor': 'engineer',
-  'eng-security-citadel': 'engineer',
-  summit: 'meta',
+/** Track per island, derived from the roadmap content. */
+export const ISLAND_TRACK = Object.fromEntries(PHASE_IDS.map((id) => [id, PHASES[id].track])) as Record<PhaseId, Track>;
+
+/** Bridge-head sign text overrides: where a bridge starts a path, name the path, not just the island. */
+export const BRIDGE_SIGN_SUBTITLES: Partial<Record<`${PhaseId}->${PhaseId}`, string>> = {
+  'fork->dev-llm-lighthouse': 'AI Developer path',
+  'fork->eng-neural-garden': 'AI Engineer path',
 };
 
-/** Placeholder display names for Phase 1 labels. Phase 2 uses `Phase.title` from data/roadmap.ts. */
-export const ISLAND_LABELS: Record<PhaseId, string> = {
-  harbor: 'Harbor',
-  'code-village': 'Code Village',
-  'math-mountain': 'Math Mountain',
-  'ml-meadow': 'ML Meadow',
-  fork: 'The Fork',
-  'dev-llm-lighthouse': 'LLM Lighthouse',
-  'dev-prompt-workshop': 'Prompt Workshop',
-  'dev-rag-library': 'RAG Library',
-  'dev-agent-hq': 'Agent HQ',
-  'dev-app-factory': 'App Factory',
-  'dev-shield-fort': 'Shield Fort',
-  'eng-neural-garden': 'Neural Garden',
-  'eng-transformer-tower': 'Transformer Tower',
-  'eng-model-forge': 'Model Forge',
-  'eng-deep-archive': 'Deep Archive',
-  'eng-clockwork-keep': 'Clockwork Keep',
-  'eng-gpu-plant': 'GPU Plant',
-  'eng-mlops-conveyor': 'MLOps Conveyor',
-  'eng-security-citadel': 'Security Citadel',
-  summit: 'The Summit',
-};
+/** Distance (m, horizontal) from a landmark within which its panel can be opened. */
+export const INTERACT_RADIUS = 6.5;
+/** Distance (m) from the player's body centre at which a Skill Gem is collected. */
+export const GEM_PICKUP_RADIUS = 1.4;
+/** Gems float this high above the island top. */
+export const GEM_HEIGHT = 1.1;
 
 const island = (
   id: PhaseId,

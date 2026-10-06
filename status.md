@@ -2,14 +2,14 @@
 
 > Update this file at the end of every session. See the session workflow in [CLAUDE.md](CLAUDE.md).
 
-**Next up:** Phase 2 ([phase-2-roadmap-content-and-interaction.md](docs/plan/phase-2-roadmap-content-and-interaction.md))
-**Last updated:** 2026-10-06 (Phase 1 session)
+**Next up:** Phase 3 ([phase-3-minigame-framework.md](docs/plan/phase-3-minigame-framework.md))
+**Last updated:** 2026-10-06 (Phase 2 session)
 
 ## Phase overview
 | # | Phase | Status | Session date |
 |---|---|---|---|
 | 1 | [Scaffold & World Movement](docs/plan/phase-1-scaffold-and-world-movement.md) | ✅ Done | 2026-10-06 |
-| 2 | [Roadmap Content & Interaction](docs/plan/phase-2-roadmap-content-and-interaction.md) | ⬜ Not started | |
+| 2 | [Roadmap Content & Interaction](docs/plan/phase-2-roadmap-content-and-interaction.md) | ✅ Done | 2026-10-06 |
 | 3 | [Mini-game Framework](docs/plan/phase-3-minigame-framework.md) | ⬜ Not started | |
 | 4 | [Concept Simulations](docs/plan/phase-4-concept-simulations.md) | ⬜ Not started | |
 | 5 | [Polish, Engagement & Finale](docs/plan/phase-5-polish-engagement-and-finale.md) | ⬜ Not started | |
@@ -31,14 +31,14 @@ Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done wi
 - [x] Acceptance criteria verified, `npm run build` passes
 
 ### Phase 2: Roadmap Content & Interaction
-- [ ] `data/roadmap.ts`: all 20 phases authored from the doc (+ bites, mentors, fork/summit meta)
-- [ ] Proximity detection + InteractPrompt (desktop + mobile)
-- [ ] PhasePanel (overview / topics / project + "I built this" / challenge slot); fork + summit layouts
-- [ ] Skill Gems (instanced) + GemToast + persistence
-- [ ] Mentor NPCs with speech bubbles
-- [ ] HUD, Passport (skill tree + travel), Minimap
-- [ ] Bridge-head signage
-- [ ] Content spot-check vs the doc; acceptance verified; build passes
+- [x] `data/roadmap.ts`: all 20 phases authored from the doc (+ bites, mentors, fork/summit meta)
+- [x] Proximity detection + InteractPrompt (desktop + mobile)
+- [x] PhasePanel (overview / topics / project + "I built this" / challenge slot); fork + summit layouts
+- [x] Skill Gems (instanced) + GemToast + persistence
+- [x] Mentor NPCs with speech bubbles
+- [x] HUD, Passport (skill tree + travel), Minimap
+- [x] Bridge-head signage
+- [x] Content spot-check vs the doc; acceptance verified; build passes
 
 ### Phase 3: Mini-game Framework
 - [ ] MiniGameHost (intro / result / recap), lazy registry, `data/minigames.ts`
@@ -88,6 +88,22 @@ Record any deviation from the plan or from the CLAUDE.md contracts here (date, d
 - 2026-10-06 (Phase 1): Nothing is fetched from a CDN at runtime. The label font is `public/fonts/Geist-Regular.ttf` (OFL, copied from Next), and the cloud sprite is drawn on a canvas (`lib/cloudTexture.ts`) instead of drei's default githack URL.
 - 2026-10-06 (Phase 1): Additive contract extensions (nothing existing changed): `PHASE_IDS` array + `gemId()` in `data/roadmap.ts`; `LandmarkType` union, `ISLAND_TRACK`, placeholder `ISLAND_LABELS`, `ISLAND_BY_ID`, `RESPAWN_Y` in `data/world.ts`; `pointerLocked`, `fading`, `worldReady` in `store/ui.ts`.
 - 2026-10-06 (Phase 1): Bridge side walls are 1.2 m, below the ~1.4 m jump apex. Players can jump off on purpose but never walk off by accident.
+- 2026-10-06 (Phase 2): **Contract changes (additive, except one semantic change):**
+  - `ui.nearbyPhaseId` now means "close enough to the landmark to interact" (within `INTERACT_RADIUS` 6.5 m × landmark scale). The island the player stands on moved to the new `ui.currentIsland`.
+  - `store/ui.ts` also gained `toastQueue`, `openPanel(id)`, `closeOverlay()`, `pushToast` / `shiftToast`, `setCurrentIsland`. `store/progress.ts` gained `collectGem(id)` (returns true if new) and `setProjectBuilt(projectId, built)`.
+  - `Phase.diagrams?: { title; steps[] }[]` holds the doc's non-project flows (RAG pipeline, Transformer architecture, agent loop, serving path + "optimize for", MLOps lifecycle, P12 architecture). Pipeline/diagram steps containing `" | "` render as parallel boxes (e.g. the research agent's `Web Search | RAG Agent`).
+  - `data/roadmap.ts` also exports the meta content: `ROADMAP_SHAPE`, `DEFINITIONS`, `TRACK_GOALS`, `COMPARISON` (`{ area, dev, eng }`), `DIFFERENCE`, `DEVELOPER_FINAL_SKILLS`, `TIMELINES`, `TIMELINE_NOTE`, `BUILD_PROJECTS`, `BUILD_ADVICE`, `CAREER_LADDER`, `ENTRY_POINT_NOTE`, `TRACK_LABELS`, `PHASES`, `topicForGem()`.
+  - `ISLAND_LABELS` was removed; titles come from `Phase.title`. `ISLAND_TRACK` is now derived from the roadmap content.
+- 2026-10-06 (Phase 2): Gem spawns, landmark/mentor positions and sign layouts live in `lib/worldLayout.ts` (`getGemSpawns`, `landmarkPosition`, `mentorPosition`, `SIGN_LAYOUTS`), not `data/world.ts`. They are derived geometry, and putting them in `data/world.ts` would create a circular import with `lib/worldLayout.ts`.
+- 2026-10-06 (Phase 2): **Content mapping decisions:**
+  - Tool / technology lists (P3 Tools, Dev P4 provider APIs, Dev P6 technologies, Eng P4 PyTorch, Eng P6 Hugging Face, Eng P9, Eng P10) are `Phase.tools` chips, not gems. Gems are concepts, and this avoids duplicate NumPy/Pandas gems across P1 and P3.
+  - Topics that the doc repeats in several phases (embeddings, reranking, batching, quantization, prompt injection, …) are separate gems per phase, as in the doc. Each phase's bite is written for its own context.
+  - Meta gems: Harbor 4 (the two definitions, shared foundation, production AI systems), Fork 3 (the two goals, "don't choose yet"), Summit 11 (the Eng P12 architecture components). Total: **268 gems**.
+  - Summit `project` = Project 8 "AI Platform". The 8 "What should they build?" projects share their `progress.projects` key with the matching phase project (1→churn, 2→image classifier, 3→support assistant, 4→knowledge assistant, 5→research agent, 8→AI platform). Projects 6 (fine-tuning) and 7 (complete SaaS) have their own keys. Passport counts only the 8 phase projects.
+  - The doc only has an explicit *Developer* final skill set. For the Engineer, the Summit shows the doc's "excellent at" list from "The Most Important Difference".
+- 2026-10-06 (Phase 2): The E key is now event-driven (a `keydown` sets the one-shot `touchState.interact`) instead of a polled edge, because a quick tap (down and up within one frame) was being missed.
+- 2026-10-06 (Phase 2): First-time players (no gems, ≤1 island visited, onboarding not done) spawn facing Byte, so the greeting is seen. drei `Html` hides bubbles whose anchor is behind the camera. Everyone else spawns facing −Z as before.
+- 2026-10-06 (Phase 2): Gem toasts pause and hide while a panel or the Passport is open, so they never cover overlays. A backlog advances every 1.5 s instead of every 3 s.
 
 ## Handoff notes
 Each session appends a short block: what was built, key files, anything half-done, and tips for the next session.
@@ -128,9 +144,43 @@ Each session appends a short block: what was built, key files, anything half-don
 - Replace `ISLAND_LABELS` with `Phase.title` once `data/roadmap.ts` has content.
 - Gem spawn points: `scatterOnIsland(def, n, 'gems', spacing, { avoid: [...] })` gives stable positions that keep walkways clear.
 
+### Phase 2 session (2026-10-06)
+**What exists**
+- **Content:** `data/roadmap.ts` has all 20 phases and 268 topics with bites, plus mentors, projects, durations, tools, anti-patterns, key questions, diagrams and the meta exports (see the Decisions log). Helpers: `getPhase`, `allGemIds`, `gemsForPhase`, `trackPhases`, `topicForGem`. A dev-only check throws if a PhaseId is missing or topic ids collide within a phase.
+- **Proximity / interact:** `Player.tsx` checks every landmark per frame (`LANDMARKS`) and writes `ui.nearbyPhaseId` only on change. E (keydown) or the mobile E button → `ui.openPanel(id)` → `mode='panel'` and pointer lock released. `components/ui/InteractPrompt.tsx` shows "Press E…" on desktop and a tappable "Tap to explore…" pill on touch; the mobile E button pulses when near.
+- **Phase Panel:** `components/ui/PhasePanel.tsx`.
+  - Tabs per phase: regular = Overview / Topics / Project (if any) / Challenge. Harbor = definitions + roadmap shape. Fork = Compare (animated dual bars + quotes). Summit = Overview / Skill sets / Timelines / What to build (8-project ladder + career ladder) / Topics / Challenge.
+  - Esc closes (then "Click to explore" relocks). ✕ / backdrop closes and relocks immediately (`resumeExplore()` in `components/ui/kit.tsx`).
+  - The Challenge tab is a disabled "Play mini-game" slot plus an empty `BadgeStamp`.
+- **Gems:** `components/world/SkillGem.tsx` draws one instanced mesh (+ Outlines) for all 268 gems, culling disabled. Gems bob and spin within 120 m, and a distance pickup (1.4 m from body centre) runs in the same frame loop → `progress.collectGem` + `ui.pushToast`. Collected gems get a zero-scale matrix. `GemToast.tsx` shows the queue head.
+- **Mentors:** `components/world/Mentor.tsx` has 20 capsule robots (shared geometry), each with a small collider. They face the player within 11 m and show a drei `Html` bubble within 7.5 m (Byte: 14 m for first-timers), cycling lines every 4.5 s. Bubbles use `zIndexRange [5,0]` so they stay under every overlay.
+- **Signs:** `components/world/BridgeSigns.tsx` places 40 signs (instanced boards + posts, troika Text), one at each bridge end. Each shows the destination title plus the phase subtitle, or "AI Developer path" / "AI Engineer path" at the Fork. The ▲ chevron is a mesh because the font may lack arrow glyphs.
+- **HUD / Passport / Minimap:** `HUD.tsx` (island + track badge, 💎 and 🏅 counts, 📖 button; global P / Esc keys). `Passport.tsx` (3-column skill tree + Summit, gem rings, badge slots, project ticks, detail card with "Travel here" / "Read about it"). `Minimap.tsx` (static SVG; a rAF loop moves the player arrow from `playerPose`).
+- **Player plumbing:** `components/player/playerState.ts` holds `playerPose` (written per frame) and `requestTravel(id)`. Travel reuses the respawn fade and lands at the island centre facing its landmark.
+- **Debug:** `window.__aiQuest.world` now also has `landmarks` and `gems`. DebugHud moved to bottom-left and shows both island and near-landmark.
+
+**Verification** (Playwright + local Chrome against `next start`; scripts in this session's scratchpad: `p2-desktop.mjs`, `p2-mobile.mjs`)
+- Desktop, 42/42 passing:
+  - prompt → E → correct panel for **all 20 landmarks**; lock released; no movement in panel
+  - chips + bite; "I built this" persists; Esc → overlay → relock; ✕ relocks directly
+  - gem pickup + toast + queue (+4) + drain; HUD, panel and Passport counts agree (5/35, 5/268, 1/8 projects)
+  - Passport travel; Fork 21 comparison rows; Summit 8 project toggles + career ladder
+  - reload keeps gems and projects; 60 fps
+- Mobile 375×812 touch, 21/21 passing: E button + tap pill open panels; zero horizontal overflow on every panel tab, Fork, all Summit tabs and the Passport; touch-scrolls panel body; gem pickup; 📖 → Passport → travel.
+- Content spot-check: a node script confirmed every phase/topic count and that all gems, mentors and signs land on their islands (gem spacing ≥ 2.8 m).
+
+**Tips for Phase 3**
+- Wire the Challenge tab in `PhasePanel.tsx` (`Challenge` component). `BadgeStamp` already renders `progress.badges[id].stars`, and the Passport's small stamps read the same field.
+- Mini-game configs can reuse `Phase.project.pipeline` and `Phase.diagrams[].steps` (strip `" | "` parallel markers, or treat them as one step).
+- `ui.setMode('minigame')` already releases pointer lock. Use `resumeExplore()` from `components/ui/kit.tsx` when returning from a click.
+
 ## Known issues
 - Two console warnings come from library internals and can't be fixed from our code: `THREE.Clock` deprecated (R3F) and "deprecated parameters for the initialization function" (rapier-compat WASM init).
 - Shadows only cover ±40 m around the player. Distant islands show no cast shadows (by design, for performance).
-- Island labels are small at long range. Phase 2 bridge-head signage should help.
+- Island labels are small at long range (the Phase 2 bridge signs help up close).
+- Speech bubbles are drei `Html`: they are not occluded by geometry (a bubble can show through a landmark), and they hide when their anchor is behind the camera.
+- The mentor icon in panels is an emoji (🤖), so it looks different on each platform. Phase 5 could swap in a small SVG of the robot.
+- Gem pickup is a distance check against the body centre, so gems can also be grabbed through a thin obstacle. All gems are placed ≥ 1 m from trees, rocks, signs, mentors and landmarks, so this is unlikely in practice.
+- Still only tested in Chromium (desktop + mobile emulation), not on a real phone or iOS Safari.
 - `README.md` is still the create-next-app boilerplate. It gets rewritten in Phase 5.
 - No commits yet: git is initialised, but nothing is committed (the plan says commit only when the user asks).
