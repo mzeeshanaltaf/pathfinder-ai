@@ -191,6 +191,49 @@ export const SIGN_LAYOUTS: SignLayout[] = BRIDGE_LAYOUTS.flatMap((b) => {
   return [signAt(b.from, b.to, b.start, f.x, f.z), signAt(b.to, b.from, b.end, -f.x, -f.z)];
 });
 
+const challengeCache = new Map<PhaseId, [number, number, number]>();
+
+/**
+ * Challenge pedestal: beside the landmark, on the opposite side from the mentor. Tries a few
+ * angles / distances and takes the first spot clear of the mentor, scenery, signs and walkways.
+ */
+export function challengePosition(def: IslandDef): [number, number, number] {
+  const cached = challengeCache.get(def.id);
+  if (cached) return cached;
+  const [ox, oz] = landmarkOffset(def);
+  const len = Math.hypot(ox, oz) || 1;
+  const towardsCentre = Math.atan2(-oz / len, -ox / len);
+  const [mx, , mz] = mentorPosition(def);
+  const { trees, rocks } = sceneryObstacles(def);
+  const signs = SIGN_LAYOUTS.filter((s) => s.on === def.id);
+  const dirs = bridgeDirections(def.id);
+  const maxR = islandWalkRadius(def.radius) - 1.6;
+  const base = landmarkRadius(def) + 2.2;
+
+  let best: [number, number, number] | null = null;
+  outer: for (const extra of [0, 0.8, 1.6]) {
+    for (const da of [-0.75, -1.0, -0.5, -1.3, -1.6, -1.9, 1.4, 1.7]) {
+      const a = towardsCentre + da;
+      const lx = ox + Math.cos(a) * (base + extra);
+      const lz = oz + Math.sin(a) * (base + extra);
+      if (Math.hypot(lx, lz) > maxR) continue;
+      const onPath = dirs.some(([dx, dz]) => lx * dx + lz * dz > 0 && Math.abs(lx * dz - lz * dx) < PATH_CLEARANCE);
+      if (onPath) continue;
+      const x = def.position[0] + lx;
+      const z = def.position[2] + lz;
+      if (Math.hypot(x - mx, z - mz) < 2.4) continue;
+      if (trees.some((p) => Math.hypot(p.x - x, p.z - z) < 1.9)) continue;
+      if (rocks.some((p) => Math.hypot(p.x - x, p.z - z) < 1.8)) continue;
+      if (signs.some((s) => Math.hypot(s.position[0] - x, s.position[2] - z) < 1.9)) continue;
+      best = [x, def.position[1], z];
+      break outer;
+    }
+  }
+  if (!best) throw new Error(`challenge: no free spot on ${def.id}`);
+  challengeCache.set(def.id, best);
+  return best;
+}
+
 export interface GemSpawn {
   id: string;
   phaseId: PhaseId;
@@ -211,10 +254,12 @@ function placeGems(def: IslandDef): GemSpawn[] {
   const rng = mulberry32(hashString(`${def.id}:gems`));
   const [lx, , lz] = landmarkPosition(def);
   const [mx, , mz] = mentorPosition(def);
+  const [cx, , cz] = challengePosition(def);
   const { trees, rocks } = sceneryObstacles(def);
   const obstacles: { x: number; z: number; r: number }[] = [
     { x: lx, z: lz, r: landmarkRadius(def) + 1.1 },
     { x: mx, z: mz, r: 1.4 },
+    { x: cx, z: cz, r: 1.6 },
     ...trees.map((p) => ({ x: p.x, z: p.z, r: 1.1 })),
     ...rocks.map((p) => ({ x: p.x, z: p.z, r: 1 })),
     ...SIGN_LAYOUTS.filter((s) => s.on === def.id).map((s) => ({ x: s.position[0], z: s.position[2], r: 1 })),

@@ -10,13 +10,14 @@ import {
   type RapierRigidBody,
 } from '@react-three/rapier';
 import { Euler, Vector3 } from 'three';
+import { MINIGAMES } from '@/data/minigames';
 import type { PhaseId } from '@/data/roadmap';
-import { BRIDGES, INTERACT_RADIUS, ISLAND_BY_ID, ISLANDS, RESPAWN_Y } from '@/data/world';
+import { BRIDGES, CHALLENGE_RADIUS, INTERACT_RADIUS, ISLAND_BY_ID, ISLANDS, RESPAWN_Y } from '@/data/world';
 import { hasQueryFlag, isCoarsePointer } from '@/lib/device';
-import { getGemSpawns, islandAt, landmarkPosition, landmarkScale, mentorPosition } from '@/lib/worldLayout';
+import { challengePosition, getGemSpawns, islandAt, landmarkPosition, landmarkScale, mentorPosition } from '@/lib/worldLayout';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
-import { playerPose, takeTravelRequest } from './playerState';
+import { playerEvents, playerPose, takeTravelRequest } from './playerState';
 import { useInput } from './useInput';
 
 // Capsule: 2 × 0.35 + 2 × 0.5 = 1.7 tall. Body origin is the capsule centre.
@@ -44,6 +45,12 @@ export const RESPAWN_FADE_MS = 350;
 const LANDMARKS = ISLANDS.map((def) => {
   const [x, y, z] = landmarkPosition(def);
   return { id: def.id, x, y, z, radius: INTERACT_RADIUS * landmarkScale(def) };
+});
+
+/** Challenge pedestals (one per island) that open the mini-game directly. */
+const CHALLENGES = ISLANDS.map((def) => {
+  const [x, y, z] = challengePosition(def);
+  return { id: def.id, x, y, z };
 });
 
 type CharacterController =ReturnType<ReturnType<typeof useRapier>['world']['createCharacterController']>;
@@ -88,6 +95,7 @@ export default function Player() {
   const grounded = useRef(false);
   const currentIsland = useRef<PhaseId | null>(null);
   const nearLandmark = useRef<PhaseId | null>(null);
+  const nearChallenge = useRef<PhaseId | null>(null);
   const travelYaw = useRef<number | null>(null);
   const respawning = useRef(false);
   const pendingTeleport = useRef(false);
@@ -116,7 +124,8 @@ export default function Player() {
     if (!hasQueryFlag('debug')) return;
     const w = window as unknown as Record<string, unknown>;
     w.__aiQuest = {
-      world: { islands: ISLANDS, bridges: BRIDGES, landmarks: LANDMARKS, gems: getGemSpawns() },
+      world: { islands: ISLANDS, bridges: BRIDGES, landmarks: LANDMARKS, challenges: CHALLENGES, gems: getGemSpawns() },
+      minigames: MINIGAMES,
       state: () => ({
         position: pos.current.toArray(),
         feetY: pos.current.y - CENTER_HEIGHT,
@@ -199,6 +208,7 @@ export default function Player() {
       v.y = JUMP_SPEED;
       t.jumpBuffer = 0;
       t.coyote = 0;
+      playerEvents.jumps++;
     }
     v.y = Math.max(v.y - GRAVITY * dt, -MAX_FALL_SPEED);
 
@@ -242,7 +252,22 @@ export default function Player() {
       nearLandmark.current = near;
       ui.setNearby(near);
     }
-    if (input.interact && active && near) ui.openPanel(near);
+    // Challenge pedestals sit inside the landmark radius, so they win when the player is right at one.
+    let challenge: PhaseId | null = null;
+    for (const c of CHALLENGES) {
+      if (Math.abs(feetY - c.y) < 3 && Math.hypot(p.x - c.x, p.z - c.z) < CHALLENGE_RADIUS) {
+        challenge = c.id;
+        break;
+      }
+    }
+    if (challenge !== nearChallenge.current) {
+      nearChallenge.current = challenge;
+      ui.setNearbyChallenge(challenge);
+    }
+    if (input.interact && active) {
+      if (challenge) ui.openMiniGame(challenge);
+      else if (near) ui.openPanel(near);
+    }
 
     // Fast travel (Passport): fade out, then reappear at the island centre facing its landmark.
     const travel = takeTravelRequest();

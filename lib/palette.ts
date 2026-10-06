@@ -40,4 +40,6 @@ export const COLORS = {
   robotShell: '#f7f4ff',
   robotScreen: '#2f2a45',
   robotEyes: '#8ff7ff',
+  badgeGold: '#ffc93c',
+  badgeIdle: '#f4f1fb',
 } as const;

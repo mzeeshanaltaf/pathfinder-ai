@@ -52,6 +52,8 @@ export const BRIDGE_SIGN_SUBTITLES: Partial<Record<`${PhaseId}->${PhaseId}`, str
 
 /** Distance (m, horizontal) from a landmark within which its panel can be opened. */
 export const INTERACT_RADIUS = 6.5;
+/** Distance (m, horizontal) from a Challenge pedestal within which its mini-game can be started. */
+export const CHALLENGE_RADIUS = 2.4;
 /** Distance (m) from the player's body centre at which a Skill Gem is collected. */
 export const GEM_PICKUP_RADIUS = 1.4;
 /** Gems float this high above the island top. */

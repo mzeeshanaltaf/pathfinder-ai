@@ -33,6 +33,8 @@ interface ProgressActions {
   /** Returns true if the gem was newly collected. */
   collectGem: (id: string) => boolean;
   setProjectBuilt: (projectId: string, built: boolean) => void;
+  /** Record a mini-game result, keeping the best stars. Returns the previous best (0 if none). */
+  awardBadge: (id: PhaseId, stars: 1 | 2 | 3) => { prevStars: 0 | 1 | 2 | 3; best: 1 | 2 | 3 };
 }
 
 export type ProgressState = ProgressData & ProgressActions;
@@ -70,6 +72,12 @@ export const useProgress = create<ProgressState>()(
         return true;
       },
       setProjectBuilt: (projectId, built) => set((s) => ({ projects: { ...s.projects, [projectId]: built } })),
+      awardBadge: (id, stars) => {
+        const prev = get().badges[id];
+        if (prev && prev.stars >= stars) return { prevStars: prev.stars, best: prev.stars };
+        set((s) => ({ badges: { ...s.badges, [id]: { stars, completedAt: new Date().toISOString() } } }));
+        return { prevStars: prev?.stars ?? 0, best: stars };
+      },
     }),
     {
       name: 'pathfinder-ai-progress',

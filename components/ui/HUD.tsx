@@ -10,7 +10,7 @@ export function openPassport() {
   useUi.getState().setMode('passport');
 }
 
-/** Global overlay keys: P toggles the Passport, Esc closes any panel. */
+/** Global overlay keys: P toggles the Passport, Esc closes any panel or mini-game. */
 function useOverlayKeys() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -19,7 +19,7 @@ function useOverlayKeys() {
       if (e.code === 'KeyP') {
         if (ui.mode === 'explore' || ui.mode === 'panel') openPassport();
         else if (ui.mode === 'passport') ui.closeOverlay();
-      } else if (e.code === 'Escape' && (ui.mode === 'panel' || ui.mode === 'passport')) {
+      } else if (e.code === 'Escape' && (ui.mode === 'panel' || ui.mode === 'passport' || ui.mode === 'minigame')) {
         // Esc can't re-grab the mouse (not a user activation); the "Click to explore" card handles that.
         ui.closeOverlay();
       }
@@ -46,7 +46,7 @@ export default function HUD() {
   const mode = useUi((s) => s.mode);
   const ready = useUi((s) => s.worldReady);
   const { gems, gemTotal, badges, badgeTotal } = useTotals();
-  if (!ready || mode === 'panel' || mode === 'passport') return null;
+  if (!ready || mode === 'panel' || mode === 'passport' || mode === 'minigame') return null;
 
   const phase = island ? getPhase(island) : null;
 

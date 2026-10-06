@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
+import { MINIGAMES } from '@/data/minigames';
 import {
   BUILD_ADVICE,
   BUILD_PROJECTS,
@@ -404,25 +405,35 @@ function ProjectTab({ phase }: { phase: Phase }) {
 }
 
 // ---------------------------------------------------------------------------
-// Challenge (mini-games arrive in Phase 3)
+// Challenge
 
 function Challenge({ phase }: { phase: Phase }) {
   const badge = useProgress((s) => s.badges[phase.id]);
+  const game = MINIGAMES[phase.id];
   return (
     <div className="flex flex-col items-center gap-4 py-4 text-center">
       <BadgeStamp stars={badge?.stars} />
-      <p className="max-w-sm text-sm font-semibold">
-        Beat this island&apos;s mini-game to earn its badge (up to 3 stars).
-      </p>
+      <div>
+        <SectionTitle>Mini-game</SectionTitle>
+        <h3 className="text-xl font-extrabold">★ {game.title}</h3>
+      </div>
+      <p className="max-w-sm text-sm font-semibold">{game.howTo}</p>
       <button
         type="button"
-        disabled
-        className="min-h-12 cursor-not-allowed rounded-full border-[3px] px-6 text-base font-extrabold opacity-50"
-        style={{ borderColor: INK, background: TRACK_COLORS[phase.track].base }}
+        onClick={() => useUi.getState().openMiniGame(phase.id)}
+        className="min-h-12 rounded-full border-[3px] px-6 text-base font-extrabold active:translate-y-0.5"
+        style={{ borderColor: INK, background: TRACK_COLORS[phase.track].base, boxShadow: `0 4px 0 ${INK}` }}
       >
-        ▶ Play mini-game
+        ▶ {badge ? 'Play again' : 'Play mini-game'}
       </button>
-      <span className="text-xs font-bold opacity-50">Coming soon</span>
+      <span className="text-xs font-bold opacity-60">
+        {badge
+          ? badge.stars < 3
+            ? `Best: ${badge.stars}★. Beat it to upgrade your badge.`
+            : 'Perfect 3★ badge earned!'
+          : 'Earn this island’s badge: up to 3 stars.'}
+      </span>
+      <p className="text-xs font-semibold opacity-50">Tip: the ★ Challenge pedestal next to the landmark starts it too.</p>
     </div>
   );
 }

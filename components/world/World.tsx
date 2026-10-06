@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { ISLANDS } from '@/data/world';
 import Bridges from './Bridge';
 import BridgeSigns from './BridgeSigns';
+import ChallengePedestals from './ChallengePedestal';
 import CloudLayer from './Clouds';
 import Island from './Island';
 import Landmark from './Landmark';
@@ -24,6 +25,7 @@ export default function World() {
         <Landmark key={def.id} def={def} />
       ))}
       <Mentors />
+      <ChallengePedestals />
       <SkillGems />
       <Suspense fallback={null}>
         <CloudLayer />

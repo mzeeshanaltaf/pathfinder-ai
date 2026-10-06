@@ -2,15 +2,15 @@
 
 > Update this file at the end of every session. See the session workflow in [CLAUDE.md](CLAUDE.md).
 
-**Next up:** Phase 3 ([phase-3-minigame-framework.md](docs/plan/phase-3-minigame-framework.md))
-**Last updated:** 2026-10-06 (Phase 2 session)
+**Next up:** Phase 4 ([phase-4-concept-simulations.md](docs/plan/phase-4-concept-simulations.md))
+**Last updated:** 2026-10-06 (Phase 3 session)
 
 ## Phase overview
 | # | Phase | Status | Session date |
 |---|---|---|---|
 | 1 | [Scaffold & World Movement](docs/plan/phase-1-scaffold-and-world-movement.md) | ✅ Done | 2026-10-06 |
 | 2 | [Roadmap Content & Interaction](docs/plan/phase-2-roadmap-content-and-interaction.md) | ✅ Done | 2026-10-06 |
-| 3 | [Mini-game Framework](docs/plan/phase-3-minigame-framework.md) | ⬜ Not started | |
+| 3 | [Mini-game Framework](docs/plan/phase-3-minigame-framework.md) | ✅ Done | 2026-10-06 |
 | 4 | [Concept Simulations](docs/plan/phase-4-concept-simulations.md) | ⬜ Not started | |
 | 5 | [Polish, Engagement & Finale](docs/plan/phase-5-polish-engagement-and-finale.md) | ⬜ Not started | |
 
@@ -41,12 +41,12 @@ Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done wi
 - [x] Content spot-check vs the doc; acceptance verified; build passes
 
 ### Phase 3: Mini-game Framework
-- [ ] MiniGameHost (intro / result / recap), lazy registry, `data/minigames.ts`
-- [ ] PipelineOrder, SortBins, Quiz engines (mouse + touch)
-- [ ] Final configs: code-village, fork, prompt-workshop, agent-hq, app-factory, clockwork-keep, harbor tutorial
-- [ ] Temporary configs for the 13 sim phases
-- [ ] Badge award + celebration + Passport stamps
-- [ ] Acceptance verified; build passes
+- [x] MiniGameHost (intro / result / recap), lazy registry, `data/minigames.ts`
+- [x] PipelineOrder, SortBins, Quiz engines (mouse + touch)
+- [x] Final configs: code-village, fork, prompt-workshop, agent-hq, app-factory, clockwork-keep, harbor tutorial
+- [x] Temporary configs for the 13 sim phases
+- [x] Badge award + celebration + Passport stamps
+- [x] Acceptance verified; build passes
 
 ### Phase 4: Concept Simulations
 - [ ] gradient-descent (math-mountain)
@@ -104,6 +104,18 @@ Record any deviation from the plan or from the CLAUDE.md contracts here (date, d
 - 2026-10-06 (Phase 2): The E key is now event-driven (a `keydown` sets the one-shot `touchState.interact`) instead of a polled edge, because a quick tap (down and up within one frame) was being missed.
 - 2026-10-06 (Phase 2): First-time players (no gems, ≤1 island visited, onboarding not done) spawn facing Byte, so the greeting is seen. drei `Html` hides bubbles whose anchor is behind the camera. Everyone else spawns facing −Z as before.
 - 2026-10-06 (Phase 2): Gem toasts pause and hide while a panel or the Passport is open, so they never cover overlays. A backlog advances every 1.5 s instead of every 3 s.
+- 2026-10-06 (Phase 3): **Contract changes (all additive):**
+  - `store/ui.ts`: `nearbyChallenge` (the Challenge pedestal in range; it takes priority over `nearbyPhaseId` for the E prompt and key), `miniGameResult` (a finished run → the host shows its result screen), `tutorial` (Harbor checklist state), plus `openMiniGame(id)`, `showMiniGameResult(r)`, `clearMiniGameResult()`, `setTutorial()`. `closeOverlay()` also clears `miniGameResult`.
+  - `store/progress.ts`: `awardBadge(id, stars)` keeps the best stars (`completedAt` = when that best was set) and returns `{ prevStars, best }`. No persisted-shape change, so `version` stays 1.
+  - `MiniGameProps` lives in `components/minigames/types.ts`. `MiniGameId` is currently `'tutorial' | 'pipeline-order' | 'sort-bins' | 'quiz'`; Phase 4 widens the union and adds registry loaders.
+  - `data/minigames.ts`: `MiniGameDef = { id, title, howTo, config, recapTopicIds }` as planned. Engine configs gained optional extras: PipelineOrder `distractorWhy` + `explain`; SortBins `seconds`; Quiz `outcomes` (weight ranges → result for personality mode).
+  - `data/world.ts`: `CHALLENGE_RADIUS` (2.4 m). `lib/worldLayout.ts`: `challengePosition(def)`. `playerState.ts`: `playerEvents.jumps`.
+- 2026-10-06 (Phase 3): Challenge pedestals sit beside each landmark, opposite the mentor (`challengePosition` tries angles until clear of the mentor, trees, rocks, signs and walkways). Gems now also avoid the pedestal, so **gem positions shifted slightly** on most islands. Gem ids are unchanged, so saved progress is unaffected.
+- 2026-10-06 (Phase 3): Scoring: PipelineOrder 1st try = 3★, 2nd = 2★, else 1★ (score 100/75/50/25). SortBins and graded Quiz: ≥ 90% = 3★, ≥ 70% = 2★, else 1★ (score = % correct). Personality quiz and tutorial always award 3★ (no right answers).
+- 2026-10-06 (Phase 3): PipelineOrder, after a wrong check: correct cards lock 🔒 and wrong ones return to the tray, so every attempt converges. Distractors explain why they don't belong. Loop mode accepts any rotation of the cycle (the offset is fixed once a card locks).
+- 2026-10-06 (Phase 3): The Harbor tutorial runs *in the world*: "Let's go!" closes the overlay and `components/ui/TutorialTracker.tsx` ticks off look (≥ 1 rad of turning in total), jump and Passport. When all three are done it calls `finishMiniGame`, which reopens the host on the result screen. The checklist isn't persisted (a reload cancels it).
+- 2026-10-06 (Phase 3): Exit paths: ✕ / "Back to island" → `resumeExplore()` (re-locks immediately, since it runs from a click). Esc → `closeOverlay()`, then "Click to explore" re-locks. The backdrop does **not** close a game, so a stray tap can't lose progress.
+- 2026-10-06 (Phase 3): Content: the plan names "Calculator" as a Tool Router bin. It isn't in the doc, but it is the plan's own choice, and the items apply the doc's tool-calling idea (LLMs slip on exact maths). Deep Archive uses 4 of the doc's 7 metrics (Recall@K, Precision@K, MRR, faithfulness) to stay within the 2–4 bin limit.
 
 ## Handoff notes
 Each session appends a short block: what was built, key files, anything half-done, and tips for the next session.
@@ -174,6 +186,38 @@ Each session appends a short block: what was built, key files, anything half-don
 - Mini-game configs can reuse `Phase.project.pipeline` and `Phase.diagrams[].steps` (strip `" | "` parallel markers, or treat them as one step).
 - `ui.setMode('minigame')` already releases pointer lock. Use `resumeExplore()` from `components/ui/kit.tsx` when returning from a click.
 
+### Phase 3 session (2026-10-06)
+**What exists**
+- **Data:** `data/minigames.ts` has `MINIGAMES: Record<PhaseId, MiniGameDef>` for all 20 phases (types for every engine config live here too). Pipelines reuse `Phase.project.pipeline` / `Phase.diagrams[].steps` where the doc has them. A dev-only check throws if a recap topic id is missing, a sort item has no `why` or unknown bin, a distractor has no `why`, or a graded question doesn't have exactly one correct option.
+- **Framework (`components/minigames/`):**
+  - `MiniGameHost.tsx`: overlay at z-40, shown while `mode === 'minigame'`. Title bar (track badge, phase · Challenge, game title, ✕) → intro card (How to play, best stars, Start) → the lazy game in `<Suspense>` → result screen (stars pop in one by one, score, badge stamp + confetti when new or improved, otherwise "Your best is still…", "What you learned" with 1–3 topic bites + a link to the island guide, Retry / Back to island).
+  - `registry.ts`: `React.lazy` loaders per `MiniGameId` plus `preloadMiniGame()` (called when the intro mounts).
+  - `complete.ts`: `finishMiniGame()` (awardBadge → showMiniGameResult), `starsForAccuracy`, `shuffle`.
+  - `kit.tsx`: `GameButton`, `Feedback`, `ProgressDots` and `useDragDrop`. That is a pointer-events tap-or-drag hook: under 6 px of movement counts as a tap; otherwise a ghost follows the pointer and the drop target is found via `elementFromPoint(...).closest('[data-drop]')`. Keyboard Enter/Space counts as a tap.
+  - Engines: `PipelineOrder.tsx` (slots + tray, tap or drag in, tap or drag out, drag between slots to swap), `SortBins.tsx` (one card at a time, tap a bin or drag onto it, optional rAF timer bar; correct answers auto-advance after 2.6 s except the last), `Quiz.tsx` (graded + personality), `Tutorial.tsx`.
+- **World:** `components/world/ChallengePedestal.tsx` adds 20 pedestals (stone base, track-coloured column, spinning extruded star: gold once earned, label "Challenge · n/3 stars"), each with a collider. `Player.tsx` checks pedestal proximity (`CHALLENGE_RADIUS`) after landmarks; E opens the game. `InteractPrompt` shows "Press E to play ★ …" or "Tap to play ★ …". The mobile E button pulses for either.
+- **Wiring:** the PhasePanel Challenge tab shows the game title + how-to + "Play mini-game" / "Play again" + best stars. HUD hides during games, and Esc exits them. The Passport stamps and the HUD 🏅 count already read `progress.badges`, so they update live. Game chunks: verified separate (`next build` output; the network log shows none load at startup, and each loads on first open).
+- **Debug:** `window.__aiQuest` also exposes `world.challenges` and `minigames` (the configs, used by the auto-solving tests).
+
+**Verification** (Playwright + local Chrome against `next start`; scripts in this session's scratchpad: `p3-desktop.mjs`, `p3-mobile.mjs`)
+- Desktop, 47/47 passing:
+  - no game chunk at startup; the pedestal prompt + E opens the game; lock released; no movement during a game
+  - PipelineOrder solved first try → 3★ + "New badge earned"; Retry with a mouse-dragged distractor + slot swap → feedback + distractor why + lock → 2★, and the best (3★) is kept in storage
+  - Back to island → explore + re-locked + movement works; Panel → Play; Esc exits → click relocks
+  - Agent HQ timer runs out ("Time's up") → 10/12 → 2★
+  - Harbor tutorial: mouse look + Space + P → result screen + badge
+  - **all 20 phases** opened from their pedestals, auto-solved to the result screen, and persisted: HUD 🏅 20/20, Passport shows 20 stamps, badges survive a reload
+- Mobile 375×812 touch, 19/19 passing:
+  - tap pill opens the game; touch drag (CDP touch events) into a pipeline slot and onto a sort bin; taps for everything else
+  - no horizontal overflow on the intro, pipeline, result, sort, quiz or outcome screens
+  - Back to island restores the touch controls; the touch tutorial works (drag-look, JUMP button, 📖)
+- Console: only the two known library warnings.
+
+**Tips for Phase 4**
+- Swap a temporary game by changing `id` / `config` (and maybe `howTo` / `recapTopicIds`) in `MINIGAMES[phaseId]`, adding the id to `MiniGameId`, and adding a loader in `registry.ts`. The host, badges, pedestal and recap need no changes.
+- Bespoke sims receive `MiniGameProps<C>`: call `onComplete({ score, stars })` once at the end. The host handles the result, Retry (remounts the game with a new `key`) and exit. Use `GameButton` / `Feedback` / `useDragDrop` from `kit.tsx` for a consistent look.
+- `starsForAccuracy()` gives the shared 90 / 70 % thresholds. The test harness in `p3-desktop.mjs` auto-solves by engine id; Phase 4 sims need their own solver (or a `?debug` win hook).
+
 ## Known issues
 - Two console warnings come from library internals and can't be fixed from our code: `THREE.Clock` deprecated (R3F) and "deprecated parameters for the initialization function" (rapier-compat WASM init).
 - Shadows only cover ±40 m around the player. Distant islands show no cast shadows (by design, for performance).
@@ -183,4 +227,8 @@ Each session appends a short block: what was built, key files, anything half-don
 - Gem pickup is a distance check against the body centre, so gems can also be grabbed through a thin obstacle. All gems are placed ≥ 1 m from trees, rocks, signs, mentors and landmarks, so this is unlikely in practice.
 - Still only tested in Chromium (desktop + mobile emulation), not on a real phone or iOS Safari.
 - `README.md` is still the create-next-app boilerplate. It gets rewritten in Phase 5.
-- No commits yet: git is initialised, but nothing is committed (the plan says commit only when the user asks).
+- Git: each phase is committed once its session ends (commit only when the user asks). Remote: `origin` → github.com/mzeeshanaltaf/pathfinder-ai.
+- The jump is a polled key state, so a synthetic key press that goes down and up within one frame is missed. Real presses are fine; automated tests must hold Space for about 100 ms.
+- During the Harbor tutorial, the "Tap to play ★ First Steps" prompt still shows at the pedestal. Re-opening it just shows the intro again (harmless).
+- The gem toast queue pauses during mini-games, so a toast collected just before opening a game shows again afterwards.
+- The pedestal label uses the troika font. The ★ glyph is drawn only in HTML, never in 3D text (Geist may lack it).

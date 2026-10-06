@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { KeyboardControls, PerformanceMonitor, Sky, Stats } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
 import type { DirectionalLight } from 'three';
+import MiniGameHost from '@/components/minigames/MiniGameHost';
 import MobileControls from '@/components/player/MobileControls';
 import Player from '@/components/player/Player';
 import { clearInput, KEYBOARD_MAP } from '@/components/player/useInput';
@@ -18,6 +19,7 @@ import Minimap from '@/components/ui/Minimap';
 import Passport from '@/components/ui/Passport';
 import PhasePanel from '@/components/ui/PhasePanel';
 import StartOverlay from '@/components/ui/StartOverlay';
+import TutorialTracker from '@/components/ui/TutorialTracker';
 import World from '@/components/world/World';
 import { hasQueryFlag, isCoarsePointer } from '@/lib/device';
 import { COLORS } from '@/lib/palette';
@@ -137,8 +139,10 @@ export default function Game() {
       <HUD />
       <InteractPrompt />
       <GemToast />
+      <TutorialTracker />
       <PhasePanel />
       <Passport />
+      <MiniGameHost />
       <FadeOverlay />
       <LoadingScreen fading={worldReady} />
       {debug && <DebugHud />}

@@ -117,10 +117,13 @@ settings: { muted: boolean; sensitivity: number; invertY: boolean; quality: 'aut
 // store/ui.ts (not persisted)
 mode: 'explore' | 'panel' | 'minigame' | 'passport' | 'menu';
 nearbyPhaseId: PhaseId | null;   // landmark within interact range (drives the E prompt)
+nearbyChallenge: PhaseId | null; // Challenge pedestal in range (wins over nearbyPhaseId for E)
 currentIsland: PhaseId | null;   // island the player is standing on (HUD)
-activePhaseId: PhaseId | null;
+activePhaseId: PhaseId | null;   // phase shown by the panel / mini-game host
+miniGameResult: { phaseId; score; stars; prevStars; best } | null;  // host shows the result screen
+// progress.awardBadge(id, stars) keeps the best stars; mini-games finish via finishMiniGame() in components/minigames/complete.ts
 
-// components/minigames
+// components/minigames/types.ts  (configs + MiniGameId in data/minigames.ts; lazy loaders in registry.ts)
 export interface MiniGameProps<C = unknown> {
   phaseId: PhaseId; config: C;
   onComplete: (r: { score: number; stars: 1 | 2 | 3 }) => void;

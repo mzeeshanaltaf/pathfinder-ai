@@ -13,6 +13,11 @@ export const playerPose = {
   yaw: 0,
 };
 
+/** Discrete player events, counted for listeners outside the Canvas (e.g. the Harbor tutorial). */
+export const playerEvents = {
+  jumps: 0,
+};
+
 let travelRequest: PhaseId | null = null;
 
 /** Ask the Player to fade out and reappear at the centre of an island (free fast-travel). */
