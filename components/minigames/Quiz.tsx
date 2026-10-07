@@ -1,24 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { getPhase } from '@/data/roadmap';
-import type { QuizConfig, QuizOutcome } from '@/data/minigames';
+import { getPhase, type PathId } from '@/data/roadmap';
+import { pickOutcome, quizWeights, type QuizConfig, type QuizOutcome } from '@/data/minigames';
 import { INK } from '@/components/ui/kit';
 import { TRACK_COLORS } from '@/lib/palette';
 import { shuffle, starsForAccuracy } from './complete';
 import { Feedback, GameButton, ProgressDots } from './kit';
 import type { MiniGameProps } from './types';
 
-function pickOutcome(outcomes: QuizOutcome[], total: number): QuizOutcome {
-  return (
-    outcomes.find((o) => (o.min === undefined || total >= o.min) && (o.max === undefined || total <= o.max)) ??
-    outcomes[outcomes.length - 1]
-  );
-}
+type Totals = Partial<Record<PathId, number>>;
 
 /**
  * Multiple choice with instant feedback + explanation.
- * `personality` mode has no right answers: option weights add up to an outcome.
+ * `personality` mode has no right answers: option weights add up per career path, and the
+ * clear leader's outcome is shown (a tie or a low total gets the fallback outcome).
  */
 export default function Quiz({ phaseId, config, onComplete }: MiniGameProps<QuizConfig>) {
   const personality = config.mode === 'personality';
@@ -27,7 +23,7 @@ export default function Quiz({ phaseId, config, onComplete }: MiniGameProps<Quiz
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [results, setResults] = useState<boolean[]>([]);
-  const [weight, setWeight] = useState(0);
+  const [totals, setTotals] = useState<Totals>({});
   const [outcome, setOutcome] = useState<QuizOutcome | null>(null);
 
   const q = questions[index];
@@ -38,7 +34,12 @@ export default function Quiz({ phaseId, config, onComplete }: MiniGameProps<Quiz
     if (answered) return;
     setPicked(i);
     setResults((r) => [...r, personality || !!q.options[i].correct]);
-    setWeight((w) => w + (q.options[i].weight ?? 0));
+    const add = quizWeights(q.options[i].weight);
+    setTotals((cur) => {
+      const next = { ...cur };
+      for (const [id, n] of Object.entries(add) as [PathId, number][]) next[id] = (next[id] ?? 0) + n;
+      return next;
+    });
   };
 
   const next = () => {
@@ -48,7 +49,7 @@ export default function Quiz({ phaseId, config, onComplete }: MiniGameProps<Quiz
       return;
     }
     if (personality) {
-      setOutcome(pickOutcome(config.outcomes ?? [], weight));
+      setOutcome(pickOutcome(config.outcomes ?? [], totals));
       return;
     }
     const acc = results.filter(Boolean).length / questions.length;

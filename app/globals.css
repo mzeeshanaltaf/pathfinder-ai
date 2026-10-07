@@ -28,20 +28,21 @@ body {
   display: block;
 }
 
-/* HUD layout. Phones: the compass sits under the island pill (left column) and the minimap moves
-   down to clear the stacked buttons. From sm up: the compass is centred at the top. */
+/* HUD layout. Phones: the compass sits under the island pill (left column: title, subtitle, track
+   badge) and the minimap moves down to clear the stacked buttons. From sm up: the compass is
+   centred at the top. */
 .hud-compass {
   left: max(10px, env(safe-area-inset-left));
-  top: calc(max(10px, env(safe-area-inset-top)) + 66px);
+  top: calc(max(10px, env(safe-area-inset-top)) + 82px);
 }
 .hud-minimap {
   top: calc(max(10px, env(safe-area-inset-top)) + 104px);
 }
 .hud-toast {
-  top: calc(max(10px, env(safe-area-inset-top)) + 122px);
+  top: calc(max(10px, env(safe-area-inset-top)) + 138px);
 }
 .hud-tracker {
-  top: calc(max(10px, env(safe-area-inset-top)) + 196px);
+  top: calc(max(10px, env(safe-area-inset-top)) + 212px);
 }
 @media (min-width: 640px) {
   .hud-compass {
@@ -289,7 +290,7 @@ body {
 
 /* Phones: while the First Steps checklist shows, the gem card sits below it. */
 .hud-toast[data-below-tracker] {
-  top: calc(max(10px, env(safe-area-inset-top)) + 306px);
+  top: calc(max(10px, env(safe-area-inset-top)) + 322px);
 }
 @media (min-width: 640px) {
   .hud-toast[data-below-tracker] {

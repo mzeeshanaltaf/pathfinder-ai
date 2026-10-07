@@ -1,11 +1,12 @@
 import type { Track } from '@/data/roadmap';
 
-/** Track identity colours: Developer = green, Engineer = blue, Common = warm, Meta = lavender. */
+/** Track identity colours: Developer = green, Engineer = blue, FDE = coral, Common = warm, Meta = lavender. */
 export const TRACK_COLORS: Record<Track, { base: string; light: string; dark: string }> = {
   meta: { base: '#b9a3ee', light: '#ddd2fa', dark: '#8b74cf' },
   common: { base: '#ffc078', light: '#ffe0b5', dark: '#e8954a' },
   developer: { base: '#7fd99a', light: '#c4f0cf', dark: '#45b06a' },
   engineer: { base: '#82bdf2', light: '#c6e0fa', dark: '#4b8fd6' },
+  fde: { base: '#ff9292', light: '#ffd3d1', dark: '#e0606a' },
 };
 
 /** Saturated gem colours per track, so Skill Gems pop against the pastel islands. */
@@ -14,6 +15,7 @@ export const GEM_COLORS: Record<Track, string> = {
   common: '#ffa940',
   developer: '#38c86b',
   engineer: '#3f9cf0',
+  fde: '#ff5466',
 };
 
 export const COLORS = {

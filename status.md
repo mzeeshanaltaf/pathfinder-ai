@@ -2,8 +2,8 @@
 
 > Update this file at the end of every session. See the session workflow in [CLAUDE.md](CLAUDE.md).
 
-**Next up:** All six planned phases are done. Candidates for later work are under "Known issues" and in the Phase 6 handoff notes: a real-device pass (iOS Safari / Android), and authoring a real third career path with the README checklist.
-**Last updated:** 2026-10-07 (Phase 6 session)
+**Next up:** All seven planned phases are done. Candidates for later work are under "Known issues" and in the Phase 7 handoff notes: a real-device pass (iOS Safari / Android), and a content review of the authored FDE roadmap (`docs/AI Forward Deployed Engineer.md`) by someone who works as an FDE.
+**Last updated:** 2026-10-07 (Phase 7 session)
 
 ## Phase overview
 | # | Phase | Status | Session date |
@@ -14,6 +14,7 @@
 | 4 | [Concept Simulations](docs/plan/phase-4-concept-simulations.md) | ✅ Done | 2026-10-06 |
 | 5 | [Polish, Engagement & Finale](docs/plan/phase-5-polish-engagement-and-finale.md) | ✅ Done | 2026-10-06 |
 | 6 | [Third-Person Explorer, Keyboard Steering & Full Roadmap](docs/plan/phase-6-third-person-and-roadmap.md) | ✅ Done | 2026-10-07 |
+| 7 | [HUD Subtitle + AI Forward Deployed Engineer Path](docs/plan/phase-7-fde-path.md) | ✅ Done | 2026-10-07 |
 
 Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done with carry-overs
 
@@ -84,6 +85,17 @@ Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done wi
 - [x] F. Roadmap tab + 📜 HUD button + Print / Save as PDF
 - [x] Multi-path smoke test (dummy 3rd path, then reverted)
 - [x] Acceptance verified; tsc, lint and build pass; docs updated
+
+### Phase 7: HUD Subtitle + AI Forward Deployed Engineer Path
+- [x] 0. Docs: `docs/AI Forward Deployed Engineer.md`, plan file, status row + checklist, CLAUDE.md (second source doc, 6 world-map rows, `PATH_IDS`, `sharedPhases`)
+- [x] 1. HUD pill shows the phase subtitle (phone HUD stack offsets moved down to fit)
+- [x] 2. Shared phases: `CareerPath.sharedPhases` / `shortLabel`, `OWN_PHASES` / `PATH_PHASES`, `pathsIncluding`, "Shared with…" roadmap section, "Also on:" badge, Passport note, dev check
+- [x] 3. Content: 6 FDE phases (64 gems), registry entry, branch, ladder rungs, comparison (FDE stars + 3 rows), Harbor / Fork / Summit copy, metadata, coral palette
+- [x] 4. World: 6 islands down the middle corridor + bridge chain; layout check passes
+- [x] 5. Six new landmarks (field camp, pipe docks, launch pad, observatory, vault, beacon); Signpost collider follows the chart width
+- [x] 6. Six Challenges on the existing engines; Fork personality quiz re-authored for 3 paths (per-path weights)
+- [x] 7. UI touch-ups for 3 paths (finale ladder, short labels, Harbor branches, job-ready grid, README)
+- [x] 8. Acceptance verified; tsc, lint and build pass; docs updated
 
 ## Decisions log
 Record any deviation from the plan or from the CLAUDE.md contracts here (date, decision, reason).
@@ -226,6 +238,20 @@ Record any deviation from the plan or from the CLAUDE.md contracts here (date, d
   - The Passport tab icons hide under 400 px, so all four tabs fit at 375 px.
   - The mobile gem card moves below the First Steps checklist while the tutorial runs.
   - The guide's "← Passport" pill sits in the header's badge row.
+- 2026-10-07 (Phase 7): **Third career path: AI Forward Deployed Engineer** (user decisions from the planning session): its own branch of 6 islands, sharing the 4 Developer islands LLM → Agents with no duplicated content; new unique landmarks; Challenges on the existing engines.
+  - **New source doc** `docs/AI Forward Deployed Engineer.md`, written from public research (sources listed in it). Its phase content, FDE comparison stars, the 3 new comparison rows (Customer Communication, Enterprise Integration, Cloud Deployment, rated for all three paths), timeline, final skill set and the "AI FDE" / "AI Solutions" ladder rungs are **authored additions**, not from the original doc.
+- 2026-10-07 (Phase 7): **Contract changes (all additive; no store version bump)**
+  - `data/roadmap.ts`: `PATH_IDS` gains `'fde'`; 6 phase ids before `summit`; `CareerPath.shortLabel?` + `shortPathLabel(p)`; `CareerPath.sharedPhases?` (dev check: each belongs to another path); `row()` takes FDE stars; `CAREER_LADDER` rows 3 and 4 gain `AI FDE` and `AI Solutions`.
+  - `lib/progress.ts`: new `OWN_PHASES` (a path's own track) and `pathsIncluding(id)`. `PATH_PHASES` now = shared + own, so `pathScore`, `pathComplete`, `suggestedNext`, `crossed-fork` and the job-ready meter include shared islands. `both-paths` ("All Paths Explored") checks `OWN_PHASES`. `roadmapSections` inserts one "Shared with the …" section per owner path, coloured as the owner.
+  - `data/minigames.ts`: `QuizWeight = number | Partial<Record<PathId, number>>`; `QuizOutcome.max` removed; exported `quizWeights` and `pickOutcome` (the clear leader with ≥ `min` points, default 1, else the `meta` fallback). Dev check: a personality quiz needs an outcome per path + `meta`.
+  - `TrackBadge` gains `prefix` ("Also on:"). `Signpost` exports `CHART_HALF_WIDTH` for its collider.
+- 2026-10-07 (Phase 7): **Layout.** FDE islands at (0,3,−217) · (−14,3.5,−248) · (12,4.5,−279) · (−12,5,−310) · (12,5.5,−341) · (−4,6,−370), radius 11. The last one moved from the plan's (−8,·,−372): that spot left a 7.8 m gap to the Summit and 19.7 m to Shield Fort. Rim gaps: bridges ≥ 9.2 m, FDE vs Developer / Engineer islands ≥ 20 m, no bridge passes within 2 m of another island, no bridges cross.
+  - The Fork now has 4 bridges, so its **signpost moved** (landmark offset from −Z to the −X/+Z gap). The Fork's and Summit's mentor, pedestal, dock and **gem positions shifted**; gem ids are unchanged.
+  - The Signpost's star bars swap "LLM APIs" (5/5/5) for "Customer Communication", so each path leads in at least one row.
+- 2026-10-07 (Phase 7): **Fork quiz.** Each question has one option per path (+2) and one neutral option; the maths question's "keep it light" option gives Developer and FDE +1 each. Path outcomes need ≥ 5 points and a clear lead; ties and low totals get "Start as a Developer, grow into an Engineer". The recap shows the three path goals (replacing "No need to choose yet", which the outcome screen already says).
+- 2026-10-07 (Phase 7): **Suggested next with shared islands.** The FDE path walks its shared Developer islands first, so after the trunk the compass still points to LLM Lighthouse. With equal progress on the shared islands, the tie goes to the Developer path (registry order); one FDE badge tips it to the FDE path.
+- 2026-10-07 (Phase 7): **UI.** Finale rung notes come from the registry: a path's rung = definition + quote, its `ladderBranches` = "Grows out of the … path" + goal (the Phase 5 hand-picked notes for AI Apps / ML/DL / AI Systems are gone). Rung rows wrap 2 per row on phones. Short labels ("AI FDE") on the Roadmap picker, Passport columns, Harbor branches, signpost arms and certificate chips. The phone HUD stack (`.hud-compass`, `.hud-toast`, `.hud-tracker`, the tutorial gem card) moved down 16 px for the pill's subtitle line.
+- 2026-10-07 (Phase 7): **Draw calls.** Worst view (Harbor, whole world, High) is 371 draws (Phase 6: 311), and the Fork looking down the FDE corridor is 324. Both hold 60 fps (worst frame 17 ms). Each new landmark is 4–7 draws from afar, in line with the existing ones.
 
 ## Handoff notes
 Each session appends a short block: what was built, key files, anything half-done, and tips for the next session.
@@ -463,6 +489,27 @@ Each session appends a short block: what was built, key files, anything half-don
 - The occlusion ray also hits trees and mentors, so in a grove the camera can dip in briefly. That is by design, but not tuned with real play.
 - Mentor lines (Byte, Compass) and the Harbor / Fork / Summit summaries still describe two careers in places; they're authored content to revisit when a real third path lands.
 
+### Phase 7 session (2026-10-07)
+**What exists**
+- **Content:** `docs/AI Forward Deployed Engineer.md` (new source doc) → 6 FDE phases in `data/roadmap.ts` (docPhase 8–13, 64 gems, projects, mentors Scout / Splice / Orbit / Gauge / Keystone / Flare), the `fde` `CareerPath` (shortLabel "AI FDE", coral 🔴, `sharedPhases` = Dev P4–P7, ~10–12 month timeline), its Roadmap branch, comparison stars and ladder rungs. Harbor, Fork and Summit copy now name all three careers (Byte and Compass each gained a line). Totals: 26 islands, 27 bridges, 334 gems, 14 phase projects.
+- **Shared islands:** `PATH_PHASES` / `OWN_PHASES` / `pathsIncluding` in `lib/progress.ts`. The Roadmap tab and print show "Shared with the AI Developer path" before the FDE's own section; shared island guides carry an "Also on: AI FDE path" badge; the Passport's AI FDE column says "+ 4 shared AI Developer islands".
+- **World:** `data/world.ts` (6 islands + chain). Landmarks in `components/world/landmarks/`: `FieldCamp`, `PipeDocks`, `LaunchPad`, `Observatory`, `Vault`, `Beacon`, registered in `index.ts`.
+- **Challenges** (`data/minigames.ts`): Ask Better Questions (graded quiz), Connect It (sort-bins), Ship to Production (pipeline + 2 distractors), Triage the Incident (timed sort-bins), Data Checkpoint (sort-bins, 3 bins), Go-Live Plan (pipeline + 2 distractors). The Fork quiz is 3-way (`Quiz.tsx` sums per-path weights).
+- **HUD:** the island pill shows the subtitle under the title.
+
+**Verification** (Playwright + local Chrome against `next start`; scripts in this session's scratchpad: `layout-check.mjs` (node + jiti, imports the real modules so their dev checks run), `p7-desktop.mjs` (sections: hud, bridges, landmarks, challenges, quiz, passport, compass, finale, perf), `p7-mobile.mjs` (+ `--fresh`), `p7-hudbox.mjs`, plus the Phase 4–6 `t-all.mjs`, `p6-desktop.mjs`, `p6-mobile.mjs`)
+- `layout-check`: all gaps and clearances, no bridge crossings, pedestals / docks / 334 gems placed on all 26 islands (tightest gem spacing 2.8 m).
+- `p7-desktop` 54/54: HUD pill "App Factory / AI Application Engineering / AI Developer path"; all 14 bridge walks Fork ↔ FDE ↔ Summit without dropping; each new landmark's prompt + E opens its guide; each FDE pedestal + E → auto-solved → 3★ badge persisted; Fork quiz reaches all 3 path outcomes and the fallback; Roadmap (FDE) order + section headings, print doc, 14-page PDF; 3 job-ready meters; "Also on" badge; compass → Integration Docks when FDE leads, App Factory on a shared-island tie, LLM Lighthouse after the trunk; finale "You completed the AI FDE path." with the AI FDE rung ✓ and its notes; certificate chip "✓ AI FDE"; 60 fps.
+- `p7-mobile` 16/16 + `--fresh` 2/2 at 375×812 touch: HUD pill → compass → gem card stack without overlap; no horizontal overflow on the Passport (all tabs, Roadmap FDE expanded), the Harbor / Fork / Summit / shared / FDE guides (every tab), the Fork quiz and two FDE games, the full finale ladder, onboarding (3 cards).
+- Regressions: `t-all` 34/34 desktop + 30/30 touch (all 26 games open and render), `p6-desktop` 56/56 (its pedestal check now counts 26), `p6-mobile` 24/24.
+- `tsc`, `npm run lint` and `npm run build` are clean. Console: only the two known library warnings.
+- All six landmarks were screenshotted and reviewed.
+
+**Not done / tips**
+- The FDE roadmap is authored from public sources, not from the original doc. A review by a practising FDE would be worth it before treating it as authoritative.
+- Still no real-device test (iOS Safari / Android).
+- The FDE path has no `BUILD_PROJECTS` entries ("What to build" stays the original doc's 8-project ladder). Its six phase projects show on their islands, in the Roadmap and in the job-ready meter.
+
 ## Known issues
 - Sim stars are generous by design where a meter is live (rank-it NDCG, perceptron accuracy, curve-fit bars): players can hill-climb. Stars mostly reward speed, first-try accuracy or efficiency.
 - Drift-watch needs about 15–30 s of watching. There is Pause but no fast-forward.
@@ -486,4 +533,5 @@ Each session appends a short block: what was built, key files, anything half-don
 - Third-person camera: when a wall is right behind the player, the camera stops at 0.8 m and can sit inside the geometry. The avatar is hidden below 1.2 m, so the view reads as first person. A short occluder (a tree) makes the camera dip in and ease back out at 4 m/s.
 - After a balloon flight the view starts at eye height on the dock, then pulls back behind the avatar over about half a second (a blend, not a cut). The ride basket starts from the third-person camera position, which is behind and above where the avatar stood.
 - Printing uses the browser dialog. It was verified with Chrome's `page.pdf()` only, not every browser's print engine. The ☑ / ☐ glyphs come from the system font.
-- The Fork personality quiz and some mentor lines are written for two paths (see the README new-path checklist).
+- The ENTRY_POINT_NOTE fallback outcome of the Fork quiz ("Start as a Developer, grow into an Engineer") is the original doc's advice and doesn't mention the FDE path.
+- 3D speech bubbles (drei `Html`) whose anchor is off to the side sit at negative screen x on phones. They're clipped by `overflow: hidden` and never scroll the page, but a naive "element outside the viewport" probe will flag them.

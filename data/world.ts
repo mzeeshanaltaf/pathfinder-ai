@@ -6,8 +6,8 @@ export const pathStart = (id: PathId): PhaseId => trackPhases(id)[0].id;
 
 // World layout. The trunk runs along −Z from the Harbor to the Fork; the
 // Developer path arcs to −X, the Engineer path arcs (wider, it is longer) to +X,
-// and both converge at the Summit. Positions are the centre of each island's
-// walkable top surface.
+// the FDE path zig-zags down the middle corridor (x ≈ 0), and all three converge
+// at the Summit. Positions are the centre of each island's walkable top surface.
 
 export type LandmarkType =
   | 'dock'
@@ -29,6 +29,12 @@ export type LandmarkType =
   | 'power-plant'
   | 'conveyor'
   | 'citadel'
+  | 'field-camp'
+  | 'pipe-docks'
+  | 'launch-pad'
+  | 'observatory'
+  | 'vault'
+  | 'beacon'
   | 'summit-plaza';
 
 export interface IslandDef {
@@ -93,6 +99,13 @@ export const ISLANDS: IslandDef[] = [
   island('eng-gpu-plant', [112, 4, -375], 13, 'power-plant'),
   island('eng-mlops-conveyor', [80, 5.5, -402], 12, 'conveyor'),
   island('eng-security-citadel', [42, 5, -418], 12, 'citadel'),
+  // AI FDE path (middle corridor, zig-zagging between the other two)
+  island('fde-discovery-camp', [0, 3, -217], 11, 'field-camp'),
+  island('fde-integration-docks', [-14, 3.5, -248], 11, 'pipe-docks'),
+  island('fde-launch-pad', [12, 4.5, -279], 11, 'launch-pad'),
+  island('fde-proving-grounds', [-12, 5, -310], 11, 'observatory'),
+  island('fde-trust-vault', [12, 5.5, -341], 11, 'vault'),
+  island('fde-go-live-beacon', [-4, 6, -370], 11, 'beacon'),
   // Convergence
   island('summit', [0, 6.5, -410], 20, 'summit-plaza'),
 ];
@@ -123,6 +136,16 @@ export const BRIDGES: BridgeDef[] = [
     'eng-gpu-plant',
     'eng-mlops-conveyor',
     'eng-security-citadel',
+    'summit',
+  ]),
+  ...chain([
+    'fork',
+    'fde-discovery-camp',
+    'fde-integration-docks',
+    'fde-launch-pad',
+    'fde-proving-grounds',
+    'fde-trust-vault',
+    'fde-go-live-beacon',
     'summit',
   ]),
 ];

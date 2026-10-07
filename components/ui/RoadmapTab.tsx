@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CAREER_PATH_BY_ID, CAREER_PATHS, getPhase, type PhaseId } from '@/data/roadmap';
+import { CAREER_PATH_BY_ID, CAREER_PATHS, getPhase, shortPathLabel, type PhaseId } from '@/data/roadmap';
 import { TRACK_COLORS } from '@/lib/palette';
 import { preferredPath, roadmapSections, suggestedNext } from '@/lib/progress';
 import { useProgress } from '@/store/progress';
@@ -51,7 +51,7 @@ export default function RoadmapTab() {
               className="min-h-11 min-w-0 flex-1 rounded-full border-[3px] px-3 text-sm font-extrabold active:translate-y-0.5"
               style={{ borderColor: on ? INK : `${INK}30`, background: on ? TRACK_COLORS[p.id].base : 'white', boxShadow: on ? `0 3px 0 ${INK}` : undefined }}
             >
-              {p.emoji} {p.label}
+              {p.emoji} {shortPathLabel(p)}
             </button>
           );
         })}

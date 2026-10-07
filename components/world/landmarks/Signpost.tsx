@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from 'react';
 import { Vector3, type Group, type Mesh } from 'three';
-import { CAREER_PATHS, COMPARISON } from '@/data/roadmap';
+import { CAREER_PATHS, COMPARISON, shortPathLabel } from '@/data/roadmap';
 import { ISLAND_BY_ID, pathStart } from '@/data/world';
 import { box, cone, cyl, extrude, part, type Part } from '@/lib/landmarkKit';
 import { toon } from '@/lib/materials';
@@ -19,14 +19,17 @@ const ARROW: [number, number][] = [
   [0, 0.32],
 ];
 
-/** Rows from the doc's side-by-side comparison shown as 3D star bars. */
-const BAR_AREAS = ['Mathematics', 'Deep Learning', 'LLM APIs', 'Model Serving', 'Product Development'];
+/** Rows from the doc's side-by-side comparison shown as 3D star bars (picked so each path leads somewhere). */
+const BAR_AREAS = ['Mathematics', 'Deep Learning', 'Customer Communication', 'Model Serving', 'Product Development'];
 const BAR_ROWS = BAR_AREAS.map((a) => COMPARISON.find((r) => r.area === a)!).filter(Boolean);
 const STAR_H = 0.32;
 const CHART = { x: 0, z: -2.0 };
 /** One bar per career path in each row. */
 const BAR_STEP = 0.27;
 const ROW_STEP = CAREER_PATHS.length * BAR_STEP + 0.08;
+const CHART_WIDTH = BAR_ROWS.length * ROW_STEP + 0.3;
+/** Half the chart base's width (its collider in landmarks/index.ts). */
+export const CHART_HALF_WIDTH = CHART_WIDTH / 2;
 /** Arms stack down the post, one per path (first path on top). */
 const ARM_TOP = 4.35;
 const ARM_STEP = 0.9;
@@ -37,7 +40,7 @@ function buildPost(): Part[] {
     part(cyl(0.2, 0.24, 5.3, 8), COLORS.woodDark, [0, 2.9, 0]),
     part(cone(0.32, 0.5, 8), TRACK_COLORS.meta.dark, [0, 5.8, 0]),
     // Bar-chart base.
-    part(box(BAR_ROWS.length * ROW_STEP + 0.3, 0.16, 0.9), COLORS.woodDark, [CHART.x, 0.08, CHART.z]),
+    part(box(CHART_WIDTH, 0.16, 0.9), COLORS.woodDark, [CHART.x, 0.08, CHART.z]),
   ];
 }
 
@@ -92,10 +95,10 @@ export default function Signpost() {
           >
             <mesh geometry={arrow} material={toon(TRACK_COLORS[p.id].base)} position={[0.15, 0, 0]} castShadow />
             <Caption position={[1.35, 0, 0.09]} size={0.26}>
-              {p.label}
+              {shortPathLabel(p)}
             </Caption>
             <Caption position={[1.35, 0, -0.09]} rotation={[0, Math.PI, 0]} size={0.26}>
-              {p.label}
+              {shortPathLabel(p)}
             </Caption>
           </group>
         </group>
@@ -120,7 +123,7 @@ export default function Signpost() {
         )),
       )}</Near>
       <Caption position={[CHART.x, 2.15, CHART.z]} size={0.2}>
-        {`Skill stars: ${CAREER_PATHS.map((p) => p.label.replace(/^AI /, '')).join(' vs ')}`}
+        {`Skill stars: ${CAREER_PATHS.map((p) => shortPathLabel(p).replace(/^AI /, '')).join(' vs ')}`}
       </Caption>
     </group>
   );

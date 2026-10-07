@@ -101,6 +101,7 @@ export default function HUD() {
           {phase ? (
             <>
               <div className="truncate text-sm leading-tight font-extrabold sm:text-base">{phase.title}</div>
+              <div className="truncate text-xs font-bold opacity-70 sm:text-sm">{phase.subtitle}</div>
               <TrackBadge track={phase.track} className="mt-1 max-w-full truncate" />
             </>
           ) : (

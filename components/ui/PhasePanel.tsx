@@ -12,11 +12,13 @@ import {
   ENTRY_POINT_NOTE,
   getPhase,
   ROADMAP_SHAPE,
+  shortPathLabel,
   TIMELINE_NOTE,
   type Phase,
   type PhaseId,
 } from '@/data/roadmap';
 import { GEM_COLORS, TRACK_COLORS } from '@/lib/palette';
+import { pathsIncluding } from '@/lib/progress';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
 import {
@@ -48,6 +50,14 @@ const TAB_LABELS: Record<TabId, string> = {
 
 /** One column per career path from `sm` up (use with `sm:grid-cols-(--cols)`). */
 const PATH_COLS = { '--cols': `repeat(${CAREER_PATHS.length}, minmax(0, 1fr))` } as React.CSSProperties;
+
+/** Fork-style arrows, one per branch: "↙ ↘" for two paths, "↙ ↓ ↘" for three (reversed where they converge). */
+const BRANCH_ARROWS = CAREER_PATHS.length === 1 ? ['↓'] : ['↙', ...Array<string>(CAREER_PATHS.length - 2).fill('↓'), '↘'];
+const CONVERGE_ARROWS = CAREER_PATHS.length === 1 ? ['↓'] : ['↘', ...Array<string>(CAREER_PATHS.length - 2).fill('↓'), '↙'];
+
+/** Mentor lines quoted in the panels (indices into `mentor.lines`). */
+const HARBOR_SHARED_LINE = 4;
+const FORK_CHOOSE_LINE = 4;
 
 function tabsFor(phase: Phase): TabId[] {
   if (phase.id === 'fork') return ['compare', 'topics', 'challenge'];
@@ -108,6 +118,9 @@ function PanelBody({ id }: { id: PhaseId }) {
                 </button>
               )}
               <TrackBadge track={phase.track} />
+              {pathsIncluding(id).map((t) => (
+                <TrackBadge key={t} track={t} prefix="Also on:" />
+              ))}
               {phase.docPhase && (
                 <span className="text-[11px] font-bold opacity-70">
                   Phase {phase.docPhase}
@@ -266,23 +279,24 @@ function HarborOverview({ phase }: { phase: Phase }) {
         ))}
       </div>
       <p className="text-center text-sm font-extrabold">{DEFINITIONS.shared}</p>
-      <MentorQuote phase={phase} line={3} />
+      <MentorQuote phase={phase} line={HARBOR_SHARED_LINE} />
       <section>
         <SectionTitle>The roadmap at a glance</SectionTitle>
         <Flow steps={ROADMAP_SHAPE.trunk} track="common" />
         <div className="my-2 text-center text-lg font-black" aria-hidden>
-          ↙ ↘
+          {BRANCH_ARROWS.join(' ')}
         </div>
+        {/* Phones: two branches per row; an odd last branch spans the row. */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-(--cols)" style={PATH_COLS}>
           {CAREER_PATHS.map((p) => (
-            <div key={p.id}>
-              <div className="mb-1 text-center text-xs font-extrabold">{p.label}</div>
+            <div key={p.id} className="max-sm:odd:last:col-span-2">
+              <div className="mb-1 text-center text-xs font-extrabold">{shortPathLabel(p)}</div>
               <Flow steps={ROADMAP_SHAPE.branches[p.id]} track={p.id} />
             </div>
           ))}
         </div>
         <div className="my-2 text-center text-lg font-black" aria-hidden>
-          ↘ ↙
+          {CONVERGE_ARROWS.join(' ')}
         </div>
         <Flow steps={[ROADMAP_SHAPE.converge]} track="meta" />
       </section>
@@ -454,7 +468,7 @@ function ForkCompare({ phase }: { phase: Phase }) {
           ))}
         </ul>
       </section>
-      <MentorQuote phase={phase} line={3} />
+      <MentorQuote phase={phase} line={FORK_CHOOSE_LINE} />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   BUILD_ADVICE,
   CAREER_LADDER,
-  CAREER_PATH_BY_ID,
   CAREER_PATHS,
   ENTRY_POINT_NOTE,
   PHASE_IDS,
@@ -21,14 +20,19 @@ import { INK, resumeExplore } from './kit';
 import { rungColor } from './roadmapParts';
 import Sheet, { PillButton } from './Sheet';
 
-/** One short note per rung, all taken from the roadmap doc. Each path's own rung is its definition. */
+/**
+ * One short note per rung, all taken from the roadmap docs. Each path's own rung is its definition
+ * and quote; the specialisations that grow out of it carry the path's goal.
+ */
 const RUNG_NOTES: Record<string, string> = {
   'Software Engineer': TIMELINE_NOTE.slice(TIMELINE_NOTE.indexOf('(') + 1, TIMELINE_NOTE.lastIndexOf(')')),
   'AI Fundamentals': ROADMAP_SHAPE.trunk.join(' → '),
-  ...Object.fromEntries(CAREER_PATHS.map((p) => [p.ladderRung, p.definition])),
-  'AI Apps': `“${CAREER_PATH_BY_ID.developer.quote}”`,
-  'ML/DL': ROADMAP_SHAPE.branches.engineer.slice(1, 4).join(' → '),
-  'AI Systems': `${ROADMAP_SHAPE.converge}: ${CAREER_PATH_BY_ID.engineer.goal}`,
+  ...Object.fromEntries(
+    CAREER_PATHS.flatMap((p) => [
+      [p.ladderRung, `${p.definition} “${p.quote}”`],
+      ...(p.ladderBranches ?? []).map((b) => [b, `Grows out of the ${p.pathLabel}. ${p.goal}`]),
+    ]),
+  ),
 };
 
 export default function FinaleOverlay() {
@@ -102,7 +106,7 @@ function FinaleCard() {
             return (
               <li key={row.join('|')} className={`relative flex flex-col items-stretch ${shown ? 'animate-[drop-in_400ms_cubic-bezier(.2,1.4,.5,1)]' : ''}`}>
                 {/* Rails */}
-                <div className="flex min-h-14 items-center gap-2 border-x-[6px] px-2 py-1.5" style={{ borderColor: '#c99363' }}>
+                <div className="flex min-h-14 flex-wrap items-center gap-2 border-x-[6px] px-2 py-1.5" style={{ borderColor: '#c99363' }}>
                   {shown ? (
                     row.map((label) => {
                       const ok = earned[label];
@@ -112,7 +116,7 @@ function FinaleCard() {
                           type="button"
                           onClick={() => setPicked(picked === label ? null : label)}
                           aria-pressed={picked === label}
-                          className="relative min-h-11 min-w-0 flex-1 rounded-xl border-[3px] px-2 py-1 text-center text-sm leading-tight font-extrabold"
+                          className="relative min-h-11 min-w-[calc(50%-4px)] flex-1 rounded-xl border-[3px] px-2 py-1 text-center text-sm leading-tight font-extrabold sm:min-w-0"
                           style={{ borderColor: INK, background: rungColor(label, '#ffffff'), boxShadow: picked === label ? `0 3px 0 ${INK}` : undefined }}
                         >
                           {label}

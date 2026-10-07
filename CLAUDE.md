@@ -2,9 +2,9 @@
 
 **Tagline:** *Find your path into AI.*
 
-Branding stays career-agnostic. v1 covers the AI Developer and AI Engineer paths, but the app should grow into other AI career paths (e.g. Forward Deployed Engineer). Keep names, copy and the `Track` / data model free of assumptions that only two paths exist.
+Branding stays career-agnostic. The app covers the AI Developer, AI Engineer and (since Phase 7) AI Forward Deployed Engineer paths, and should keep growing into other AI career paths. Keep names, copy and the `Track` / data model free of assumptions about how many paths exist.
 
-A cartoonish, third-person 3D browser world where learners *walk* the AI Developer / AI Engineer roadmap as a little explorer instead of reading a document. Each roadmap phase is a floating island with a landmark. Learners collect **Skill Gems** (topics), play a short **mini-game** per phase to earn a **badge**, track real-world **projects**, and watch their **Skill Passport** fill up. The aim is engagement: give learners reasons to come back.
+A cartoonish, third-person 3D browser world where learners *walk* the AI career roadmaps as a little explorer instead of reading a document. Each roadmap phase is a floating island with a landmark. Learners collect **Skill Gems** (topics), play a short **mini-game** per phase to earn a **badge**, track real-world **projects**, and watch their **Skill Passport** fill up. The aim is engagement: give learners reasons to come back.
 
 ## Session workflow (read first)
 The project is built in phases, **one phase per Claude Code session**.
@@ -27,8 +27,9 @@ The project is built in phases, **one phase per Claude Code session**.
 | 4 | [phase-4-concept-simulations.md](docs/plan/phase-4-concept-simulations.md) |
 | 5 | [phase-5-polish-engagement-and-finale.md](docs/plan/phase-5-polish-engagement-and-finale.md) |
 | 6 | [phase-6-third-person-and-roadmap.md](docs/plan/phase-6-third-person-and-roadmap.md) |
+| 7 | [phase-7-fde-path.md](docs/plan/phase-7-fde-path.md) |
 
-**Content source of truth:** [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md). All topics, durations, projects, comparison stars and timelines come from it. Don't invent roadmap content. Short explanatory "bites" for topics are the only authored additions.
+**Content source of truth:** [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md) (trunk, AI Developer, AI Engineer, Summit) and [docs/AI Forward Deployed Engineer.md](docs/AI%20Forward%20Deployed%20Engineer.md) (the AI FDE path, its comparison stars, timeline and ladder rung). All topics, durations, projects, comparison stars and timelines come from them. Don't invent roadmap content. Short explanatory "bites" for topics are the only authored additions.
 
 ## Locked decisions
 - **Theme:** floating island village in a pastel cartoon sky. Islands are joined by plank/rope bridges.
@@ -44,7 +45,7 @@ The project is built in phases, **one phase per Claude Code session**.
 ## World map (stable IDs, used everywhere)
 The layout mirrors the roadmap's shape: a trunk, then a fork, then two paths that converge.
 
-The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 green) branches to −X and the Engineer path (🔵 blue) to +X. Both converge at the Summit further along −Z.
+The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 green) branches to −X, the Engineer path (🔵 blue) to +X, and the AI FDE path (🔴 coral) zig-zags down the middle corridor (x ≈ 0). All three converge at the Summit further along −Z. The FDE also walks the Developer's LLM → Agents islands (`sharedPhases`), so it has no duplicated content.
 
 | `PhaseId` | Track | Doc section | Landmark | Mini-game id (final) |
 |---|---|---|---|---|
@@ -67,6 +68,12 @@ The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 
 | `eng-gpu-plant` | engineer | Eng P9 Model Serving & Inference | Power plant | `batching` |
 | `eng-mlops-conveyor` | engineer | Eng P10 MLOps / LLMOps | Conveyor factory | `drift-watch` |
 | `eng-security-citadel` | engineer | Eng P11 AI Security | Citadel | `injection-defense` (hard) |
+| `fde-discovery-camp` | fde | FDE P8 Customer Discovery & Scoping + Discovery Brief | Field camp: tent, map table, campfire | `quiz` (graded: Ask Better Questions) |
+| `fde-integration-docks` | fde | FDE P9 Enterprise Data & Integration + Support Agent | Pipe docks: crane, crates, packet pipes | `sort-bins` (Connect It) |
+| `fde-launch-pad` | fde | FDE P10 Deployment & Cloud + Customer Cloud deploy | Launch pad: rocket + gantry | `pipeline-order` (Ship to Production) |
+| `fde-proving-grounds` | fde | FDE P11 Field Evaluation & Observability + Eval Harness | Observatory + floating scorecard | `sort-bins` (timed: Triage the Incident) |
+| `fde-trust-vault` | fde | FDE P12 Enterprise Security & Compliance + Doc workflow | Vault + glowing padlock | `sort-bins` (Data Checkpoint) |
+| `fde-go-live-beacon` | fde | FDE P13 Rollout, Adoption & Feedback + Case Study | Beacon mast + signal rings | `pipeline-order` (Go-Live Plan) |
 | `summit` | meta | Eng P12 + final skill sets, timeline, career ladder, projects list | Summit plaza + 3D architecture | `final-assembly` |
 
 ## Directory structure (target)
@@ -95,10 +102,14 @@ lib/                 helpers (palette, toon gradient, random, worldLayout), prog
 ## Core contracts (keep stable across phases)
 ```ts
 // data/roadmap.ts
-export const PATH_IDS = ['developer', 'engineer'] as const;  export type PathId = typeof PATH_IDS[number];
+export const PATH_IDS = ['developer', 'engineer', 'fde'] as const;  export type PathId = typeof PATH_IDS[number];
 export type Track = 'meta' | 'common' | PathId;
 // Career-path registry (Phase 6): CAREER_PATHS: CareerPath[] (+ CAREER_PATH_BY_ID), each
-// { id, label, pathLabel, emoji, definition, goal, quote, excellentAt, finalSkills?, timeline, ladderRung, ladderBranches? }.
+// { id, label, shortLabel?, pathLabel, sharedPhases?, emoji, definition, goal, quote, excellentAt, finalSkills?, timeline, ladderRung, ladderBranches? }.
+// shortLabel ("AI FDE") is for tight spots; read it via shortPathLabel(p). sharedPhases = another path's phases this
+// path also walks (in order, before its own); a dev check requires they belong to another path.
+// lib/progress.ts: OWN_PHASES[path] = its track's phases; PATH_PHASES[path] = [...sharedPhases, ...own] (score, compass,
+// pathComplete, job-ready); pathsIncluding(phaseId) = paths that walk a phase they don't own ("Also on:" badge).
 // TRACK_LABELS for paths derive from pathLabel. ROADMAP_SHAPE = { trunk, branches: Record<PathId, string[]>, converge }.
 // ComparisonRow = { area; stars: Partial<Record<PathId, Stars>> } (missing → "—"). DEFINITIONS keeps only `shared`.
 // UI never hardcodes 'developer' | 'engineer': loop over CAREER_PATHS / PATH_IDS (README has the new-path checklist).
@@ -150,6 +161,8 @@ passportTab: 'map' | 'roadmap' | 'journey' | 'awards'; passportSelected: PhaseId
 // playerControl.teleport(x, feetY, z, yaw?, { snap? }) cuts the camera unless snap: false (balloon landing blends);
 // playerControl.face(yaw). playerPose.yaw = facing. InputFrame = { moveY, turn, sprint, jump, interact }.
 
+// data/minigames.ts: QuizOption.weight = number | Partial<Record<PathId, number>> (a number = the old Dev(−)/Eng(+) scale).
+// Personality outcomes: one per path (picked when it leads alone with ≥ min points) + a 'meta' fallback (tie / low total).
 // components/minigames/types.ts  (MiniGameId = EngineId | SimId in data/minigames.ts; sim configs in data/sims.ts; lazy loaders in registry.ts)
 export interface MiniGameProps<C = unknown> {
   phaseId: PhaseId; config: C;
@@ -165,7 +178,8 @@ export interface MiniGameProps<C = unknown> {
 - **Mobile parity.** Every interaction needs a touch path: the Interact button, panels with big tap targets, no hover-only UI. Overlays must not scroll horizontally at 375px width.
 - **Performance budget:** ~60 fps on a mid laptop. Clamp dpr to [1, 1.75] and use drei `PerformanceMonitor` to drop quality. Instance repeated props (trees, rocks, gems). Use one shadow-casting directional light.
 - **Landmarks:** static parts go through `Static` / `mergeParts` (one draw + one outline per landmark). Materials that animate (opacity, colour) live at module scope in the landmark file: the React Compiler lint rule forbids mutating values returned by hooks. Small moving details go inside `<Near>`, and captions hide beyond 60 m.
-- **Palette:** pastel, defined once in `lib/palette.ts`. Developer = green family, Engineer = blue family, Common = warm yellow/orange, Meta = lavender.
+- **Palette:** pastel, defined once in `lib/palette.ts`. Developer = green family, Engineer = blue family, FDE = coral, Common = warm yellow/orange, Meta = lavender.
+- **HUD stack on phones:** the island pill (title, subtitle, track) is 3 lines; `.hud-compass`, `.hud-toast` and `.hud-tracker` in `globals.css` are offset below it. Change those offsets if the pill's height changes.
 - **File writing:** use the Write/Edit tools, never shell heredocs (they mis-parse on this Windows machine).
 - **Shell:** Windows; PowerShell is primary, and Git Bash is available.
 

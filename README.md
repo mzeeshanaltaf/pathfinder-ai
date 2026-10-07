@@ -5,12 +5,12 @@
 Pathfinder AI is a cartoon 3D world in the browser. Instead of reading an AI career roadmap, you **walk** it as a little explorer, with the camera behind you. Each roadmap phase is a floating island with its own animated landmark:
 
 - A shared trunk covers programming, maths and ML fundamentals.
-- At the Fork, the **AI Developer** path (green) and the **AI Engineer** path (blue) split.
+- At the Fork, three career paths split: the **AI Developer** (green), the **AI Engineer** (blue) and the **AI Forward Deployed Engineer** (coral). The AI FDE also walks the Developer's LLM, prompting, RAG and agent islands, then adds its own field skills: discovery, integration, deployment, evals, security and go-live.
 - The paths meet again at the Summit, where a hologram shows a production AI architecture.
 
 On every island you can:
 
-- **Collect Skill Gems.** There is one per topic, 268 in all, and each comes with a plain-English explanation.
+- **Collect Skill Gems.** There is one per topic, 334 in all, and each comes with a plain-English explanation.
 - **Read the phase.** Walk up to the landmark and press E.
 - **Play its Challenge.** Each island has a mini-game or concept simulation that awards a 1–3 star badge.
 - **Mark projects "I built this"** to track the portfolio projects you've built.
@@ -23,7 +23,7 @@ Your **Skill Passport** gathers all of this in one place:
 - your achievements
 - a certificate once you reach the Summit
 
-Every island is open from the start. The compass, lit bridges and a "next stop" suggestion guide you, but nothing is locked. The content comes from [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md).
+Every island is open from the start. The compass, lit bridges and a "next stop" suggestion guide you, but nothing is locked. The content comes from [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md) and [docs/AI Forward Deployed Engineer.md](docs/AI%20Forward%20Deployed%20Engineer.md).
 
 ## Run it
 
@@ -56,13 +56,15 @@ The view moves only with the keyboard or the stick: there is no mouse-look and n
 
 ## What's in the world
 
-- **20 islands, 20 landmarks.** Every island has a landmark with an idle animation that shows the topic, for example:
+- **26 islands, 26 landmarks.** Every island has a landmark with an idle animation that shows the topic, for example:
   - a lighthouse sweeping a beam of token blocks
   - a library where retrieved chunks fly into an answer orb
   - a transformer tower with attention beams
   - the agent-loop gears of the Clockwork Keep
+  - a crane and data packets flowing through the Integration Docks' pipes
+  - the Go-Live Beacon sending out signal rings
   - the Summit's holographic architecture
-- **Mini-games.** Pipelines, sorting and quizzes, plus 12 hands-on simulations (gradient descent, curve fitting, temperature, chunking, attention, GPU memory, batching, drift…).
+- **Mini-games.** Pipelines, sorting and quizzes, plus 12 hands-on simulations (gradient descent, curve fitting, temperature, chunking, attention, GPU memory, batching, drift…). The Fork's "Which path fits you?" quiz suggests one of the three paths.
 - **Guidance.** A compass points to the suggested next island and its distance. Bridges glow once you've earned the badge for the island they lead from. The minimap rings your next stop.
 - **Hot-air balloons.** Each island has a balloon dock, and the Passport's "Fly here" button lifts you into a short, skippable flight.
 - **Coming back.** Byte greets first-time players with an onboarding tour that ends in the Harbor tutorial. Returning players get a welcome-back card. A daily streak unlocks hats for Byte at 3, 7 and 30 days. There are 11 achievements.
@@ -99,31 +101,32 @@ data/                roadmap.ts (content + CAREER_PATHS registry), world.ts (isl
 lib/                 progress.ts (suggested next, job-ready, achievements, streak), audio.ts,
                      certificate.ts, landmarkKit.ts, materials.ts, worldLayout.ts, palette…
 store/               progress.ts (persisted, versioned), ui.ts
-docs/                roadmap source doc + per-phase plans; status.md tracks progress
+docs/                roadmap source docs + per-phase plans; status.md tracks progress
 ```
 
 ## Adding a roadmap or a new career path
 
-The world is data-driven. Career paths live in one registry, and TypeScript points at every place that still needs an entry for a new path. A temporary third path was added and removed this way in Phase 6, and it needed no UI changes.
+The world is data-driven. Career paths live in one registry, and TypeScript points at every place that still needs an entry for a new path. The AI Forward Deployed Engineer was added this way in Phase 7.
 
-**Checklist for a new career path** (e.g. AI Forward Deployed Engineer):
+**Checklist for a new career path:**
 
 1. **`data/roadmap.ts`**
    - [ ] Add the id to `PATH_IDS`. This extends `PathId` and `Track`.
    - [ ] Add its phase ids to `PHASE_IDS`, and a `Phase` for each with `track` set to the new id (title, subtitle, summary, topic groups with bites, tools, project, mentor lines).
-   - [ ] Add a `CareerPath` to `CAREER_PATHS`: `label`, `pathLabel`, `emoji`, `definition`, `goal`, `quote`, `excellentAt`, optional `finalSkills`, `timeline`, and the `ladderRung` it earns in `CAREER_LADDER` (plus optional `ladderBranches`).
+   - [ ] Add a `CareerPath` to `CAREER_PATHS`: `label`, optional `shortLabel` (for pickers, signpost arms and certificate chips), `pathLabel`, `emoji`, `definition`, `goal`, `quote`, `excellentAt`, optional `finalSkills`, `timeline`, and the `ladderRung` it earns in `CAREER_LADDER` (plus optional `ladderBranches`).
+   - [ ] If the path overlaps another path, list those islands in `sharedPhases` instead of duplicating them. They count towards the new path's progress, appear in its Roadmap as a "Shared with…" section, and show an "Also on:" badge in their island guide.
    - [ ] Add its branch to `ROADMAP_SHAPE.branches`.
    - [ ] Optionally add its stars to the `COMPARISON` rows. `stars` is per path; a path missing from a row shows "—".
-   - A dev-only check fails if a path has no `CareerPath`, no phases, no timeline steps or an unknown ladder rung.
+   - A dev-only check fails if a path has no `CareerPath`, no phases, no timeline steps, an unknown ladder rung, or a shared phase that isn't another path's.
 2. **`lib/palette.ts`**: `TRACK_COLORS` and `GEM_COLORS` entries (the compiler asks for them).
 3. **`data/world.ts`**: an `island(...)` per phase (position, radius, `LandmarkType`) and a `BRIDGES` chain from `'fork'` through the path to `'summit'`.
    - The Fork's bridge sign and signpost arm are derived from the path's first island.
    - Landmarks, mentors, pedestals, docks, signs and gems are placed by `lib/worldLayout.ts`.
 4. **Landmarks** (`components/world/landmarks/`): reuse a `LandmarkType`, or add a component and register it in `landmarks/index.ts`.
-5. **`data/minigames.ts`**: a Challenge per new phase. `MINIGAMES` is a `Record<PhaseId, …>`, so the compiler asks. The Fork's personality quiz is written for two paths: re-author its questions and outcomes for the new one.
+5. **`data/minigames.ts`**: a Challenge per new phase. `MINIGAMES` is a `Record<PhaseId, …>`, so the compiler asks. The Fork's personality quiz scores each path separately: give the new path an option in each question (`weight: { newPath: 2 }`). Its outcome is generated from the registry, and a dev check requires one.
 6. **`lib/progress.ts`**: map each timeline step to islands in `TIMELINE_PHASES`. It is a `Record<PathId, …>`, and a dev check compares the step count.
 
-Everything else picks the path up from the registry: the compass, the job-ready meter, achievements, the Passport columns, the Roadmap tab, the Fork comparison, the Summit tabs, the onboarding cards, the finale ladder and the balloons.
+Everything else picks the path up from the registry: the compass, the job-ready meter, achievements, the Passport columns, the Roadmap tab, the Fork comparison, the Summit tabs, the onboarding cards, the finale ladder, the certificate and the balloons.
 
 Mentor lines (Byte, Compass at the Fork) and the Harbor / Fork / Summit summaries are authored text. Update them if they should mention the new path.
 

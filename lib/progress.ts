@@ -25,7 +25,17 @@ export const PATH_TRACKS: readonly PathTrack[] = PATH_IDS;
 /** The shared trunk, in walking order (the Harbor tutorial is part of onboarding, not the trunk). */
 export const TRUNK: PhaseId[] = ['code-village', 'math-mountain', 'ml-meadow', 'fork'];
 
-export const PATH_PHASES = Object.fromEntries(PATH_TRACKS.map((t) => [t, trackPhases(t).map((p) => p.id)])) as Record<PathTrack, PhaseId[]>;
+/** A path's own islands (its track), in walking order. */
+export const OWN_PHASES = Object.fromEntries(PATH_TRACKS.map((t) => [t, trackPhases(t).map((p) => p.id)])) as Record<PathTrack, PhaseId[]>;
+
+/** Every island a path walks after the Fork: phases it shares with another path first, then its own. */
+export const PATH_PHASES = Object.fromEntries(
+  PATH_TRACKS.map((t) => [t, [...(CAREER_PATH_BY_ID[t].sharedPhases ?? []), ...OWN_PHASES[t]]]),
+) as Record<PathTrack, PhaseId[]>;
+
+/** Paths that walk a phase without owning it (e.g. the AI FDE on the AI Developer's LLM islands). */
+export const pathsIncluding = (id: PhaseId): PathTrack[] =>
+  PATH_TRACKS.filter((t) => getPhase(id).track !== t && PATH_PHASES[t].includes(id));
 
 export interface RoadmapSection {
   title: string;
@@ -33,11 +43,22 @@ export interface RoadmapSection {
   ids: PhaseId[];
 }
 
-/** A path's whole roadmap in walking order: the common trunk (to the Fork), the path's phases, then the Summit. */
+/**
+ * A path's whole roadmap in walking order: the common trunk (to the Fork), any phases shared with
+ * another path (one section per owner, in its colours), the path's own phases, then the Summit.
+ */
 export function roadmapSections(path: PathTrack): RoadmapSection[] {
+  const shared: RoadmapSection[] = [];
+  for (const id of CAREER_PATH_BY_ID[path].sharedPhases ?? []) {
+    const owner = getPhase(id).track;
+    const last = shared[shared.length - 1];
+    if (last?.track === owner) last.ids.push(id);
+    else shared.push({ title: `Shared with the ${TRACK_LABELS[owner]}`, track: owner, ids: [id] });
+  }
   return [
     { title: TRACK_LABELS.common, track: 'common', ids: TRUNK },
-    { title: CAREER_PATH_BY_ID[path].pathLabel, track: path, ids: PATH_PHASES[path] },
+    ...shared,
+    { title: CAREER_PATH_BY_ID[path].pathLabel, track: path, ids: OWN_PHASES[path] },
     { title: 'Where the paths converge', track: 'meta', ids: ['summit'] },
   ];
 }
@@ -104,6 +125,18 @@ const TIMELINE_PHASES: Record<PathTrack, PhaseId[][]> = {
     ['eng-model-forge', 'eng-gpu-plant'],
     ['eng-gpu-plant', 'eng-mlops-conveyor'],
     ['eng-security-citadel', 'summit'],
+  ],
+  fde: [
+    ['code-village'],
+    ['math-mountain', 'ml-meadow'],
+    ['dev-llm-lighthouse', 'dev-prompt-workshop', 'dev-rag-library'],
+    ['dev-agent-hq'],
+    ['fde-discovery-camp'],
+    ['fde-integration-docks'],
+    ['fde-launch-pad'],
+    ['fde-proving-grounds'],
+    ['fde-trust-vault'],
+    ['fde-go-live-beacon', 'summit'],
   ],
 };
 
@@ -211,7 +244,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     icon: '🔀',
     title: 'All Paths Explored',
     text: 'Earn a badge on every career path.',
-    check: (p) => PATH_TRACKS.every((t) => badgeAny(p, PATH_PHASES[t])),
+    // Own islands only: a badge on a shared AI Developer island doesn't count for the AI FDE.
+    check: (p) => PATH_TRACKS.every((t) => badgeAny(p, OWN_PHASES[t])),
   },
   {
     id: 'common-badges',
@@ -234,7 +268,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     id: 'island-hopper',
     icon: '🗺',
     title: 'Island Hopper',
-    text: 'Set foot on all 20 islands.',
+    text: `Set foot on all ${PHASE_IDS.length} islands.`,
     check: (p) => PHASE_IDS.every((id) => p.visited[id]),
   },
   { id: 'summit', icon: '🏔', title: 'Summit Reached', text: 'Reach the Summit.', check: (p) => !!p.visited.summit },

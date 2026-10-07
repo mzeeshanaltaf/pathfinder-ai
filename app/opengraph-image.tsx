@@ -40,7 +40,7 @@ export default async function Image() {
           <div style={{ fontSize: 92, lineHeight: 1, letterSpacing: -2 }}>Pathfinder AI</div>
           <div style={{ fontSize: 44, marginTop: 18, color: '#8b74cf' }}>Find your path into AI.</div>
           <div style={{ fontSize: 30, marginTop: 28, lineHeight: 1.3, opacity: 0.8 }}>
-            Walk the AI Developer and AI Engineer roadmaps across a world of floating islands. Collect skills, play challenges, reach the Summit.
+            Walk the AI Developer, AI Engineer and AI FDE roadmaps across a world of floating islands. Collect skills, play challenges, reach the Summit.
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@ const geistSans = Geist({
 });
 
 const DESCRIPTION =
-  'Find your path into AI. Walk the AI Developer and AI Engineer roadmaps across a cartoon world of floating islands: collect skills, play challenges, track projects and reach the Summit.';
+  'Find your path into AI. Walk the AI Developer, AI Engineer and AI Forward Deployed Engineer roadmaps across a cartoon world of floating islands: collect skills, play challenges, track projects and reach the Summit.';
 
 export const metadata: Metadata = {
   // Absolute URLs for the Open Graph image; set NEXT_PUBLIC_SITE_URL when deploying.
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: 'Pathfinder AI · Find your path into AI',
   description: DESCRIPTION,
   applicationName: 'Pathfinder AI',
-  keywords: ['AI roadmap', 'AI Developer', 'AI Engineer', 'learn AI', 'career path', '3D game'],
+  keywords: ['AI roadmap', 'AI Developer', 'AI Engineer', 'Forward Deployed Engineer', 'learn AI', 'career path', '3D game'],
   openGraph: {
     title: 'Pathfinder AI',
     description: DESCRIPTION,

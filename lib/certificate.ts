@@ -1,6 +1,6 @@
 // Draws the Pathfinder AI certificate on a 2D canvas (exported as a PNG download).
 
-import { PHASE_IDS, TRACK_LABELS } from '@/data/roadmap';
+import { CAREER_PATH_BY_ID, PHASE_IDS, shortPathLabel } from '@/data/roadmap';
 import { TRACK_COLORS } from '@/lib/palette';
 import type { CertificateSummary } from '@/lib/progress';
 
@@ -162,7 +162,7 @@ export function drawCertificate(canvas: HTMLCanvasElement, d: CertificateData, f
   ctx.fillText('walked the AI roadmap all the way to the Summit of Pathfinder AI.', W / 2, 568);
 
   // Paths completed.
-  const paths: { text: string; bg: string }[] = d.paths.map((t) => ({ text: `✓ ${TRACK_LABELS[t]}`, bg: TRACK_COLORS[t].light }));
+  const paths: { text: string; bg: string }[] = d.paths.map((t) => ({ text: `✓ ${shortPathLabel(CAREER_PATH_BY_ID[t])}`, bg: TRACK_COLORS[t].light }));
   if (paths.length === 0) paths.push({ text: 'Common foundation + the Summit', bg: TRACK_COLORS.common.light });
   ctx.font = `800 30px ${family}`;
   const widths = paths.map((p) => ctx.measureText(p.text).width + 56);

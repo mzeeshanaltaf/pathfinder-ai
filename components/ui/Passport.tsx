@@ -1,6 +1,20 @@
 'use client';
 
-import { BUILD_PROJECTS, CAREER_PATH_BY_ID, CAREER_PATHS, getPhase, PHASE_IDS, TIMELINE_NOTE, TRACK_LABELS, trackPhases, type PhaseId, type Track } from '@/data/roadmap';
+import {
+  BUILD_PROJECTS,
+  CAREER_PATH_BY_ID,
+  CAREER_PATHS,
+  getPhase,
+  isPathTrack,
+  PHASE_IDS,
+  shortPathLabel,
+  TIMELINE_NOTE,
+  TRACK_LABELS,
+  trackPhases,
+  type PathId,
+  type PhaseId,
+  type Track,
+} from '@/data/roadmap';
 import { GEM_COLORS, TRACK_COLORS } from '@/lib/palette';
 import { ACHIEVEMENTS, jobReady, PATH_TRACKS, preferredPath } from '@/lib/progress';
 import { useProgress } from '@/store/progress';
@@ -9,9 +23,18 @@ import { BadgeStamp, CloseButton, flyTo, INK, ProgressRing, resumeExplore, Track
 import RoadmapTab from './RoadmapTab';
 
 const TRUNK: PhaseId[] = ['harbor', 'code-village', 'math-mountain', 'ml-meadow', 'fork'];
-const COLUMNS: { title: string; track: Track; ids: PhaseId[] }[] = [
+
+/** "+ 4 shared AI Developer islands": a path that also walks another path's islands says so under its header. */
+function sharedNote(id: PathId): string | undefined {
+  const shared = CAREER_PATH_BY_ID[id].sharedPhases ?? [];
+  if (!shared.length) return undefined;
+  const owners = [...new Set(shared.map((s) => getPhase(s).track))].filter(isPathTrack).map((t) => shortPathLabel(CAREER_PATH_BY_ID[t]));
+  return `+ ${shared.length} shared ${owners.join(' / ')} island${shared.length === 1 ? '' : 's'}`;
+}
+
+const COLUMNS: { title: string; note?: string; track: Track; ids: PhaseId[] }[] = [
   { title: 'Common trunk', track: 'common', ids: TRUNK },
-  ...CAREER_PATHS.map((p) => ({ title: p.label, track: p.id, ids: trackPhases(p.id).map((ph) => ph.id) })),
+  ...CAREER_PATHS.map((p) => ({ title: shortPathLabel(p), note: sharedNote(p.id), track: p.id, ids: trackPhases(p.id).map((ph) => ph.id) })),
 ];
 /** Over 3 columns, phones show the trunk as a row on top and wrap the paths 2 per row. */
 const WIDE = COLUMNS.length > 3;
@@ -129,6 +152,9 @@ function PassportBook({ hidden }: { hidden: boolean }) {
                     >
                       {col.title}
                     </h3>
+                    {col.note && (
+                      <p className="-mt-1 mb-2 text-center text-[10px] leading-tight font-bold opacity-70 sm:text-[11px]">{col.note}</p>
+                    )}
                     <div className={trunkRow ? 'grid w-full grid-cols-3 gap-1.5 sm:flex sm:flex-col sm:items-center sm:gap-0' : 'flex w-full flex-col items-center'}>
                       {col.ids.map((id, i) => (
                         <div key={id} className="flex w-full flex-col items-center">
@@ -244,7 +270,7 @@ function JourneyTab() {
       <p className="mb-3 text-sm font-semibold">
         How far are you from job-ready? Built projects count most: <i>“{TIMELINE_NOTE.split(';')[1]?.split('.')[0]?.trim()}.”</i>
       </p>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {estimates.map((e) => {
           const c = TRACK_COLORS[e.track];
           const timeline = CAREER_PATH_BY_ID[e.track].timeline;

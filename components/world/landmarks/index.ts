@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { LandmarkType } from '@/data/world';
 import { ring, type Vec3 } from '@/lib/landmarkKit';
 import Archive from './Archive';
+import Beacon from './Beacon';
 import Citadel from './Citadel';
 import ControlTower from './ControlTower';
 import Conveyor, { STATIONS } from './Conveyor';
@@ -9,17 +10,22 @@ import CraftShop from './CraftShop';
 import Dock, { PIER } from './Dock';
 import Factory, { BELT } from './Factory';
 import Farm from './Farm';
+import FieldCamp from './FieldCamp';
 import Forge from './Forge';
 import Fort from './Fort';
 import GearTower from './GearTower';
+import LaunchPad from './LaunchPad';
 import Library from './Library';
 import Lighthouse from './Lighthouse';
 import Mountain from './Mountain';
 import NeuronTrees, { TREES } from './NeuronTrees';
+import Observatory from './Observatory';
+import PipeDocks from './PipeDocks';
 import PowerPlant, { COOLING } from './PowerPlant';
-import Signpost from './Signpost';
+import Signpost, { CHART_HALF_WIDTH } from './Signpost';
 import SummitPlaza from './SummitPlaza';
 import Tower from './Tower';
+import Vault from './Vault';
 import Workshop from './Workshop';
 
 /** Solid shapes in landmark space (before the landmark's scale). */
@@ -66,7 +72,8 @@ export const LANDMARK_SPECS: Record<LandmarkType, LandmarkSpec> = {
   },
   mountain: { Body: Mountain, label: 8.2, colliders: [cylC(2.3, 2.25), boxC([1.65, 0.5, 0.55], [-2.55, 0.5, -1.9], 0.75)] },
   farm: { Body: Farm, label: 5.6, colliders: [boxC([1.55, 1.75, 1.3], [0, 1.75, 0])] },
-  signpost: { Body: Signpost, label: 7.3, colliders: [cylC(0.35, 3), boxC([1.7, 0.5, 0.45], [0, 0.5, -2.0])] },
+  // The bar-chart base widens with every career path (one bar per path per row).
+  signpost: { Body: Signpost, label: 7.3, colliders: [cylC(0.35, 3), boxC([CHART_HALF_WIDTH, 0.5, 0.45], [0, 0.5, -2.0])] },
   lighthouse: { Body: Lighthouse, label: 9.2, colliders: [cylC(1.45, 3.5)] },
   'craft-shop': {
     Body: CraftShop,
@@ -121,6 +128,34 @@ export const LANDMARK_SPECS: Record<LandmarkType, LandmarkSpec> = {
     ],
   },
   citadel: { Body: Citadel, label: 7.2, colliders: [boxC([1.95, 1.6, 1.95], [0, 1.6, 0])] },
+  'field-camp': {
+    Body: FieldCamp,
+    label: 4.4,
+    colliders: [boxC([1.3, 1.0, 1.1], [0, 1.0, -1.0]), boxC([0.66, 0.45, 0.44], [1.45, 0.45, 1.0]), cylC(0.5, 0.2, [-1.4, 0.2, 1.15])],
+  },
+  'pipe-docks': {
+    Body: PipeDocks,
+    label: 6.2,
+    colliders: [
+      boxC([0.6, 0.75, 0.5], [0, 0.75, -0.3]),
+      boxC([0.55, 0.75, 0.75], [-1.9, 0.75, -0.25]),
+      cylC(0.5, 0.6, [2.0, 0.6, -0.6]),
+      boxC([0.55, 0.55, 0.45], [1.15, 0.55, -2.2]),
+      boxC([0.4, 2.3, 0.45], [-1.5, 2.3, -2.05]),
+    ],
+  },
+  'launch-pad': {
+    Body: LaunchPad,
+    label: 6.6,
+    colliders: [cylC(1.85, 0.9, [0.1, 0.9, -0.45]), cylC(0.5, 2.0, [0.35, 2.0, -0.45]), boxC([0.5, 2.25, 0.5], [-1.25, 2.25, -0.45])],
+  },
+  observatory: { Body: Observatory, label: 5.2, colliders: [cylC(1.6, 1.4, [0, 1.4, -0.45])] },
+  vault: { Body: Vault, label: 5.3, colliders: [boxC([1.65, 1.45, 1.4], [0, 1.45, -0.6])] },
+  beacon: {
+    Body: Beacon,
+    label: 7.8,
+    colliders: [cylC(1.2, 0.3, [0, 0.3, -0.3]), cylC(0.3, 2.8, [0, 2.8, -0.3]), boxC([0.7, 0.62, 0.1], [0, 0.62, 1.22])],
+  },
   'summit-plaza': {
     Body: SummitPlaza,
     label: 11,

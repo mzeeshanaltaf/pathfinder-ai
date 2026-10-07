@@ -32,14 +32,15 @@ export function useTotals() {
   return { gems, gemTotal: allGemIds.length, badges, badgeTotal: PHASE_IDS.length };
 }
 
-export function TrackBadge({ track, className = '' }: { track: Track; className?: string }) {
+/** A track's coloured pill. `prefix` adds a lead-in, e.g. "Also on:" for a path that shares the island. */
+export function TrackBadge({ track, className = '', prefix }: { track: Track; className?: string; prefix?: string }) {
   const c = TRACK_COLORS[track];
   return (
     <span
       className={`inline-flex items-center rounded-full border-2 px-2 py-0.5 text-[11px] font-bold leading-none whitespace-nowrap ${className}`}
       style={{ background: c.light, borderColor: c.dark, color: INK }}
     >
-      {TRACK_LABELS[track]}
+      {prefix ? `${prefix} ${TRACK_LABELS[track]}` : TRACK_LABELS[track]}
     </span>
   );
 }

@@ -1,10 +1,11 @@
-// Roadmap content. Source of truth: docs/AI Engineer-Developer.md.
-// Every topic, project, duration and diagram below comes from that doc; the only
+// Roadmap content. Sources of truth: docs/AI Engineer-Developer.md (trunk, AI Developer,
+// AI Engineer, Summit) and docs/AI Forward Deployed Engineer.md (the AI FDE path).
+// Every topic, project, duration and diagram below comes from those docs; the only
 // authored text is the topic `bite`s, the mentor lines and short summaries that
-// paraphrase the doc's own guidance.
+// paraphrase the docs' own guidance.
 
 /** Career paths. A new path starts here; TypeScript then points at every place that needs an entry. */
-export const PATH_IDS = ['developer', 'engineer'] as const;
+export const PATH_IDS = ['developer', 'engineer', 'fde'] as const;
 export type PathId = (typeof PATH_IDS)[number];
 
 export type Track = 'meta' | 'common' | PathId;
@@ -29,6 +30,12 @@ export const PHASE_IDS = [
   'eng-gpu-plant',
   'eng-mlops-conveyor',
   'eng-security-citadel',
+  'fde-discovery-camp',
+  'fde-integration-docks',
+  'fde-launch-pad',
+  'fde-proving-grounds',
+  'fde-trust-vault',
+  'fde-go-live-beacon',
   'summit',
 ] as const;
 
@@ -103,7 +110,7 @@ const PHASE_LIST: Phase[] = [
     title: 'Harbor',
     subtitle: 'Your paths into AI',
     summary:
-      'This world maps AI careers, starting with the AI Developer and the AI Engineer. They share the first part of the roadmap, then diverge at the Fork and meet again at the Summit.',
+      'This world maps AI careers: the AI Developer, the AI Engineer and the AI Forward Deployed Engineer. They share the first part of the roadmap, then diverge at the Fork and meet again at the Summit.',
     groups: [
       g(
         'The careers',
@@ -111,6 +118,10 @@ const PHASE_LIST: Phase[] = [
         t(
           'AI Engineer',
           'Understands the underlying ML/LLM technology and builds, optimizes, evaluates, and operates AI systems in production.',
+        ),
+        t(
+          'AI Forward Deployed Engineer',
+          "Embeds with customers and turns general-purpose AI models into working production systems inside their business.",
         ),
         t(
           'Shared foundation',
@@ -128,6 +139,7 @@ const PHASE_LIST: Phase[] = [
         "Hi, I'm Byte, your guide! Welcome to Pathfinder AI.",
         'An AI Developer builds apps using existing AI models and APIs.',
         'An AI Engineer goes deeper: building, optimizing, evaluating and running AI systems in production.',
+        "An AI Forward Deployed Engineer takes AI to real customers and makes it work inside their business.",
         'The paths share the first islands, then split at the Fork. Cross the bridge to Code Village to begin!',
         'Collect the glowing Skill Gems: each one is a topic. Press P (or tap 📖) for your Skill Passport.',
       ],
@@ -344,7 +356,7 @@ const PHASE_LIST: Phase[] = [
     title: 'The Fork',
     subtitle: 'From here the paths diverge',
     summary:
-      "The AI Developer path heads one way, the AI Engineer path the other. Compare them side by side, but you don't have to choose yet: every island stays open.",
+      "The AI Developer path heads one way and the AI Engineer path the other, while the AI FDE path runs straight down the middle. Compare them side by side, but you don't have to choose yet: every island stays open.",
     groups: [
       g(
         'The goals',
@@ -357,6 +369,10 @@ const PHASE_LIST: Phase[] = [
           'Understand, build, optimize, evaluate, and operate AI/ML systems. The AI Engineer follows everything the Developer learns but goes significantly deeper.',
         ),
         t(
+          'AI FDE goal',
+          "Make AI work in production for real customers: discover the problem, integrate with their systems, deploy, evaluate and own the rollout to go-live. The FDE shares the Developer's LLM, RAG and agent islands.",
+        ),
+        t(
           'No need to choose yet',
           "Don't choose between the two at the beginning. Start building, then add deeper ML and systems knowledge over time.",
         ),
@@ -365,9 +381,10 @@ const PHASE_LIST: Phase[] = [
     mentor: {
       name: 'Compass',
       lines: [
-        'Here the road splits: one bridge to the AI Developer path, one to the AI Engineer path. Follow the signs!',
+        'Here the road splits three ways: bridges to the AI Developer, AI Engineer and AI FDE paths. Follow the signs!',
         "AI Developer: 'I use AI models to build software.'",
         "AI Engineer: 'I understand AI models deeply enough to build and operate AI systems.'",
+        "AI FDE: 'I make AI work inside real customers' businesses.'",
         "You don't have to choose now. Every path meets again at the Summit.",
         'Open the comparison board to see where each path goes deeper.',
       ],
@@ -950,6 +967,292 @@ const PHASE_LIST: Phase[] = [
     },
   },
 
+  // ============================================ AI FORWARD DEPLOYED ENGINEER PATH
+  // Source: docs/AI Forward Deployed Engineer.md. The path also walks Dev P4–P7 (CareerPath.sharedPhases).
+  {
+    id: 'fde-discovery-camp',
+    track: 'fde',
+    docPhase: 8,
+    title: 'Discovery Camp',
+    subtitle: 'Customer Discovery & Scoping',
+    duration: '~1 month',
+    summary:
+      'Before writing code, find out what the customer actually needs, and agree what success looks like. The model is rarely the hard part; the right problem is.',
+    keyQuestion: 'What does success look like for this customer, in numbers?',
+    antiPatterns: [
+      'building before you understand the workflow',
+      "promising accuracy you haven't measured",
+      'scoping a whole platform instead of one workflow',
+    ],
+    groups: [
+      g(
+        'Understand the customer',
+        t('stakeholder interviews', 'Talking to everyone the system touches (users, their managers, IT, security) to learn how work really gets done.'),
+        t(
+          'asking good questions (the Mom Test)',
+          "Ask about what people did last time, not whether they'd like your idea. Past behaviour is honest; compliments are not.",
+          'mom-test',
+        ),
+        t('workflow mapping', 'Drawing the steps, people, systems and hand-offs of a process today, so you can see exactly where AI could help.'),
+        t('problem statements', 'One clear sentence: who has the problem, what it costs them, and how they handle it today.'),
+        t('success metrics / ROI', 'Numbers agreed up front (hours saved, tickets resolved, error rate) that prove whether the project paid off.', 'success-metrics'),
+      ),
+      g(
+        'Scope it',
+        t(
+          'constraints (data, security, latency, budget)',
+          "The hard limits: what data you may use, where it may go, how fast answers must be, and what the customer can spend.",
+          'constraints',
+        ),
+        t('use-case prioritization', 'Ranking candidate use cases by value, feasibility and risk, then starting with the one that wins on all three.'),
+        t('MVP scoping', 'The smallest version that proves value on one real workflow. Everything else waits for phase two.'),
+        t('build vs buy', 'Deciding whether an existing product, a platform feature or custom code is the best way to solve each part.'),
+        t('managing expectations', 'Being honest early about what AI can and cannot do, how accurate it will be, and how long it will take.'),
+      ),
+    ],
+    project: {
+      id: 'discovery-brief',
+      title: 'Discovery Brief',
+      pipeline: ['Stakeholder Interviews', 'Workflow Map', 'Problem Statement', 'Success Metrics', 'Scoped MVP'],
+    },
+    mentor: {
+      name: 'Scout',
+      lines: [
+        'Welcome to Discovery Camp! Every deployment starts with listening.',
+        'Interview the people who do the work, and map their workflow step by step.',
+        "Ask about what they did last time, not whether they'd like your idea.",
+        'Agree on success metrics in numbers before you build anything.',
+        'Write a discovery brief: interviews, workflow map, problem statement, metrics, a scoped MVP.',
+      ],
+    },
+  },
+  {
+    id: 'fde-integration-docks',
+    track: 'fde',
+    docPhase: 9,
+    title: 'Integration Docks',
+    subtitle: 'Enterprise Data & Integration',
+    duration: '~1 month',
+    summary:
+      'Real customers have old systems, messy data and strict access rules. Connecting the model to them, safely and reliably, is most of the job.',
+    tools: ['Postman', 'Airflow', 'dbt', 'MCP SDKs'],
+    groups: [
+      g(
+        'Connect to their systems',
+        t('reading unfamiliar API docs', "Quickly finding the endpoints, auth, limits and quirks of a system you've never seen, often with patchy docs.", 'reading-api-docs'),
+        t('OAuth2 / JWT', 'OAuth2 lets your app act for a user with a scoped token instead of their password; a JWT is a signed token that carries who they are.', 'oauth2-jwt'),
+        t('SSO (SAML / OIDC)', "Single sign-on: users log in once with the company's identity provider, and your app trusts it through SAML or OpenID Connect.", 'sso'),
+        t('webhooks', 'A system calls your URL the moment something happens (a new ticket, a payment), so you react instantly instead of polling.'),
+        t('CRM / ticketing systems', 'Tools like Salesforce, Zendesk or ServiceNow that hold customers and tickets. AI agents often read from and write to them.', 'crm-ticketing'),
+        t('MCP servers for internal tools', "Wrapping a customer's internal APIs as MCP servers, so any MCP-aware assistant can use them through one standard interface.", 'mcp-servers'),
+      ),
+      g(
+        'Move and clean their data',
+        t('ETL / ELT', 'Extract data from sources, transform it and load it somewhere useful (or load first, then transform inside the warehouse).', 'etl-elt'),
+        t('messy data cleaning', 'Fixing duplicates, missing fields, odd formats and encodings, because enterprise data is never as clean as the demo.'),
+        t('document ingestion (PDF / OCR)', 'Turning PDFs, scans and slides into clean text and structure; OCR reads text from images.', 'document-ingestion'),
+        t('data warehouses', 'Central analytics databases such as Snowflake, BigQuery or Redshift, where much of a company\'s data already lives.'),
+        t('idempotency & retries', 'Designing calls so repeating them is safe, then retrying failures with backoff, so a flaky network never double-charges anyone.', 'idempotency-retries'),
+      ),
+    ],
+    project: {
+      id: 'enterprise-support-agent',
+      title: 'Enterprise Support Agent',
+      pipeline: ['Ticket', 'Webhook', 'Agent', 'Knowledge Base | CRM Lookup', 'Draft Reply', 'Human Approval', 'Ticket Update'],
+    },
+    mentor: {
+      name: 'Splice',
+      lines: [
+        'Welcome to the Integration Docks! Everything here connects to something else.',
+        'Expect old systems, patchy API docs and messy data. That is normal.',
+        'Use OAuth2 and SSO, never shared passwords.',
+        'Make every call idempotent and retry with backoff.',
+        'Build a support agent: a ticket webhook, a knowledge-base and CRM lookup, a draft reply, then human approval.',
+      ],
+    },
+  },
+  {
+    id: 'fde-launch-pad',
+    track: 'fde',
+    docPhase: 10,
+    title: 'Launch Pad',
+    subtitle: 'Deployment & Cloud',
+    duration: '~1 month',
+    summary:
+      "Ship into the customer's environment: often their own cloud account, their own network, or no internet at all.",
+    tools: ['Terraform', 'GitHub Actions', 'Helm', 'AWS Bedrock', 'Azure OpenAI', 'Google Vertex AI'],
+    groups: [
+      g(
+        'Package and ship',
+        t('Docker', 'Packaging the app and its dependencies into an image that runs the same on your laptop and in the customer\'s cloud.'),
+        t('Kubernetes basics', 'Running containers at scale: pods, deployments, services and autoscaling. Many enterprises standardise on it.'),
+        t('infrastructure as code', 'Describing servers, networks and permissions in code (e.g. Terraform), so an environment can be rebuilt exactly.'),
+        t('CI/CD', 'Every push is tested and built automatically (continuous integration) and released through a repeatable pipeline (continuous delivery).', 'ci-cd'),
+        t('staging → production', 'Testing a release in a copy of production first, then promoting the same build, never a different one.', 'staging-to-production'),
+      ),
+      g(
+        'Their cloud, their rules',
+        t('AWS / Azure / GCP', 'The big three clouds. An FDE deploys into whichever one the customer already uses.', 'cloud-providers'),
+        t('IAM', 'Identity and Access Management: which people and services may do what. Grant the least privilege that works.'),
+        t('networking (VPC, private endpoints, TLS)', 'Private networks, endpoints that never touch the public internet, and encrypted traffic. Security teams check all three.', 'networking'),
+        t('VPC / on-prem / air-gapped deployments', "Running inside the customer's private cloud, their own data centre, or a network with no internet connection at all.", 'private-deployments'),
+        t(
+          'cloud model endpoints (Bedrock / Azure OpenAI / Vertex)',
+          "Using models through the customer's own cloud account, so data stays inside their contracts and region.",
+          'cloud-model-endpoints',
+        ),
+        t('cost control', 'Budgets, alerts, caching and right-sized models, so the bill matches the value and nobody gets a surprise.'),
+      ),
+    ],
+    project: {
+      id: 'customer-cloud-deployment',
+      title: 'Deploy into a Customer Cloud',
+      pipeline: ['Git Push', 'CI Tests', 'Container Image', 'Registry', 'Terraform', 'Staging', 'Smoke Tests', 'Production'],
+    },
+    mentor: {
+      name: 'Orbit',
+      lines: [
+        "Welcome to the Launch Pad! T-minus one deployment.",
+        "You deploy into the customer's cloud, not yours: their IAM, their network, their rules.",
+        'Containers, Terraform and CI/CD make every launch repeatable.',
+        'Some customers need VPC, on-prem or even air-gapped deployments.',
+        'Practise the full countdown: push, test, build, register, Terraform, staging, smoke tests, production.',
+      ],
+    },
+  },
+  {
+    id: 'fde-proving-grounds',
+    track: 'fde',
+    docPhase: 11,
+    title: 'Proving Grounds',
+    subtitle: 'Field Evaluation & Observability',
+    duration: '~1 month',
+    summary: "Prove it works on the customer's real tasks, and find out fast when it stops working.",
+    tools: ['Langfuse', 'LangSmith', 'OpenTelemetry'],
+    groups: [
+      g(
+        'Evaluate in the field',
+        t('golden datasets from real tasks', "Test cases built from the customer's actual tickets, documents and questions, with answers their experts agree on.", 'golden-datasets'),
+        t('LLM-as-judge', 'An LLM grades outputs against a rubric, so you can score thousands of answers. Spot-check the judge against humans.'),
+        t('offline vs online evals', 'Offline: score a fixed dataset before release. Online: measure live traffic and user feedback after it.', 'offline-vs-online-evals'),
+        t('A/B tests', 'Sending part of the traffic to a new version and comparing results, so changes are judged on real users.'),
+        t('regressions after model upgrades', 'A new model version can quietly break prompts that used to work. Re-run your evals before switching.', 'model-upgrade-regressions'),
+      ),
+      g(
+        'Watch it in production',
+        t('tracing (OpenTelemetry, Langfuse / LangSmith)', 'Recording every step of a request (retrieval, prompts, tool calls) so you can see exactly where it went wrong.', 'tracing'),
+        t('latency & cost tracking', 'Measuring response time and spend per request and per customer, so slowdowns and runaway bills show up early.', 'latency-cost-tracking'),
+        t('guardrails', 'Checks around the model: validating inputs and outputs, blocking unsafe content, and keeping answers on topic.'),
+        t('fallbacks & timeouts', 'If a model or tool is slow or down, give up after a limit and fall back to a simpler path or a human.', 'fallbacks-timeouts'),
+        t('debugging non-deterministic output', 'The same input can give different answers. Use traces, fixed seeds and many samples to find patterns, not one-offs.', 'debugging-non-determinism'),
+        t('postmortems', 'A blameless write-up after an incident: what happened, why, and what changes so it cannot happen again.'),
+      ),
+    ],
+    project: {
+      id: 'customer-eval-harness',
+      title: 'Customer Eval Harness',
+      pipeline: ['Real Tasks', 'Golden Dataset', 'Run Pipeline', 'Rules | LLM-as-Judge', 'Scorecard', 'Regression Gate'],
+    },
+    mentor: {
+      name: 'Gauge',
+      lines: [
+        'Welcome to the Proving Grounds. Here demos become evidence.',
+        "Build golden datasets from the customer's real tasks, not made-up examples.",
+        'Trace every request, and track latency and cost per customer.',
+        'Re-run your evals after every model upgrade. Regressions hide there.',
+        'Build an eval harness with a regression gate, so nothing worse ever ships.',
+      ],
+    },
+  },
+  {
+    id: 'fde-trust-vault',
+    track: 'fde',
+    docPhase: 12,
+    title: 'Trust Vault',
+    subtitle: 'Enterprise Security & Compliance',
+    duration: '~1 month',
+    summary: "Enterprise customers say yes only after their security team does. Protect their data, prove it, and pass the review.",
+    tools: ['Microsoft Presidio', 'HashiCorp Vault', 'Cloud KMS'],
+    groups: [
+      g(
+        'Protect the data',
+        t('PII detection & redaction', 'Finding personal data (names, emails, account numbers) and masking it before it reaches a model or a log.', 'pii-redaction'),
+        t('encryption', 'Scrambling data in transit (TLS) and at rest, with keys the customer controls, so stolen data is unreadable.'),
+        t('secrets management', 'API keys and passwords live in a vault and are injected at runtime, never in code, prompts or chat logs.'),
+        t('RBAC', "Role-Based Access Control: the AI only sees and does what the current user's role allows."),
+        t('tenant isolation', "One customer's documents, embeddings and prompts can never leak into another customer's answers."),
+      ),
+      g(
+        'Prove it',
+        t('data residency & retention', 'Where data is stored (e.g. only in the EU) and how long it is kept before deletion, often written into contracts.', 'data-residency'),
+        t('SOC 2 / GDPR / HIPAA', 'Common frameworks and laws for security controls, personal data and health data. Customers will ask which ones you meet.', 'compliance-frameworks'),
+        t('audit logs', 'A tamper-evident record of who asked what and what the AI and its tools did, for investigations and auditors.'),
+        t('OWASP Top 10 for LLMs', 'The best-known list of LLM risks: prompt injection, sensitive data disclosure, excessive agency and more.', 'owasp-llm-top-10'),
+        t('security reviews & questionnaires', "The customer's security team will send long questionnaires and review your design. Clear answers speed up the deal.", 'security-reviews'),
+      ),
+    ],
+    project: {
+      id: 'document-processing-workflow',
+      title: 'Document-Processing Workflow',
+      pipeline: ['PDF Upload', 'Parsing', 'PII Redaction', 'Structured Extraction', 'Validation', 'Human Review', 'System of Record'],
+    },
+    mentor: {
+      name: 'Keystone',
+      lines: [
+        'Welcome to the Trust Vault. Nothing leaves without the right key.',
+        'Redact personal data before it reaches a model or a log.',
+        'Secrets live in a vault, never in code or prompts.',
+        "Know where the customer's data lives and how long you keep it.",
+        'Build a document workflow: parse, redact PII, extract, validate, human review, system of record.',
+      ],
+    },
+  },
+  {
+    id: 'fde-go-live-beacon',
+    track: 'fde',
+    docPhase: 13,
+    title: 'Go-Live Beacon',
+    subtitle: 'Rollout, Adoption & Feedback',
+    duration: '~1 month',
+    summary:
+      "A system nobody uses has failed. The FDE stays until the customer's team owns it, and brings what they learned back to the product.",
+    antiPatterns: ['throwing the system over the wall at go-live', 'measuring success by demos instead of adoption'],
+    groups: [
+      g(
+        'Go live',
+        t('demos & pilots', 'Show it working on their data, then run a time-boxed pilot with a small group of real users.'),
+        t('go-live plans', 'Who switches on when, what gets monitored, and how to roll back. Written down and agreed before launch day.'),
+        t('user training', 'Teaching people how and when to use the new system, and when not to trust it.'),
+        t('runbooks & docs', 'Step-by-step guides for operating and fixing the system, so the customer can run it without you.'),
+        t('handoff to the customer team', "Transferring ownership (code, dashboards, on-call) to the customer's engineers, with time to ask questions.", 'handoff'),
+        t('change management', 'Helping people and processes adapt: champions, feedback loops and patience, because new tools change jobs.'),
+      ),
+      g(
+        'Prove it and share it',
+        t('adoption & ROI measurement', 'Tracking real usage and the success metrics agreed in discovery, so the value is visible to the people who paid.', 'adoption-roi'),
+        t('architecture decision records', 'Short documents that capture each big technical decision, the options considered, and why one was chosen.', 'adrs'),
+        t('technical writing', 'Clear docs, design notes and case studies. An FDE writes for engineers, executives and end users.'),
+        t('field → product feedback', 'Patterns you see across customers become feature requests and fixes for the core product team.', 'field-feedback'),
+        t('reusable components', 'Turning one-off customer code into shared connectors, templates and tools, so the next deployment is faster.'),
+      ),
+    ],
+    project: {
+      id: 'client-case-study',
+      title: 'Client Case Study',
+      pipeline: ['Problem', 'Architecture', 'Decisions (ADRs)', 'Evals', 'Latency | Cost | Accuracy', 'Postmortem'],
+    },
+    mentor: {
+      name: 'Flare',
+      lines: [
+        'Welcome to the Go-Live Beacon! The signal goes out when the customer takes over.',
+        "Pilot first, train the users, and write the runbooks before launch day.",
+        'Measure adoption and ROI, not applause at the demo.',
+        'Bring what you learned in the field back to the product team.',
+        'Build 2–3 case studies, each with its architecture, decisions, evals and a postmortem.',
+      ],
+    },
+  },
+
   // ------------------------------------------------------------------ Summit
   {
     id: 'summit',
@@ -1008,6 +1311,7 @@ const PHASE_LIST: Phase[] = [
         'Frontend, API, orchestration, agents, RAG, tools, LLMs, databases, evaluation and monitoring: one system.',
         'Projects matter more than completing a calendar schedule.',
         'AI Developer is an excellent entry point. You can grow into an AI Engineer step by step.',
+        "AI FDEs bring this whole system to real customers, and stay until it's live.",
       ],
     },
   },
@@ -1030,6 +1334,17 @@ export const ROADMAP_SHAPE: { trunk: string[]; branches: Record<PathId, string[]
       'Model Fine-tuning',
       'AI Infrastructure',
     ],
+    fde: [
+      'LLM APIs + Prompting',
+      'RAG',
+      'Agents + MCP',
+      'Customer Discovery',
+      'Enterprise Integration',
+      'Cloud Deployment',
+      'Field Evals',
+      'Security & Compliance',
+      'Go-live & Adoption',
+    ],
   },
   converge: 'Production AI Systems',
 };
@@ -1046,30 +1361,34 @@ export interface ComparisonRow {
   stars: Partial<Record<PathId, Stars>>;
 }
 
-const row = (area: string, developer: Stars, engineer: Stars): ComparisonRow => ({ area, stars: { developer, engineer } });
+const row = (area: string, developer: Stars, engineer: Stars, fde: Stars): ComparisonRow => ({ area, stars: { developer, engineer, fde } });
 
+/** Developer / Engineer stars from docs/AI Engineer-Developer.md; FDE stars and the last 3 rows from docs/AI Forward Deployed Engineer.md. */
 export const COMPARISON: ComparisonRow[] = [
-  row('Python', 4, 5),
-  row('Software Engineering', 4, 5),
-  row('SQL', 3, 4),
-  row('Mathematics', 2, 5),
-  row('Statistics', 2, 4),
-  row('ML', 3, 5),
-  row('Deep Learning', 2, 5),
-  row('PyTorch', 2, 5),
-  row('Transformers', 3, 5),
-  row('LLM APIs', 5, 5),
-  row('Prompt Engineering', 4, 4),
-  row('RAG', 5, 5),
-  row('Agents', 5, 5),
-  row('Fine-tuning', 2, 4),
-  row('Model Training', 1, 4),
-  row('Model Serving', 2, 5),
-  row('MLOps', 2, 5),
-  row('AI Evaluation', 3, 5),
-  row('AI Security', 3, 5),
-  row('Product Development', 5, 4),
-  row('Research', 2, 4),
+  row('Python', 4, 5, 4),
+  row('Software Engineering', 4, 5, 4),
+  row('SQL', 3, 4, 4),
+  row('Mathematics', 2, 5, 2),
+  row('Statistics', 2, 4, 2),
+  row('ML', 3, 5, 3),
+  row('Deep Learning', 2, 5, 2),
+  row('PyTorch', 2, 5, 1),
+  row('Transformers', 3, 5, 3),
+  row('LLM APIs', 5, 5, 5),
+  row('Prompt Engineering', 4, 4, 5),
+  row('RAG', 5, 5, 5),
+  row('Agents', 5, 5, 5),
+  row('Fine-tuning', 2, 4, 2),
+  row('Model Training', 1, 4, 1),
+  row('Model Serving', 2, 5, 3),
+  row('MLOps', 2, 5, 3),
+  row('AI Evaluation', 3, 5, 4),
+  row('AI Security', 3, 5, 4),
+  row('Product Development', 5, 4, 4),
+  row('Research', 2, 4, 1),
+  row('Customer Communication', 3, 2, 5),
+  row('Enterprise Integration', 3, 3, 5),
+  row('Cloud Deployment', 3, 4, 5),
 ];
 
 export interface Timeline {
@@ -1091,8 +1410,15 @@ export interface CareerPath {
   id: PathId;
   /** "AI Developer" */
   label: string;
+  /** Compact name for tight spots (pickers, signpost arms, certificate chips), e.g. "AI FDE". Defaults to `label`. */
+  shortLabel?: string;
   /** "AI Developer path" */
   pathLabel: string;
+  /**
+   * Another path's phases this roadmap also walks, in walking order, before its own. They stay on
+   * their owner's islands (no duplicated content) but count towards this path's progress.
+   */
+  sharedPhases?: PhaseId[];
   emoji: string;
   definition: string;
   goal: string;
@@ -1177,9 +1503,60 @@ export const CAREER_PATHS: CareerPath[] = [
     ladderRung: 'AI Engineer',
     ladderBranches: ['ML/DL', 'AI Systems'],
   },
+  {
+    id: 'fde',
+    label: 'AI Forward Deployed Engineer',
+    shortLabel: 'AI FDE',
+    pathLabel: 'AI FDE path',
+    sharedPhases: ['dev-llm-lighthouse', 'dev-prompt-workshop', 'dev-rag-library', 'dev-agent-hq'],
+    emoji: '🔴',
+    definition: 'Embeds with customers and turns general-purpose AI models into working production systems inside their business.',
+    goal: 'Make AI work in production for real customers, from discovery to go-live.',
+    quote: "I make AI work inside real customers' businesses.",
+    excellentAt: ['Customer Discovery', 'LLMs', 'RAG', 'Agents', 'Integration', 'Deployment', 'Evaluation'],
+    finalSkills: {
+      foundation: ['Python', 'SQL', 'APIs', 'Git', 'Docker', 'Cloud'],
+      ai: [
+        'LLM APIs',
+        'Prompt Engineering',
+        'RAG',
+        'Agents',
+        'MCP',
+        'Enterprise Integration',
+        'Cloud Deployment',
+        'Evals & Observability',
+        'Security & Compliance',
+        'Customer Discovery',
+        'Technical Writing',
+      ],
+      challenge: 'Our support team is drowning in tickets. Can AI help, inside our own systems and our own cloud?',
+      outcome: 'from the first discovery call to a live, measured rollout.',
+    },
+    timeline: {
+      total: '~10–12 months',
+      steps: [
+        { when: 'Months 1–2', what: 'Python + SQL + APIs' },
+        { when: 'Month 3', what: 'ML Fundamentals' },
+        { when: 'Months 4–5', what: 'LLMs + Prompting + RAG' },
+        { when: 'Month 6', what: 'Agents + MCP' },
+        { when: 'Month 7', what: 'Customer Discovery' },
+        { when: 'Month 8', what: 'Enterprise Integration' },
+        { when: 'Month 9', what: 'Deployment & Cloud' },
+        { when: 'Month 10', what: 'Field Evals & Observability' },
+        { when: 'Month 11', what: 'Enterprise Security & Compliance' },
+        { when: 'Month 12', what: 'Go-live + case-study portfolio' },
+      ],
+      note: 'With 2–3 deployed case studies (with postmortems) in your portfolio: ready to apply for AI Forward Deployed Engineer / AI Solutions Engineer roles.',
+    },
+    ladderRung: 'AI FDE',
+    ladderBranches: ['AI Solutions'],
+  },
 ];
 
 export const CAREER_PATH_BY_ID = Object.fromEntries(CAREER_PATHS.map((p) => [p.id, p])) as Record<PathId, CareerPath>;
+
+/** A path's compact name ("AI FDE"), falling back to its full label. */
+export const shortPathLabel = (p: CareerPath) => p.shortLabel ?? p.label;
 
 export const TRACK_LABELS = {
   meta: 'Waypoint',
@@ -1287,12 +1664,15 @@ export const BUILD_PROJECTS: BuildProject[] = [
 
 export const BUILD_ADVICE = 'Prefer a project-driven roadmap rather than completing dozens of courses.';
 
-/** "One Important Recommendation" progression, top to bottom. Rows with several entries are parallel. */
+/**
+ * "One Important Recommendation" progression, top to bottom. Rows with several entries are parallel.
+ * The AI FDE and AI Solutions rungs come from docs/AI Forward Deployed Engineer.md.
+ */
 export const CAREER_LADDER: string[][] = [
   ['Software Engineer'],
   ['AI Fundamentals'],
-  ['AI Developer', 'AI Engineer'],
-  ['AI Apps', 'ML/DL', 'AI Systems'],
+  ['AI Developer', 'AI Engineer', 'AI FDE'],
+  ['AI Apps', 'ML/DL', 'AI Systems', 'AI Solutions'],
   ['Senior AI Engineer'],
   ['AI Architect / Lead'],
 ];
@@ -1336,5 +1716,10 @@ if (process.env.NODE_ENV !== 'production') {
     if (!PHASE_LIST.some((p) => p.track === id)) throw new Error(`roadmap: path "${id}" has no phases`);
     if (!path[0].timeline.steps.length) throw new Error(`roadmap: path "${id}" has no timeline steps`);
     if (!CAREER_LADDER.some((r) => r.includes(path[0].ladderRung))) throw new Error(`roadmap: path "${id}" ladder rung missing`);
+    // Shared phases must exist and belong to another career path (never the trunk or the path itself).
+    for (const s of path[0].sharedPhases ?? []) {
+      const owner = PHASES[s]?.track;
+      if (!owner || owner === id || !isPathTrack(owner)) throw new Error(`roadmap: path "${id}" shares "${s}", which is not another path's phase`);
+    }
   }
 }
