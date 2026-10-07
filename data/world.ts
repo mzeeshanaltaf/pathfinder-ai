@@ -1,5 +1,8 @@
-import { PHASE_IDS, PHASES, type PhaseId, type Track } from '@/data/roadmap';
+import { CAREER_PATHS, PHASE_IDS, PHASES, trackPhases, type PathId, type PhaseId, type Track } from '@/data/roadmap';
 import { TRACK_COLORS } from '@/lib/palette';
+
+/** First island of a career path (the one the Fork's bridge leads to). */
+export const pathStart = (id: PathId): PhaseId => trackPhases(id)[0].id;
 
 // World layout. The trunk runs along −Z from the Harbor to the Fork; the
 // Developer path arcs to −X, the Engineer path arcs (wider, it is longer) to +X,
@@ -45,10 +48,9 @@ export interface BridgeDef {
 export const ISLAND_TRACK = Object.fromEntries(PHASE_IDS.map((id) => [id, PHASES[id].track])) as Record<PhaseId, Track>;
 
 /** Bridge-head sign text overrides: where a bridge starts a path, name the path, not just the island. */
-export const BRIDGE_SIGN_SUBTITLES: Partial<Record<`${PhaseId}->${PhaseId}`, string>> = {
-  'fork->dev-llm-lighthouse': 'AI Developer path',
-  'fork->eng-neural-garden': 'AI Engineer path',
-};
+export const BRIDGE_SIGN_SUBTITLES: Partial<Record<`${PhaseId}->${PhaseId}`, string>> = Object.fromEntries(
+  CAREER_PATHS.map((p) => [`fork->${pathStart(p.id)}`, p.pathLabel]),
+);
 
 /** Distance (m, horizontal) from a landmark within which its panel can be opened. */
 export const INTERACT_RADIUS = 6.5;

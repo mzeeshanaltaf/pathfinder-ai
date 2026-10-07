@@ -2,8 +2,8 @@
 
 import { useMemo, useRef } from 'react';
 import { Vector3, type Group, type Mesh } from 'three';
-import { COMPARISON } from '@/data/roadmap';
-import { ISLAND_BY_ID } from '@/data/world';
+import { CAREER_PATHS, COMPARISON } from '@/data/roadmap';
+import { ISLAND_BY_ID, pathStart } from '@/data/world';
 import { box, cone, cyl, extrude, part, type Part } from '@/lib/landmarkKit';
 import { toon } from '@/lib/materials';
 import { COLORS, TRACK_COLORS } from '@/lib/palette';
@@ -24,6 +24,12 @@ const BAR_AREAS = ['Mathematics', 'Deep Learning', 'LLM APIs', 'Model Serving', 
 const BAR_ROWS = BAR_AREAS.map((a) => COMPARISON.find((r) => r.area === a)!).filter(Boolean);
 const STAR_H = 0.32;
 const CHART = { x: 0, z: -2.0 };
+/** One bar per career path in each row. */
+const BAR_STEP = 0.27;
+const ROW_STEP = CAREER_PATHS.length * BAR_STEP + 0.08;
+/** Arms stack down the post, one per path (first path on top). */
+const ARM_TOP = 4.35;
+const ARM_STEP = 0.9;
 
 function buildPost(): Part[] {
   return [
@@ -31,7 +37,7 @@ function buildPost(): Part[] {
     part(cyl(0.2, 0.24, 5.3, 8), COLORS.woodDark, [0, 2.9, 0]),
     part(cone(0.32, 0.5, 8), TRACK_COLORS.meta.dark, [0, 5.8, 0]),
     // Bar-chart base.
-    part(box(BAR_ROWS.length * 0.62 + 0.3, 0.16, 0.9), COLORS.woodDark, [CHART.x, 0.08, CHART.z]),
+    part(box(BAR_ROWS.length * ROW_STEP + 0.3, 0.16, 0.9), COLORS.woodDark, [CHART.x, 0.08, CHART.z]),
   ];
 }
 
@@ -41,7 +47,7 @@ function armYaw(from: Vector3, to: [number, number, number], groupYaw: number): 
   return Math.atan2(-d.z, d.x);
 }
 
-/** The Fork: a big crossroads signpost (green arm → Developer path, blue arm → Engineer path) and star bars. */
+/** The Fork: a big crossroads signpost (one arm per career path, pointing at its first island) and star bars. */
 export default function Signpost() {
   const { position, rotY } = useLandmark();
   const arms = useRef<Group[]>([]);
@@ -58,69 +64,63 @@ export default function Signpost() {
 
   const yaws = useMemo(() => {
     const from = new Vector3(...position);
-    return {
-      developer: armYaw(from, ISLAND_BY_ID['dev-llm-lighthouse'].position, rotY),
-      engineer: armYaw(from, ISLAND_BY_ID['eng-neural-garden'].position, rotY),
-    };
+    return CAREER_PATHS.map((p) => armYaw(from, ISLAND_BY_ID[pathStart(p.id)].position, rotY));
   }, [position, rotY]);
 
+  const n = CAREER_PATHS.length;
   useLandmarkFrame((t) => {
     arms.current.forEach((a, i) => {
       if (a) a.rotation.z = Math.sin(t * 1.3 + i * 2) * 0.035;
     });
     bars.current.forEach((b, i) => {
       if (!b) return;
-      const row = BAR_ROWS[Math.floor(i / 2)];
-      const stars = i % 2 === 0 ? row.dev : row.eng;
-      b.scale.y = stars * STAR_H * (1 + Math.sin(t * 2 + i * 0.6) * 0.04);
+      const stars = BAR_ROWS[Math.floor(i / n)].stars[CAREER_PATHS[i % n].id] ?? 0;
+      b.scale.y = Math.max(0.001, stars * STAR_H * (1 + Math.sin(t * 2 + i * 0.6) * 0.04));
     });
     if (vane.current) vane.current.rotation.y = t * 0.8;
   });
 
-  const arm = (track: 'developer' | 'engineer', y: number, label: string, i: number) => (
-    <group rotation={[0, yaws[track], 0]} position={[0, y, 0]}>
-      <group
-        ref={(g) => {
-          if (g) arms.current[i] = g;
-        }}
-      >
-        <mesh geometry={arrow} material={toon(TRACK_COLORS[track].base)} position={[0.15, 0, 0]} castShadow />
-        <Caption position={[1.35, 0, 0.09]} size={0.26}>
-          {label}
-        </Caption>
-        <Caption position={[1.35, 0, -0.09]} rotation={[0, Math.PI, 0]} size={0.26}>
-          {label}
-        </Caption>
-      </group>
-    </group>
-  );
-
   return (
     <group>
       <Static build={buildPost} />
-      {arm('developer', 4.35, 'AI Developer', 0)}
-      {arm('engineer', 3.45, 'AI Engineer', 1)}
+      {CAREER_PATHS.map((p, i) => (
+        <group key={p.id} rotation={[0, yaws[i], 0]} position={[0, ARM_TOP - i * ARM_STEP, 0]}>
+          <group
+            ref={(g) => {
+              if (g) arms.current[i] = g;
+            }}
+          >
+            <mesh geometry={arrow} material={toon(TRACK_COLORS[p.id].base)} position={[0.15, 0, 0]} castShadow />
+            <Caption position={[1.35, 0, 0.09]} size={0.26}>
+              {p.label}
+            </Caption>
+            <Caption position={[1.35, 0, -0.09]} rotation={[0, Math.PI, 0]} size={0.26}>
+              {p.label}
+            </Caption>
+          </group>
+        </group>
+      ))}
       <group ref={vane} position={[0, 6.1, 0]}>
         <mesh geometry={vaneBar} material={toon(TRACK_COLORS.meta.base)} />
         <mesh geometry={vaneTip} material={toon(TRACK_COLORS.meta.base)} position={[0.5, 0, 0]} rotation={[0, 0, -Math.PI / 2]} />
       </group>
       <Near>{BAR_ROWS.flatMap((row, r) =>
-        (['dev', 'eng'] as const).map((k, j) => (
+        CAREER_PATHS.map((p, j) => (
           <mesh
-            key={`${row.area}-${k}`}
+            key={`${row.area}-${p.id}`}
             ref={(m) => {
-              if (m) bars.current[r * 2 + j] = m;
+              if (m) bars.current[r * n + j] = m;
             }}
             geometry={barGeo}
-            material={toon(k === 'dev' ? TRACK_COLORS.developer.base : TRACK_COLORS.engineer.base)}
-            position={[CHART.x + (r - (BAR_ROWS.length - 1) / 2) * 0.62 + (j - 0.5) * 0.27, 0.16, CHART.z]}
-            scale={[1, row[k] * STAR_H, 1]}
+            material={toon(TRACK_COLORS[p.id].base)}
+            position={[CHART.x + (r - (BAR_ROWS.length - 1) / 2) * ROW_STEP + (j - (n - 1) / 2) * BAR_STEP, 0.16, CHART.z]}
+            scale={[1, Math.max(0.001, (row.stars[p.id] ?? 0) * STAR_H), 1]}
             castShadow
           />
         )),
       )}</Near>
       <Caption position={[CHART.x, 2.15, CHART.z]} size={0.2}>
-        {'Skill stars: Developer vs Engineer'}
+        {`Skill stars: ${CAREER_PATHS.map((p) => p.label.replace(/^AI /, '')).join(' vs ')}`}
       </Caption>
     </group>
   );

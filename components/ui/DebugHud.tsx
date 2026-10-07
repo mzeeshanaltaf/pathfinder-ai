@@ -13,7 +13,6 @@ export default function DebugHud() {
   const island = useUi((s) => s.currentIsland);
   const nearby = useUi((s) => s.nearbyPhaseId);
   const mode = useUi((s) => s.mode);
-  const locked = useUi((s) => s.pointerLocked);
   const tier = useUi((s) => s.perfTier);
   const quality = useProgress((s) => s.settings.quality);
   const lastIsland = useProgress((s) => s.lastIsland);
@@ -33,10 +32,7 @@ export default function DebugHud() {
       <div>
         visited: {visited}/{PHASE_IDS.length}
       </div>
-      <div>
-        mode: {mode}
-        {locked ? ' · locked' : ''}
-      </div>
+      <div>mode: {mode}</div>
       <div>
         quality: {quality} · tier {tier}
       </div>

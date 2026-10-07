@@ -42,7 +42,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="h-full overflow-hidden">{children}</body>
+      <body className="h-full overflow-hidden">
+        {children}
+        {/* The Passport's Roadmap tab portals its printable document here (hidden on screen). */}
+        <div id="print-root" />
+      </body>
     </html>
   );
 }

@@ -1,26 +1,20 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { MINIGAMES } from '@/data/minigames';
 import {
   BUILD_ADVICE,
   BUILD_PROJECTS,
   CAREER_LADDER,
+  CAREER_PATHS,
   COMPARISON,
   DEFINITIONS,
-  DEVELOPER_FINAL_SKILLS,
-  DIFFERENCE,
   ENTRY_POINT_NOTE,
-  gemId,
   getPhase,
   ROADMAP_SHAPE,
   TIMELINE_NOTE,
-  TIMELINES,
-  TRACK_GOALS,
   type Phase,
   type PhaseId,
-  type Topic,
-  type TopicGroup,
 } from '@/data/roadmap';
 import { GEM_COLORS, TRACK_COLORS } from '@/lib/palette';
 import { useProgress } from '@/store/progress';
@@ -36,6 +30,7 @@ import {
   TrackBadge,
   usePhaseGems,
 } from './kit';
+import { AntiPatterns, Card, Chips, KeyQuestion, rungColor, ToolsSection, TopicGroupView } from './roadmapParts';
 import { replayFinale } from './Passport';
 
 type TabId = 'overview' | 'compare' | 'topics' | 'project' | 'skills' | 'timelines' | 'build' | 'challenge';
@@ -50,6 +45,9 @@ const TAB_LABELS: Record<TabId, string> = {
   build: 'What to build',
   challenge: 'Challenge',
 };
+
+/** One column per career path from `sm` up (use with `sm:grid-cols-(--cols)`). */
+const PATH_COLS = { '--cols': `repeat(${CAREER_PATHS.length}, minmax(0, 1fr))` } as React.CSSProperties;
 
 function tabsFor(phase: Phase): TabId[] {
   if (phase.id === 'fork') return ['compare', 'topics', 'challenge'];
@@ -70,11 +68,14 @@ function PanelBody({ id }: { id: PhaseId }) {
   const [tab, setTab] = useState<TabId>(tabs[0]);
   const { found, total } = usePhaseGems(id);
   const colors = TRACK_COLORS[phase.track];
+  const fromPassport = useUi((s) => s.panelFrom === 'passport');
+  // The backdrop (and Esc, in the HUD) go back one level; ✕ closes everything.
+  const back = fromPassport ? () => useUi.getState().backToPassport() : resumeExplore;
 
   return (
     <div
       className="fixed inset-0 z-30 flex items-stretch justify-center bg-[#3d3452]/35 backdrop-blur-[2px] sm:items-center sm:p-4"
-      onClick={resumeExplore}
+      onClick={back}
     >
       <div
         role="dialog"
@@ -96,6 +97,16 @@ function PanelBody({ id }: { id: PhaseId }) {
           </ProgressRing>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
+              {fromPassport && (
+                <button
+                  type="button"
+                  onClick={back}
+                  className="min-h-8 rounded-full border-[3px] bg-white px-2.5 text-xs font-extrabold whitespace-nowrap active:translate-y-0.5"
+                  style={{ borderColor: INK, boxShadow: `0 2px 0 ${INK}` }}
+                >
+                  ← Passport
+                </button>
+              )}
               <TrackBadge track={phase.track} />
               {phase.docPhase && (
                 <span className="text-[11px] font-bold opacity-70">
@@ -188,14 +199,6 @@ function SummitRewards() {
 // ---------------------------------------------------------------------------
 // Shared bits
 
-function Card({ children, className = '', tint }: { children: ReactNode; className?: string; tint?: string }) {
-  return (
-    <div className={`rounded-2xl border-[3px] p-3 ${className}`} style={{ borderColor: INK, background: tint ?? 'white' }}>
-      {children}
-    </div>
-  );
-}
-
 function MentorQuote({ phase, line = 1 }: { phase: Phase; line?: number }) {
   const colors = TRACK_COLORS[phase.track];
   const text = phase.mentor.lines[line] ?? phase.mentor.lines[0];
@@ -218,19 +221,6 @@ function MentorQuote({ phase, line = 1 }: { phase: Phase; line?: number }) {
   );
 }
 
-function Chips({ items, track }: { items: string[]; track: Phase['track'] }) {
-  const c = TRACK_COLORS[track];
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {items.map((s) => (
-        <span key={s} className="rounded-full border-2 px-2.5 py-1 text-xs font-bold" style={{ borderColor: c.dark, background: c.light }}>
-          {s}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Overview
 
@@ -244,25 +234,8 @@ function Overview({ phase }: { phase: Phase }) {
         </div>
       )}
       <MentorQuote phase={phase} />
-      {phase.keyQuestion && (
-        <Card tint="#fff4d6">
-          <SectionTitle>Key question</SectionTitle>
-          <p className="text-base font-extrabold">“{phase.keyQuestion}”</p>
-        </Card>
-      )}
-      {phase.antiPatterns && (
-        <Card tint="#ffe8e8">
-          <SectionTitle>What doesn&apos;t work</SectionTitle>
-          <ul className="flex flex-col gap-1 text-sm font-semibold">
-            {phase.antiPatterns.map((a) => (
-              <li key={a} className="flex gap-2">
-                <span aria-hidden>🚫</span>
-                <span>{a}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <KeyQuestion phase={phase} />
+      <AntiPatterns phase={phase} />
       {phase.diagrams?.map((d) => (
         <section key={d.title}>
           <SectionTitle>{d.title}</SectionTitle>
@@ -270,7 +243,7 @@ function Overview({ phase }: { phase: Phase }) {
         </section>
       ))}
       {phase.id === 'summit' && (
-        <Card tint={TRACK_COLORS.developer.light}>
+        <Card tint={TRACK_COLORS[CAREER_PATHS[0].id].light}>
           <p className="text-sm font-semibold">{ENTRY_POINT_NOTE}</p>
         </Card>
       )}
@@ -282,15 +255,15 @@ function HarborOverview({ phase }: { phase: Phase }) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-[15px] leading-relaxed">{phase.summary}</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Card tint={TRACK_COLORS.developer.light}>
-          <h3 className="font-extrabold">🟢 AI Developer</h3>
-          <p className="mt-1 text-sm">{DEFINITIONS.developer}</p>
-        </Card>
-        <Card tint={TRACK_COLORS.engineer.light}>
-          <h3 className="font-extrabold">🔵 AI Engineer</h3>
-          <p className="mt-1 text-sm">{DEFINITIONS.engineer}</p>
-        </Card>
+      <div className="grid gap-3 sm:grid-cols-(--cols)" style={PATH_COLS}>
+        {CAREER_PATHS.map((p) => (
+          <Card key={p.id} tint={TRACK_COLORS[p.id].light}>
+            <h3 className="font-extrabold">
+              {p.emoji} {p.label}
+            </h3>
+            <p className="mt-1 text-sm">{p.definition}</p>
+          </Card>
+        ))}
       </div>
       <p className="text-center text-sm font-extrabold">{DEFINITIONS.shared}</p>
       <MentorQuote phase={phase} line={3} />
@@ -300,15 +273,13 @@ function HarborOverview({ phase }: { phase: Phase }) {
         <div className="my-2 text-center text-lg font-black" aria-hidden>
           ↙ ↘
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <div className="mb-1 text-center text-xs font-extrabold">AI Developer</div>
-            <Flow steps={ROADMAP_SHAPE.developer} track="developer" />
-          </div>
-          <div>
-            <div className="mb-1 text-center text-xs font-extrabold">AI Engineer</div>
-            <Flow steps={ROADMAP_SHAPE.engineer} track="engineer" />
-          </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-(--cols)" style={PATH_COLS}>
+          {CAREER_PATHS.map((p) => (
+            <div key={p.id}>
+              <div className="mb-1 text-center text-xs font-extrabold">{p.label}</div>
+              <Flow steps={ROADMAP_SHAPE.branches[p.id]} track={p.id} />
+            </div>
+          ))}
         </div>
         <div className="my-2 text-center text-lg font-black" aria-hidden>
           ↘ ↙
@@ -332,65 +303,8 @@ function Topics({ phase }: { phase: Phase }) {
       {phase.groups.map((g) => (
         <TopicGroupView key={g.title} phase={phase} group={g} />
       ))}
-      {phase.tools && (
-        <section>
-          <SectionTitle>{phase.id === 'dev-rag-library' || phase.id === 'eng-gpu-plant' ? 'Technologies' : 'Tools'}</SectionTitle>
-          <Chips items={phase.tools} track={phase.track} />
-        </section>
-      )}
+      <ToolsSection phase={phase} />
     </div>
-  );
-}
-
-function TopicGroupView({ phase, group }: { phase: Phase; group: TopicGroup }) {
-  const gems = useProgress((s) => s.gems);
-  const [open, setOpen] = useState<Topic | null>(null);
-  const c = TRACK_COLORS[phase.track];
-  const gemColor = GEM_COLORS[phase.track];
-
-  return (
-    <section>
-      <SectionTitle>{group.title}</SectionTitle>
-      <div className="flex flex-wrap gap-1.5">
-        {group.topics.map((tp) => {
-          const got = !!gems[gemId(phase.id, tp.id)];
-          const selected = open?.id === tp.id;
-          return (
-            <button
-              key={tp.id}
-              type="button"
-              onClick={() => setOpen(selected ? null : tp)}
-              aria-pressed={selected}
-              className="min-h-9 rounded-full border-[3px] px-3 py-1 text-left text-sm font-bold transition-transform active:scale-95"
-              style={{
-                borderColor: selected ? INK : got ? c.dark : `${INK}30`,
-                background: got ? c.light : 'white',
-                color: got ? INK : `${INK}a0`,
-              }}
-            >
-              {got && (
-                <span className="mr-1" style={{ color: gemColor }} aria-label="collected">
-                  ◆
-                </span>
-              )}
-              {tp.label}
-            </button>
-          );
-        })}
-      </div>
-      {open && (
-        <div
-          className="mt-2 rounded-2xl border-[3px] px-3 py-2 text-sm animate-[toast-in_200ms_ease-out]"
-          style={{ borderColor: INK, background: c.light }}
-        >
-          <div className="font-extrabold">{open.label}</div>
-          <p className="mt-0.5">{open.bite}</p>
-          {!gems[gemId(phase.id, open.id)] && (
-            <p className="mt-1 text-xs font-bold opacity-60">Find this Skill Gem somewhere on the island.</p>
-          )}
-        </div>
-      )}
-    </section>
   );
 }
 
@@ -483,64 +397,58 @@ function ForkCompare({ phase }: { phase: Phase }) {
     const id = requestAnimationFrame(() => setGrown(true));
     return () => cancelAnimationFrame(id);
   }, []);
-  const dev = TRACK_COLORS.developer;
-  const eng = TRACK_COLORS.engineer;
-
   return (
     <div className="flex flex-col gap-5">
       <p className="text-[15px] leading-relaxed">{phase.summary}</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Card tint={dev.light}>
-          <h3 className="font-extrabold">🟢 AI Developer</h3>
-          <p className="mt-1 text-sm">
-            Goal: <b>{TRACK_GOALS.developer}</b>
-          </p>
-          <p className="mt-2 text-base font-extrabold italic">“{DIFFERENCE.developer.quote}”</p>
-          <p className="mt-2 text-xs font-bold opacity-70">Excellent at</p>
-          <p className="text-sm font-semibold">{DIFFERENCE.developer.excellentAt.join(' + ')}</p>
-        </Card>
-        <Card tint={eng.light}>
-          <h3 className="font-extrabold">🔵 AI Engineer</h3>
-          <p className="mt-1 text-sm">
-            Goal: <b>{TRACK_GOALS.engineer}</b>
-          </p>
-          <p className="mt-2 text-base font-extrabold italic">“{DIFFERENCE.engineer.quote}”</p>
-          <p className="mt-2 text-xs font-bold opacity-70">Excellent at</p>
-          <p className="text-sm font-semibold">{DIFFERENCE.engineer.excellentAt.join(' + ')}</p>
-        </Card>
+      <div className="grid gap-3 sm:grid-cols-(--cols)" style={PATH_COLS}>
+        {CAREER_PATHS.map((p) => (
+          <Card key={p.id} tint={TRACK_COLORS[p.id].light}>
+            <h3 className="font-extrabold">
+              {p.emoji} {p.label}
+            </h3>
+            <p className="mt-1 text-sm">
+              Goal: <b>{p.goal}</b>
+            </p>
+            <p className="mt-2 text-base font-extrabold italic">“{p.quote}”</p>
+            <p className="mt-2 text-xs font-bold opacity-70">Excellent at</p>
+            <p className="text-sm font-semibold">{p.excellentAt.join(' + ')}</p>
+          </Card>
+        ))}
       </div>
 
       <section>
         <SectionTitle>Side-by-side comparison</SectionTitle>
         <div className="mb-2 flex flex-wrap gap-3 text-xs font-bold">
-          <span className="flex items-center gap-1">
-            <span className="h-3 w-5 rounded-full border-2" style={{ background: dev.base, borderColor: INK }} /> AI Developer
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-3 w-5 rounded-full border-2" style={{ background: eng.base, borderColor: INK }} /> AI Engineer
-          </span>
+          {CAREER_PATHS.map((p) => (
+            <span key={p.id} className="flex items-center gap-1">
+              <span className="h-3 w-5 rounded-full border-2" style={{ background: TRACK_COLORS[p.id].base, borderColor: INK }} /> {p.label}
+            </span>
+          ))}
         </div>
         <ul className="flex flex-col gap-2">
           {COMPARISON.map((row, i) => (
             <li key={row.area} className="grid grid-cols-[minmax(0,7.5rem)_1fr] items-center gap-2 sm:grid-cols-[10rem_1fr]">
               <span className="text-xs leading-tight font-bold wrap-break-word">{row.area}</span>
-              <span className="flex flex-col gap-1" aria-label={`${row.area}: Developer ${row.dev} of 5, Engineer ${row.eng} of 5`}>
-                {[
-                  { v: row.dev, c: dev },
-                  { v: row.eng, c: eng },
-                ].map(({ v, c }, k) => (
-                  <span key={k} className="flex items-center gap-1.5">
-                    <span className="h-3 flex-1 overflow-hidden rounded-full border-2 bg-white" style={{ borderColor: `${INK}40` }}>
-                      <span
-                        className="block h-full rounded-full transition-[width] duration-700 ease-out"
-                        style={{ width: grown ? `${v * 20}%` : '0%', background: c.dark, transitionDelay: `${i * 30}ms` }}
-                      />
+              <span
+                className="flex flex-col gap-1"
+                aria-label={`${row.area}: ${CAREER_PATHS.map((p) => `${p.label} ${row.stars[p.id] ?? 'not rated'} of 5`).join(', ')}`}
+              >
+                {CAREER_PATHS.map((p) => {
+                  const v = row.stars[p.id];
+                  return (
+                    <span key={p.id} className="flex items-center gap-1.5">
+                      <span className="h-3 flex-1 overflow-hidden rounded-full border-2 bg-white" style={{ borderColor: `${INK}40` }}>
+                        <span
+                          className="block h-full rounded-full transition-[width] duration-700 ease-out"
+                          style={{ width: grown && v ? `${v * 20}%` : '0%', background: TRACK_COLORS[p.id].dark, transitionDelay: `${i * 30}ms` }}
+                        />
+                      </span>
+                      <span className="w-14 text-[10px] tracking-tighter text-amber-500" aria-hidden>
+                        {v ? '★'.repeat(v) : '—'}
+                      </span>
                     </span>
-                    <span className="w-14 text-[10px] tracking-tighter text-amber-500" aria-hidden>
-                      {'★'.repeat(v)}
-                    </span>
-                  </span>
-                ))}
+                  );
+                })}
               </span>
             </li>
           ))}
@@ -555,30 +463,40 @@ function ForkCompare({ phase }: { phase: Phase }) {
 // Summit
 
 function SummitSkills() {
-  const dev = TRACK_COLORS.developer;
-  const eng = TRACK_COLORS.engineer;
   return (
     <div className="flex flex-col gap-5">
-      <Card tint={dev.light}>
-        <h3 className="font-extrabold">🟢 AI Developer final skill set</h3>
-        <div className="mt-2">
-          <Chips items={DEVELOPER_FINAL_SKILLS.foundation} track="developer" />
-          <div className="my-1 text-center text-lg font-black">+</div>
-          <Chips items={DEVELOPER_FINAL_SKILLS.ai} track="developer" />
-        </div>
-        <p className="mt-3 text-sm">
-          Capable of taking <b>“{DEVELOPER_FINAL_SKILLS.challenge}”</b> {DEVELOPER_FINAL_SKILLS.outcome}
-        </p>
-      </Card>
-      <Card tint={eng.light}>
-        <h3 className="font-extrabold">🔵 AI Engineer: excellent at</h3>
-        <div className="mt-2">
-          <Chips items={DIFFERENCE.engineer.excellentAt} track="engineer" />
-        </div>
-        <p className="mt-3 text-sm">
-          <b>“{DIFFERENCE.engineer.quote}”</b>
-        </p>
-      </Card>
+      {CAREER_PATHS.map((p) => {
+        const fs = p.finalSkills;
+        return (
+          <Card key={p.id} tint={TRACK_COLORS[p.id].light}>
+            <h3 className="font-extrabold">
+              {p.emoji} {p.label}
+              {fs ? ' final skill set' : ': excellent at'}
+            </h3>
+            {fs ? (
+              <>
+                <div className="mt-2">
+                  <Chips items={fs.foundation} track={p.id} />
+                  <div className="my-1 text-center text-lg font-black">+</div>
+                  <Chips items={fs.ai} track={p.id} />
+                </div>
+                <p className="mt-3 text-sm">
+                  Capable of taking <b>“{fs.challenge}”</b> {fs.outcome}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="mt-2">
+                  <Chips items={p.excellentAt} track={p.id} />
+                </div>
+                <p className="mt-3 text-sm">
+                  <b>“{p.quote}”</b>
+                </p>
+              </>
+            )}
+          </Card>
+        );
+      })}
       <Card>
         <p className="text-sm font-semibold">{ENTRY_POINT_NOTE}</p>
       </Card>
@@ -589,13 +507,14 @@ function SummitSkills() {
 function SummitTimelines() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        {TIMELINES.map((tl) => {
-          const c = TRACK_COLORS[tl.track];
+      <div className="grid gap-4 sm:grid-cols-(--cols)" style={PATH_COLS}>
+        {CAREER_PATHS.map((p) => {
+          const tl = p.timeline;
+          const c = TRACK_COLORS[p.id];
           return (
-            <Card key={tl.track} tint={c.light}>
+            <Card key={p.id} tint={c.light}>
               <h3 className="font-extrabold">
-                {tl.track === 'developer' ? '🟢 AI Developer' : '🔵 AI Engineer'}
+                {p.emoji} {p.label}
                 <span className="ml-2 text-sm">{tl.total}</span>
               </h3>
               <ol className="mt-2 flex flex-col">
@@ -671,15 +590,7 @@ function SummitBuild() {
                   <span
                     key={r}
                     className="min-w-0 flex-1 rounded-xl border-[3px] px-2 py-1.5 text-center text-sm font-bold"
-                    style={{
-                      borderColor: INK,
-                      background:
-                        r === 'AI Developer' || r === 'AI Apps'
-                          ? TRACK_COLORS.developer.light
-                          : r === 'AI Engineer' || r === 'ML/DL' || r === 'AI Systems'
-                            ? TRACK_COLORS.engineer.light
-                            : TRACK_COLORS.meta.light,
-                    }}
+                    style={{ borderColor: INK, background: rungColor(r) }}
                   >
                     {r}
                   </span>

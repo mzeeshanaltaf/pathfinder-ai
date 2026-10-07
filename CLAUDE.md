@@ -4,7 +4,7 @@
 
 Branding stays career-agnostic. v1 covers the AI Developer and AI Engineer paths, but the app should grow into other AI career paths (e.g. Forward Deployed Engineer). Keep names, copy and the `Track` / data model free of assumptions that only two paths exist.
 
-A cartoonish, first-person 3D browser world where learners *walk* the AI Developer / AI Engineer roadmap instead of reading a document. Each roadmap phase is a floating island with a landmark. Learners collect **Skill Gems** (topics), play a short **mini-game** per phase to earn a **badge**, track real-world **projects**, and watch their **Skill Passport** fill up. The aim is engagement: give learners reasons to come back.
+A cartoonish, third-person 3D browser world where learners *walk* the AI Developer / AI Engineer roadmap as a little explorer instead of reading a document. Each roadmap phase is a floating island with a landmark. Learners collect **Skill Gems** (topics), play a short **mini-game** per phase to earn a **badge**, track real-world **projects**, and watch their **Skill Passport** fill up. The aim is engagement: give learners reasons to come back.
 
 ## Session workflow (read first)
 The project is built in phases, **one phase per Claude Code session**.
@@ -26,13 +26,15 @@ The project is built in phases, **one phase per Claude Code session**.
 | 3 | [phase-3-minigame-framework.md](docs/plan/phase-3-minigame-framework.md) |
 | 4 | [phase-4-concept-simulations.md](docs/plan/phase-4-concept-simulations.md) |
 | 5 | [phase-5-polish-engagement-and-finale.md](docs/plan/phase-5-polish-engagement-and-finale.md) |
+| 6 | [phase-6-third-person-and-roadmap.md](docs/plan/phase-6-third-person-and-roadmap.md) |
 
 **Content source of truth:** [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md). All topics, durations, projects, comparison stars and timelines come from it. Don't invent roadmap content. Short explanatory "bites" for topics are the only authored additions.
 
 ## Locked decisions
 - **Theme:** floating island village in a pastel cartoon sky. Islands are joined by plank/rope bridges.
-- **View:** first person. Desktop uses WASD + mouse (pointer lock). Mobile uses a touch joystick plus drag-to-look, and is a first-class target.
-- **Interactivity:** explore, with a mini-game per phase. Mini-games are HTML overlay panels (the game pauses and pointer lock is released).
+- **View:** third person. A low-poly explorer kid (`components/player/Avatar.tsx`) with a damped camera behind it that pulls in when a wall is in the way. (Phases 1–5 were first person; changed in Phase 6.)
+- **Controls:** keyboard tank steering. W/↑ forward, S/↓ back (slower), A/← and D/→ turn. **No mouse-look and no pointer lock**, so the mouse is free for the HUD. Mobile is joystick only (stick Y walks, stick X turns, the rim sprints; no drag-to-look) and is a first-class target.
+- **Interactivity:** explore, with a mini-game per phase. Mini-games are HTML overlay panels (the game pauses).
 - **Stack:** Next.js (App Router, TypeScript, Tailwind) + `@react-three/fiber` + `@react-three/drei` + `@react-three/rapier` + `zustand`.
 - **Persistence:** localStorage only (zustand `persist`). No backend and no accounts.
 - **No hard locks:** every island is reachable from the start. Progress guides through lit bridges, a compass and a "suggested next", never through gates. This follows the doc's advice not to force the Developer/Engineer choice early.
@@ -73,9 +75,11 @@ app/                 layout.tsx, page.tsx (dynamic import, ssr:false), globals.c
 components/Game.tsx  Canvas + Physics + lights + sky + World + Player; HUD mounted outside Canvas
 components/world/    Island, Bridge (+ LitBridges), Landmark (wrapper), landmarks/* (one file per type + kit.tsx + index.ts registry),
                      SkillGem, Mentor, ChallengePedestal, Balloons (docks) + BalloonTravel, Finale, Clouds
-components/player/   Player (rapier kinematic character controller), useInput, MobileControls
-components/ui/       HUD, Compass, InteractPrompt, PhasePanel, GemToast, NoticeToast, Passport, Minimap, Onboarding, WelcomeBack,
-                     Settings, FinaleOverlay, Certificate, CinematicOverlay, SessionManager, Sheet, ByteAvatar, Logo
+components/player/   Player (rapier kinematic character controller + third-person camera rig), Avatar, useInput, MobileControls
+components/ui/       HUD, Compass, ControlsHint, InteractPrompt, PhasePanel, GemToast (sticky gem card), NoticeToast, Passport,
+                     RoadmapTab + RoadmapPrint (Passport → Roadmap, print / PDF), roadmapParts (blocks shared with PhasePanel),
+                     Minimap, Onboarding, WelcomeBack, Settings, FinaleOverlay, Certificate, CinematicOverlay, SessionManager,
+                     Sheet, ByteAvatar, Logo
 components/minigames/ registry.ts, MiniGameHost.tsx, engines (PipelineOrder, SortBins, Quiz); sims/ = 12 bespoke sims + simKit.tsx
 data/roadmap.ts      typed roadmap content (phases, topics + bites, projects, comparison, timelines)
 data/world.ts        island positions, sizes, landmark type, bridges, spawn/checkpoints, interaction radii
@@ -91,7 +95,13 @@ lib/                 helpers (palette, toon gradient, random, worldLayout), prog
 ## Core contracts (keep stable across phases)
 ```ts
 // data/roadmap.ts
-export type Track = 'meta' | 'common' | 'developer' | 'engineer';
+export const PATH_IDS = ['developer', 'engineer'] as const;  export type PathId = typeof PATH_IDS[number];
+export type Track = 'meta' | 'common' | PathId;
+// Career-path registry (Phase 6): CAREER_PATHS: CareerPath[] (+ CAREER_PATH_BY_ID), each
+// { id, label, pathLabel, emoji, definition, goal, quote, excellentAt, finalSkills?, timeline, ladderRung, ladderBranches? }.
+// TRACK_LABELS for paths derive from pathLabel. ROADMAP_SHAPE = { trunk, branches: Record<PathId, string[]>, converge }.
+// ComparisonRow = { area; stars: Partial<Record<PathId, Stars>> } (missing → "—"). DEFINITIONS keeps only `shared`.
+// UI never hardcodes 'developer' | 'engineer': loop over CAREER_PATHS / PATH_IDS (README has the new-path checklist).
 export type PhaseId = 'harbor' | 'code-village' | /* ...all ids in the table above */ 'summit';
 export interface Topic { id: string; label: string; bite: string }            // bite = 1–2 sentence plain-English explanation
 export interface TopicGroup { title: string; topics: Topic[] }
@@ -120,8 +130,8 @@ settings: { muted: boolean; sensitivity: number; invertY: boolean; quality: 'aut
 achievements: Record<string, string>;  // id → ISO date unlocked (definitions in lib/progress.ts)
 playerName: string; byteHat: string; finaleSeen: boolean;
 
-// store/ui.ts (not persisted)
-mode: 'explore' | 'panel' | 'minigame' | 'passport' | 'menu' | 'cinematic';  // cinematic keeps pointer lock
+// store/ui.ts (not persisted; there is no pointerLocked: pointer lock was removed in Phase 6)
+mode: 'explore' | 'panel' | 'minigame' | 'passport' | 'menu' | 'cinematic';  // cinematic: Player skips its camera rig
 menu: 'onboarding' | 'welcome' | 'settings' | 'finale' | 'certificate' | null;  // which card mode 'menu' shows
 cinematic: { kind: 'balloon'; to: PhaseId } | { kind: 'finale' } | null;     // scripted camera (Player skips its camera)
 nearbyPhaseId: PhaseId | null;   // landmark within interact range (drives the E prompt)
@@ -131,8 +141,14 @@ currentIsland: PhaseId | null;   // island the player is standing on (HUD)
 activePhaseId: PhaseId | null;   // phase shown by the panel / mini-game host
 miniGameResult: { phaseId; score; stars; prevStars; best } | null;  // host shows the result screen
 notices: Notice[]; perfTier: 0 | 1 | 2;  // achievement/streak toasts; auto-quality tier
+gemCard: string | null;          // sticky gem card: showGemCard(id) replaces it, closeGemCard() (✕ / Esc)
+panelFrom: 'passport' | null;    // openPanel(id, 'passport') → "← Passport"; Esc / backdrop → backToPassport()
+passportTab: 'map' | 'roadmap' | 'journey' | 'awards'; passportSelected: PhaseId | null; roadmapPath: PathId | null;
+// openPassport(tab?) resets the selection to currentIsland (P, 📖, 📜, docks); closeOverlay() clears panelFrom.
 // progress.awardBadge(id, stars) keeps the best stars; mini-games finish via finishMiniGame() in components/minigames/complete.ts
 // Travel: requestTravel(id) (components/player/playerState.ts) → BalloonTravel flies to the island's dock.
+// playerControl.teleport(x, feetY, z, yaw?, { snap? }) cuts the camera unless snap: false (balloon landing blends);
+// playerControl.face(yaw). playerPose.yaw = facing. InputFrame = { moveY, turn, sprint, jump, interact }.
 
 // components/minigames/types.ts  (MiniGameId = EngineId | SimId in data/minigames.ts; sim configs in data/sims.ts; lazy loaders in registry.ts)
 export interface MiniGameProps<C = unknown> {
@@ -143,8 +159,8 @@ export interface MiniGameProps<C = unknown> {
 ```
 
 ## Conventions & gotchas
-- **SSR off for the game.** `app/page.tsx` is a client component that loads `components/Game` via `next/dynamic(..., { ssr: false })`. The game uses `window`, pointer lock, WASM (rapier) and localStorage. Skipping this causes hydration mismatch and dead UI.
-- **Input gating.** Player movement and look only run while `ui.mode === 'explore'`. Opening any panel calls `document.exitPointerLock()`. Closing it returns to explore, and on desktop pointer lock is re-requested on the next click.
+- **SSR off for the game.** `app/page.tsx` is a client component that loads `components/Game` via `next/dynamic(..., { ssr: false })`. The game uses `window`, WASM (rapier) and localStorage. Skipping this causes hydration mismatch and dead UI.
+- **Input gating.** Player movement and turning only run while `ui.mode === 'explore'`. Opening any panel switches the mode; closing it (`resumeExplore()` / `closeOverlay()`) returns to explore. There is no pointer lock to manage.
 - **No React state in `useFrame`.** Use refs for per-frame values. Write to zustand only on discrete events (gem collected, entered island radius).
 - **Mobile parity.** Every interaction needs a touch path: the Interact button, panels with big tap targets, no hover-only UI. Overlays must not scroll horizontally at 375px width.
 - **Performance budget:** ~60 fps on a mid laptop. Clamp dpr to [1, 1.75] and use drei `PerformanceMonitor` to drop quality. Instance repeated props (trees, rocks, gems). Use one shadow-casting directional light.

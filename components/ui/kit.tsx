@@ -3,16 +3,21 @@
 import { Fragment, type ReactNode } from 'react';
 import { allGemIds, gemsForPhase, PHASE_IDS, TRACK_LABELS, type PhaseId, type Track } from '@/data/roadmap';
 import { TRACK_COLORS } from '@/lib/palette';
-import { requestGameLock } from '@/lib/pointerLock';
+import { requestTravel } from '@/components/player/playerState';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
 
 export const INK = '#3d3452';
 
-/** Close any overlay and, on desktop, re-grab the mouse straight away (only works from a click/tap). */
+/** Close any overlay and go back to exploring. */
 export function resumeExplore() {
   useUi.getState().closeOverlay();
-  requestGameLock();
+}
+
+/** Fly to an island by balloon (closes any overlay). */
+export function flyTo(id: PhaseId) {
+  requestTravel(id);
+  resumeExplore();
 }
 
 /** Gems found / total for one phase (re-renders only when the count changes). */

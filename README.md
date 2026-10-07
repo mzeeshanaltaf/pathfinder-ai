@@ -2,11 +2,11 @@
 
 *Find your path into AI.*
 
-Pathfinder AI is a cartoon, first-person 3D world in the browser. Instead of reading an AI career roadmap, you **walk** it. Each roadmap phase is a floating island with its own animated landmark:
+Pathfinder AI is a cartoon 3D world in the browser. Instead of reading an AI career roadmap, you **walk** it as a little explorer, with the camera behind you. Each roadmap phase is a floating island with its own animated landmark:
 
 - A shared trunk covers programming, maths and ML fundamentals.
 - At the Fork, the **AI Developer** path (green) and the **AI Engineer** path (blue) split.
-- Both paths meet again at the Summit, where a hologram shows a production AI architecture.
+- The paths meet again at the Summit, where a hologram shows a production AI architecture.
 
 On every island you can:
 
@@ -18,6 +18,7 @@ On every island you can:
 Your **Skill Passport** gathers all of this in one place:
 
 - a map of every island
+- the **full roadmap** of a career path, phase by phase, which you can print or save as a PDF
 - a job-ready meter for each path
 - your achievements
 - a certificate once you reach the Summit
@@ -38,13 +39,17 @@ Requires Node 20+. Nothing is fetched at runtime: there's no backend and no acco
 
 ## Controls
 
+The view moves only with the keyboard or the stick: there is no mouse-look and no pointer lock, so the HUD buttons always work with the mouse.
+
 | | Desktop | Touch |
 |---|---|---|
-| Move | WASD / arrows | Drag on the left half (floating joystick) |
-| Look | Mouse (click to lock, Esc to release) | Drag on the right half |
+| Walk forward / back | W S or ↑ ↓ | Push the stick up / down (it appears wherever you touch) |
+| Turn left / right | A D or ← → | Push the stick left / right |
 | Jump / sprint | Space / Shift | JUMP button / push the stick to the rim |
 | Explore a landmark, play a Challenge, fly from a balloon dock | E | E button or the tap pill |
-| Skill Passport | P | 📖 |
+| Skill Passport / full roadmap | P / 📜 | 📖 / 📜 |
+| Close a panel or the gem card | Esc (from an island guide opened in the Passport, Esc goes back to the Passport) | ✕ |
+| Controls hint | H or ⌨ | |
 | Sound on/off | M | 🔊 |
 | Settings | ⚙️ | ⚙️ |
 | Skip a balloon flight or the finale | Space / Enter / Esc | Skip button |
@@ -61,9 +66,11 @@ Requires Node 20+. Nothing is fetched at runtime: there's no backend and no acco
 - **Guidance.** A compass points to the suggested next island and its distance. Bridges glow once you've earned the badge for the island they lead from. The minimap rings your next stop.
 - **Hot-air balloons.** Each island has a balloon dock, and the Passport's "Fly here" button lifts you into a short, skippable flight.
 - **Coming back.** Byte greets first-time players with an onboarding tour that ends in the Harbor tutorial. Returning players get a welcome-back card. A daily streak unlocks hats for Byte at 3, 7 and 30 days. There are 11 achievements.
+- **Gem cards.** Each gem you pick up shows a card with its explanation. It stays until you close it (✕ or Esc), and the next gem replaces it.
+- **Full roadmap.** The 📜 button (or the Passport's Roadmap tab) lists every phase, topic, tool and project of a path, with your progress ticked. Each phase links to its island guide and a balloon ride. *Print / Save as PDF* prints a plain ink-on-white version through the browser's print dialog.
 - **Job-ready meter.** Estimates the months left on each path from the doc's timelines. Built projects weigh most: *projects matter more than completing a calendar schedule*.
 - **Finale.** Reaching the Summit with its badge plays a short celebration: fireworks and a fly-around of the hologram. Then comes an interactive career ladder and a certificate you can download as a PNG or print.
-- **Settings.** Look sensitivity, invert Y, graphics quality (auto/low/high), sound, Byte's hat, the name on your certificate, and Reset progress (asks to confirm).
+- **Settings.** Turn speed, graphics quality (auto/low/high), sound, Byte's hat, the name on your certificate, and Reset progress (asks to confirm).
 
 **Performance.** Static landmark parts are merged into one mesh each. Repeated props are instanced. Small details, captions, signs, mentors and pedestals are hidden when far away. drei's `PerformanceMonitor` lowers the quality on slow devices: first the pixel ratio, then shadows, half the clouds and the flowers. Phones start one tier down.
 
@@ -82,11 +89,13 @@ components/world/    islands, bridges (+ LitBridges), signs, scenery, gems, ment
                      balloon docks + BalloonTravel, Finale (fireworks + fly-around), clouds
 components/world/landmarks/
                      one file per landmark + kit (merged static meshes, captions, culling) + index (registry)
-components/player/   kinematic character controller, input, touch controls, shared player state
-components/ui/       HUD, compass, Passport, phase panel, onboarding, welcome back, settings,
-                     finale card, certificate, toasts, loading screen
+components/player/   kinematic character controller + third-person camera rig, Avatar (explorer kid),
+                     input (keyboard tank steering), touch joystick, shared player state
+components/ui/       HUD, compass, controls hint, Passport (+ RoadmapTab, RoadmapPrint), phase panel,
+                     roadmapParts (shared roadmap blocks), onboarding, welcome back, settings,
+                     finale card, certificate, gem card + toasts, loading screen
 components/minigames/ host, lazy registry, engines, sims/
-data/                roadmap.ts (content), world.ts (islands + bridges), minigames.ts, sims.ts
+data/                roadmap.ts (content + CAREER_PATHS registry), world.ts (islands + bridges), minigames.ts, sims.ts
 lib/                 progress.ts (suggested next, job-ready, achievements, streak), audio.ts,
                      certificate.ts, landmarkKit.ts, materials.ts, worldLayout.ts, palette…
 store/               progress.ts (persisted, versioned), ui.ts
@@ -95,22 +104,29 @@ docs/                roadmap source doc + per-phase plans; status.md tracks prog
 
 ## Adding a roadmap or a new career path
 
-The world is data-driven, so most of the work is in `data/`:
+The world is data-driven. Career paths live in one registry, and TypeScript points at every place that still needs an entry for a new path. A temporary third path was added and removed this way in Phase 6, and it needed no UI changes.
 
-1. **Content (`data/roadmap.ts`)**
-   - Add the phase ids to `PHASE_IDS`.
-   - Add a `Phase` for each id: track, title, summary, topic groups with short bites, project, mentor lines.
-   - For a new career path, also add a `Track` value and a `TRACK_LABELS` entry.
-2. **Colours (`lib/palette.ts`)**: a new track needs `TRACK_COLORS` and `GEM_COLORS` entries.
-3. **World (`data/world.ts`)**
-   - Add an `island(...)` per phase, with a position, radius and `LandmarkType`.
-   - Chain the islands with `BRIDGES`.
-   - Landmarks, mentors, Challenge pedestals, balloon docks, signs and Skill Gems are placed automatically by `lib/worldLayout.ts`.
-4. **Landmark (`components/world/landmarks/`)**: reuse an existing `LandmarkType`, or add a component and register it in `landmarks/index.ts` with its label height and colliders.
-5. **Challenge (`data/minigames.ts`)**: give each phase a mini-game. It can be an engine config (pipeline order, sort bins, quiz) or one of the simulations in `data/sims.ts`.
-6. **Guidance (`lib/progress.ts`)**
-   - Add the path to `PATH_TRACKS`.
-   - Map its timeline steps to islands in `TIMELINE_PHASES`, so the compass and the job-ready meter include it.
-   - The new path also needs a `TIMELINES` entry in `data/roadmap.ts`.
+**Checklist for a new career path** (e.g. AI Forward Deployed Engineer):
 
-Saved progress is keyed by stable phase ids. If ids are ever renamed, bump `PROGRESS_VERSION` in `store/progress.ts` and migrate.
+1. **`data/roadmap.ts`**
+   - [ ] Add the id to `PATH_IDS`. This extends `PathId` and `Track`.
+   - [ ] Add its phase ids to `PHASE_IDS`, and a `Phase` for each with `track` set to the new id (title, subtitle, summary, topic groups with bites, tools, project, mentor lines).
+   - [ ] Add a `CareerPath` to `CAREER_PATHS`: `label`, `pathLabel`, `emoji`, `definition`, `goal`, `quote`, `excellentAt`, optional `finalSkills`, `timeline`, and the `ladderRung` it earns in `CAREER_LADDER` (plus optional `ladderBranches`).
+   - [ ] Add its branch to `ROADMAP_SHAPE.branches`.
+   - [ ] Optionally add its stars to the `COMPARISON` rows. `stars` is per path; a path missing from a row shows "—".
+   - A dev-only check fails if a path has no `CareerPath`, no phases, no timeline steps or an unknown ladder rung.
+2. **`lib/palette.ts`**: `TRACK_COLORS` and `GEM_COLORS` entries (the compiler asks for them).
+3. **`data/world.ts`**: an `island(...)` per phase (position, radius, `LandmarkType`) and a `BRIDGES` chain from `'fork'` through the path to `'summit'`.
+   - The Fork's bridge sign and signpost arm are derived from the path's first island.
+   - Landmarks, mentors, pedestals, docks, signs and gems are placed by `lib/worldLayout.ts`.
+4. **Landmarks** (`components/world/landmarks/`): reuse a `LandmarkType`, or add a component and register it in `landmarks/index.ts`.
+5. **`data/minigames.ts`**: a Challenge per new phase. `MINIGAMES` is a `Record<PhaseId, …>`, so the compiler asks. The Fork's personality quiz is written for two paths: re-author its questions and outcomes for the new one.
+6. **`lib/progress.ts`**: map each timeline step to islands in `TIMELINE_PHASES`. It is a `Record<PathId, …>`, and a dev check compares the step count.
+
+Everything else picks the path up from the registry: the compass, the job-ready meter, achievements, the Passport columns, the Roadmap tab, the Fork comparison, the Summit tabs, the onboarding cards, the finale ladder and the balloons.
+
+Mentor lines (Byte, Compass at the Fork) and the Harbor / Fork / Summit summaries are authored text. Update them if they should mention the new path.
+
+**A new phase on an existing path** needs a phase id and `Phase` (step 1), an island (step 3), a landmark (step 4), a Challenge (step 5) and its `TIMELINE_PHASES` mapping.
+
+Saved progress is keyed by stable phase ids. If ids are ever renamed, bump the version in `store/progress.ts` and migrate.

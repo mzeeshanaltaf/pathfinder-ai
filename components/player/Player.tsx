@@ -9,12 +9,13 @@ import {
   type RapierCollider,
   type RapierRigidBody,
 } from '@react-three/rapier';
-import { Euler, Vector3 } from 'three';
+import { Vector3 } from 'three';
+import type { Ray } from '@dimforge/rapier3d-compat';
 import { MINIGAMES } from '@/data/minigames';
 import type { PhaseId } from '@/data/roadmap';
 import { BRIDGES, CHALLENGE_RADIUS, DOCK_INTERACT_RADIUS, INTERACT_RADIUS, ISLAND_BY_ID, ISLANDS, RESPAWN_Y } from '@/data/world';
 import { sfx } from '@/lib/audio';
-import { hasQueryFlag, isCoarsePointer } from '@/lib/device';
+import { hasQueryFlag } from '@/lib/device';
 import {
   challengePosition,
   dockPosition,
@@ -26,6 +27,7 @@ import {
 } from '@/lib/worldLayout';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
+import Avatar, { type AvatarHandle } from './Avatar';
 import { playerControl, playerEvents, playerPose } from './playerState';
 import { useInput } from './useInput';
 
@@ -33,7 +35,6 @@ import { useInput } from './useInput';
 const CAPSULE_RADIUS = 0.35;
 const CAPSULE_HALF = 0.5;
 const CENTER_HEIGHT = CAPSULE_HALF + CAPSULE_RADIUS;
-const EYE_HEIGHT = 1.6;
 
 const WALK_SPEED = 5.5;
 const SPRINT_SPEED = 9.5;
@@ -46,7 +47,31 @@ const MAX_FALL_SPEED = 55;
 const COYOTE_TIME = 0.12;
 /** A jump pressed slightly before landing still fires. */
 const JUMP_BUFFER = 0.15;
-const PITCH_LIMIT = 1.45;
+/** Walking backwards is slower. */
+const BACK_SPEED = 0.6;
+/** Turning (rad/s at sensitivity 1); the turn rate eases in so a tap nudges and a hold turns smoothly. */
+const TURN_SPEED = 2.4;
+const TURN_EASE = 10;
+/** How fast the avatar's body swings round to the facing direction. */
+const AVATAR_TURN = 14;
+
+/** Third-person camera rig. */
+const CAM = {
+  /** Look-at height above the feet. */
+  targetH: 1.45,
+  back: 4.2,
+  up: 1.6,
+  /** Look at a point this far ahead of the target (a slight downward tilt). */
+  ahead: 2,
+  /** Position damping (1/s): the camera lags a little behind turns. */
+  damp: 10,
+  /** Occlusion: stop `pad` in front of a hit, never closer than `min`; hide the avatar under `hide`. */
+  pad: 0.3,
+  min: 0.8,
+  hide: 1.2,
+  /** Pull-out speed (1/s) once an obstacle clears. */
+  release: 4,
+};
 
 export const RESPAWN_FADE_MS = 350;
 
@@ -91,24 +116,24 @@ function firstVisitYaw(): number {
 }
 
 export default function Player() {
-  const { world } = useRapier();
+  const { world, rapier } = useRapier();
   const camera = useThree((s) => s.camera);
   const readInput = useInput();
 
   const [spawn] = useState(spawnPoint);
-  const [isTouch] = useState(isCoarsePointer);
 
   const bodyRef = useRef<RapierRigidBody>(null);
   const colliderRef = useRef<RapierCollider>(null);
   const controllerRef = useRef<CharacterController | null>(null);
+  const avatar = useRef<AvatarHandle>(null);
 
   // Per-frame state lives in refs (never React state).
   const pos = useRef(spawn.clone());
   const vel = useRef(new Vector3());
   const desired = useRef(new Vector3());
   const [initialYaw] = useState(firstVisitYaw);
-  const look = useRef({ yaw: initialYaw, pitch: 0 });
-  const euler = useRef(new Euler(0, 0, 0, 'YXZ'));
+  /** Facing (yaw 0 = −Z), eased turn rate, and the avatar body's own (lagging) yaw. */
+  const look = useRef({ yaw: initialYaw, turn: 0, bodyYaw: initialYaw });
   const timers = useRef({ coyote: 0, jumpBuffer: 0 });
   const grounded = useRef(false);
   const currentIsland = useRef<PhaseId | null>(null);
@@ -119,6 +144,9 @@ export default function Player() {
   const respawning = useRef(false);
   const pendingTeleport = useRef(false);
   const fadeTimer = useRef<number | undefined>(undefined);
+  /** Camera rig: damped position + look point, occlusion distance, and a one-shot snap (spawn, respawn, teleports). */
+  const rig = useRef({ pos: new Vector3(), look: new Vector3(), occl: Infinity, snap: true, dist: CAM.back });
+  const scratch = useRef({ target: new Vector3(), ideal: new Vector3(), lookGoal: new Vector3(), dir: new Vector3(), ray: null as Ray | null });
 
   useEffect(() => {
     const kcc = world.createCharacterController(0.05);
@@ -140,19 +168,18 @@ export default function Player() {
 
   // Scripted moves (balloon landing, finale framing).
   useEffect(() => {
-    playerControl.teleport = (x, feetY, z, yaw) => {
+    playerControl.teleport = (x, feetY, z, yaw, opts) => {
       pos.current.set(x, feetY + CENTER_HEIGHT, z);
       vel.current.set(0, 0, 0);
       bodyRef.current?.setTranslation(pos.current, true);
       bodyRef.current?.setNextKinematicTranslation(pos.current);
-      if (yaw !== undefined) {
-        look.current.yaw = yaw;
-        look.current.pitch = 0;
-      }
+      if (yaw !== undefined) look.current.yaw = look.current.bodyYaw = yaw;
+      look.current.turn = 0;
+      // A balloon landing blends from the cinematic camera; everything else cuts straight to the new spot.
+      if (opts?.snap !== false) rig.current.snap = true;
     };
-    playerControl.face = (yaw, pitch = 0) => {
-      look.current.yaw = yaw;
-      look.current.pitch = pitch;
+    playerControl.face = (yaw) => {
+      look.current.yaw = look.current.bodyYaw = yaw;
     };
     return () => {
       playerControl.teleport = null;
@@ -171,22 +198,24 @@ export default function Player() {
         position: pos.current.toArray(),
         feetY: pos.current.y - CENTER_HEIGHT,
         yaw: look.current.yaw,
-        pitch: look.current.pitch,
         grounded: grounded.current,
         island: currentIsland.current,
+        camera: camera.position.toArray(),
+        /** Camera distance from the look target (shrinks when something is in the way). */
+        cameraDist: rig.current.dist,
+        avatarVisible: avatar.current?.group?.visible ?? false,
+        avatar: avatar.current?.pose(),
       }),
-      teleport: (x: number, feetY: number, z: number) => playerControl.teleport?.(x, feetY, z),
-      setLook: (yaw: number, pitch = 0) => {
-        look.current.yaw = yaw;
-        look.current.pitch = pitch;
-      },
+      teleport: (x: number, feetY: number, z: number, yaw?: number) => playerControl.teleport?.(x, feetY, z, yaw),
+      setLook: (yaw: number) => playerControl.face?.(yaw),
       /** Open a phase's mini-game at its intro card (tests drive each sim from there). */
       openGame: (id: PhaseId) => useUi.getState().openMiniGame(id),
+      openPanel: (id: PhaseId) => useUi.getState().openPanel(id),
     };
     return () => {
       delete w.__aiQuest;
     };
-  }, []);
+  }, [camera]);
 
   useFrame((_, rawDt) => {
     const body = bodyRef.current;
@@ -198,9 +227,10 @@ export default function Player() {
     const p = pos.current;
     const v = vel.current;
     const t = timers.current;
+    const L = look.current;
     const ui = useUi.getState();
     const input = readInput();
-    const active = ui.mode === 'explore' && (ui.pointerLocked || isTouch);
+    const active = ui.mode === 'explore';
 
     // Respawn teleport (scheduled once the screen is fully white).
     if (pendingTeleport.current) {
@@ -210,26 +240,24 @@ export default function Player() {
       v.set(0, 0, 0);
       body.setTranslation(p, true);
       body.setNextKinematicTranslation(p);
+      rig.current.snap = true;
       ui.setFading(false);
     }
 
-    // Look
-    if (active) {
-      const { sensitivity, invertY } = useProgress.getState().settings;
-      look.current.yaw -= input.lookX * sensitivity;
-      look.current.pitch -= input.lookY * sensitivity * (invertY ? -1 : 1);
-      look.current.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, look.current.pitch));
-    }
-    const { yaw, pitch } = look.current;
+    // Tank steering: A/D (or the stick's X) turn; the rate eases in and out.
+    const { sensitivity } = useProgress.getState().settings;
+    L.turn += ((active ? input.turn : 0) - L.turn) * (1 - Math.exp(-TURN_EASE * dt));
+    if (Math.abs(L.turn) < 1e-4) L.turn = 0;
+    L.yaw -= L.turn * TURN_SPEED * sensitivity * dt;
+    const yaw = L.yaw;
+    const fx = -Math.sin(yaw);
+    const fz = -Math.cos(yaw);
 
-    // Horizontal velocity, eased towards the input target.
-    const mx = active ? input.moveX : 0;
+    // Walk along the facing direction (no strafe); backwards is slower.
     const my = active ? input.moveY : 0;
-    const speed = input.sprint ? SPRINT_SPEED : WALK_SPEED;
-    const sin = Math.sin(yaw);
-    const cos = Math.cos(yaw);
-    const targetX = (cos * mx - sin * my) * speed;
-    const targetZ = (-sin * mx - cos * my) * speed;
+    const speed = (input.sprint && my > 0 ? SPRINT_SPEED : WALK_SPEED) * (my < 0 ? BACK_SPEED : 1);
+    const targetX = fx * my * speed;
+    const targetZ = fz * my * speed;
     const ease = 1 - Math.exp(-(grounded.current ? GROUND_ACCEL : AIR_ACCEL) * dt);
     v.x += (targetX - v.x) * ease;
     v.z += (targetZ - v.z) * ease;
@@ -254,23 +282,71 @@ export default function Player() {
     if (v.y > 0 && m.y < d.y * 0.5) v.y = 0; // bumped a ceiling
     p.set(p.x + m.x, p.y + m.y, p.z + m.z);
     body.setNextKinematicTranslation(p);
+    const moved = Math.hypot(m.x, m.z);
 
     // Footsteps: one soft tick per stride while walking on the ground.
     if (grounded.current && active) {
-      stepDist.current += Math.hypot(m.x, m.z);
+      stepDist.current += moved;
       if (stepDist.current > (input.sprint ? STRIDE * 1.3 : STRIDE)) {
         stepDist.current = 0;
         sfx.footstep(input.sprint);
       }
     }
 
-    // Camera at eye height (a cinematic drives the camera itself).
-    if (ui.mode !== 'cinematic') {
-      camera.position.set(p.x, p.y - CENTER_HEIGHT + EYE_HEIGHT, p.z);
-      camera.quaternion.setFromEuler(euler.current.set(pitch, yaw, 0, 'YXZ'));
+    const feetY = p.y - CENTER_HEIGHT;
+
+    // Avatar: feet at the body, body swings round to the facing direction, procedural animation.
+    const av = avatar.current;
+    if (av?.group) {
+      L.bodyYaw += Math.atan2(Math.sin(yaw - L.bodyYaw), Math.cos(yaw - L.bodyYaw)) * (1 - Math.exp(-AVATAR_TURN * dt));
+      av.group.position.set(p.x, feetY, p.z);
+      av.group.rotation.y = L.bodyYaw;
+      av.update(dt, { speed: moved / Math.max(dt, 1e-4), grounded: grounded.current, sprint: input.sprint && active, vy: v.y });
     }
 
-    const feetY = p.y - CENTER_HEIGHT;
+    // Camera rig (a cinematic drives the camera itself; the rig then damps from wherever it left it).
+    const r = rig.current;
+    const tmp = scratch.current;
+    if (ui.mode === 'cinematic') {
+      r.pos.copy(camera.position);
+      camera.getWorldDirection(tmp.dir);
+      r.look.copy(camera.position).addScaledVector(tmp.dir, CAM.back);
+      r.occl = Infinity;
+      if (av?.group) av.group.visible = ui.cinematic?.kind !== 'balloon';
+    } else {
+      const target = tmp.target.set(p.x, feetY + CAM.targetH, p.z);
+      const ideal = tmp.ideal.set(target.x - fx * CAM.back, target.y + CAM.up, target.z - fz * CAM.back);
+      const lookGoal = tmp.lookGoal.set(target.x + fx * CAM.ahead, target.y, target.z + fz * CAM.ahead);
+      if (r.snap) {
+        r.snap = false;
+        r.pos.copy(ideal);
+        r.look.copy(lookGoal);
+        r.occl = Infinity;
+      } else {
+        const k = 1 - Math.exp(-CAM.damp * dt);
+        r.pos.lerp(ideal, k);
+        r.look.lerp(lookGoal, k);
+      }
+      // Occlusion: cast from the target back towards the camera; snap in on a hit, ease back out once clear.
+      const dir = tmp.dir.subVectors(r.pos, target);
+      const len = dir.length();
+      let limit = len;
+      if (len > 1e-3) {
+        dir.divideScalar(len);
+        const ray = (tmp.ray ??= new rapier.Ray({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 }));
+        ray.origin = { x: target.x, y: target.y, z: target.z };
+        ray.dir = { x: dir.x, y: dir.y, z: dir.z };
+        const hit = world.castRay(ray, len + CAM.pad, true, rapier.QueryFilterFlags.EXCLUDE_SENSORS, undefined, collider, body);
+        if (hit) limit = Math.min(len, Math.max(CAM.min, hit.timeOfImpact - CAM.pad));
+      }
+      if (limit < r.occl) r.occl = limit;
+      else r.occl += (limit - r.occl) * (1 - Math.exp(-CAM.release * dt));
+      r.dist = Math.min(len, r.occl);
+      camera.position.copy(target).addScaledVector(dir, r.dist);
+      camera.lookAt(r.look);
+      if (av?.group) av.group.visible = r.dist >= CAM.hide;
+    }
+
     playerPose.x = p.x;
     playerPose.y = feetY;
     playerPose.z = p.z;
@@ -310,9 +386,9 @@ export default function Player() {
     }
     // Balloon dock (lowest priority: only when no pedestal is in range).
     let dock: PhaseId | null = null;
-    for (const d of DOCKS) {
-      if (Math.abs(feetY - d.y) < 3 && Math.hypot(p.x - d.x, p.z - d.z) < DOCK_INTERACT_RADIUS) {
-        dock = d.id;
+    for (const dk of DOCKS) {
+      if (Math.abs(feetY - dk.y) < 3 && Math.hypot(p.x - dk.x, p.z - dk.z) < DOCK_INTERACT_RADIUS) {
+        dock = dk.id;
         break;
       }
     }
@@ -322,7 +398,7 @@ export default function Player() {
     }
     if (input.interact && active) {
       if (challenge) ui.openMiniGame(challenge);
-      else if (dock) ui.setMode('passport');
+      else if (dock) ui.openPassport();
       else if (near) ui.openPanel(near);
     }
 
@@ -337,8 +413,11 @@ export default function Player() {
   });
 
   return (
-    <RigidBody ref={bodyRef} type="kinematicPosition" colliders={false} position={spawn.toArray()}>
-      <CapsuleCollider ref={colliderRef} args={[CAPSULE_HALF, CAPSULE_RADIUS]} />
-    </RigidBody>
+    <>
+      <RigidBody ref={bodyRef} type="kinematicPosition" colliders={false} position={spawn.toArray()}>
+        <CapsuleCollider ref={colliderRef} args={[CAPSULE_HALF, CAPSULE_RADIUS]} />
+      </RigidBody>
+      <Avatar ref={avatar} />
+    </>
   );
 }

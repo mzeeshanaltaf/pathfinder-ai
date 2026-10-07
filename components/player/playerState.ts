@@ -9,7 +9,7 @@ export const playerPose = {
   /** Feet height. */
   y: 0,
   z: 0,
-  /** Camera yaw (0 = looking towards −Z). */
+  /** Facing yaw (0 = facing −Z); the third-person camera sits behind it. */
   yaw: 0,
 };
 
@@ -20,10 +20,13 @@ export const playerEvents = {
 
 /** Imperative hooks the Player registers for scripted moves (balloon landing, finale). */
 export const playerControl: {
-  /** Move the player's feet to (x, feetY, z); optionally set the look direction (pitch resets to 0). */
-  teleport: ((x: number, feetY: number, z: number, yaw?: number) => void) | null;
-  /** Turn the view without moving. */
-  face: ((yaw: number, pitch?: number) => void) | null;
+  /**
+   * Move the player's feet to (x, feetY, z); optionally set the facing. The camera cuts to the new spot
+   * unless `snap: false` (a balloon landing blends from the cinematic camera instead).
+   */
+  teleport: ((x: number, feetY: number, z: number, yaw?: number, opts?: { snap?: boolean }) => void) | null;
+  /** Turn to face a direction without moving. */
+  face: ((yaw: number) => void) | null;
 } = { teleport: null, face: null };
 
 let travelRequest: PhaseId | null = null;

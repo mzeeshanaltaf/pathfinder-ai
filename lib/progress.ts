@@ -3,26 +3,44 @@
 
 import {
   BUILD_PROJECTS,
+  CAREER_PATH_BY_ID,
   gemsForPhase,
   getPhase,
+  PATH_IDS,
   PHASE_IDS,
-  TIMELINES,
+  TRACK_LABELS,
   trackPhases,
+  type PathId,
   type PhaseId,
   type Track,
 } from '@/data/roadmap';
 import type { ProgressData } from '@/store/progress';
 
-/** A career path (every track except the shared ones). A new path is a new Track value plus its data. */
-export type PathTrack = Exclude<Track, 'meta' | 'common'>;
+/** A career path (every track except the shared ones). Alias of PathId from the registry. */
+export type PathTrack = PathId;
 
-/** Career paths in default order: the doc recommends AI Developer as the entry point. */
-export const PATH_TRACKS: PathTrack[] = ['developer', 'engineer'];
+/** Career paths in default order (CAREER_PATHS order: the doc recommends AI Developer as the entry point). */
+export const PATH_TRACKS: readonly PathTrack[] = PATH_IDS;
 
 /** The shared trunk, in walking order (the Harbor tutorial is part of onboarding, not the trunk). */
 export const TRUNK: PhaseId[] = ['code-village', 'math-mountain', 'ml-meadow', 'fork'];
 
 export const PATH_PHASES = Object.fromEntries(PATH_TRACKS.map((t) => [t, trackPhases(t).map((p) => p.id)])) as Record<PathTrack, PhaseId[]>;
+
+export interface RoadmapSection {
+  title: string;
+  track: Track;
+  ids: PhaseId[];
+}
+
+/** A path's whole roadmap in walking order: the common trunk (to the Fork), the path's phases, then the Summit. */
+export function roadmapSections(path: PathTrack): RoadmapSection[] {
+  return [
+    { title: TRACK_LABELS.common, track: 'common', ids: TRUNK },
+    { title: CAREER_PATH_BY_ID[path].pathLabel, track: path, ids: PATH_PHASES[path] },
+    { title: 'Where the paths converge', track: 'meta', ids: ['summit'] },
+  ];
+}
 
 const gemFraction = (p: Pick<ProgressData, 'gems'>, id: PhaseId) => {
   const ids = gemsForPhase(id);
@@ -67,7 +85,7 @@ export function suggestedNext(p: Pick<ProgressData, 'gems' | 'badges'>): PhaseId
 // ---------------------------------------------------------------------------
 // Job-ready meter
 
-/** Which islands teach each step of the doc's timelines (same order as TIMELINES[track].steps). */
+/** Which islands teach each step of the doc's timelines (same order as CAREER_PATH_BY_ID[track].timeline.steps). */
 const TIMELINE_PHASES: Record<PathTrack, PhaseId[][]> = {
   developer: [
     ['code-village'],
@@ -89,7 +107,7 @@ const TIMELINE_PHASES: Record<PathTrack, PhaseId[][]> = {
   ],
 };
 
-/** "Production AI: Complete SaaS" has no island of its own; it belongs to the final step of both paths. */
+/** "Production AI: Complete SaaS" has no island of its own; it belongs to the final step of every path. */
 const FINAL_STEP_EXTRA_PROJECTS = BUILD_PROJECTS.filter((b) => !b.phaseId).map((b) => b.projectId);
 
 /** "Months 1–2" → 2, "Month 5" → 1, "Months 16–18" → 3. */
@@ -125,7 +143,7 @@ export interface JobReadyEstimate {
 const PROJECT_WEIGHT = 0.65;
 
 export function jobReady(p: Pick<ProgressData, 'gems' | 'badges' | 'projects'>, track: PathTrack): JobReadyEstimate {
-  const timeline = TIMELINES.find((t) => t.track === track)!;
+  const timeline = CAREER_PATH_BY_ID[track].timeline;
   const groups = TIMELINE_PHASES[track];
   const steps: JobReadyStep[] = timeline.steps.map((step, i) => {
     const phases = groups[i] ?? [];
@@ -157,8 +175,8 @@ export function jobReady(p: Pick<ProgressData, 'gems' | 'badges' | 'projects'>, 
 }
 
 if (process.env.NODE_ENV !== 'production') {
-  for (const t of TIMELINES) {
-    if (TIMELINE_PHASES[t.track].length !== t.steps.length) throw new Error(`jobReady: ${t.track} timeline step count mismatch`);
+  for (const t of PATH_TRACKS) {
+    if (TIMELINE_PHASES[t].length !== CAREER_PATH_BY_ID[t].timeline.steps.length) throw new Error(`jobReady: ${t} timeline step count mismatch`);
   }
 }
 
@@ -191,8 +209,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'both-paths',
     icon: '🔀',
-    title: 'Both Paths Explored',
-    text: 'Earn a badge on the Developer path and on the Engineer path.',
+    title: 'All Paths Explored',
+    text: 'Earn a badge on every career path.',
     check: (p) => PATH_TRACKS.every((t) => badgeAny(p, PATH_PHASES[t])),
   },
   {

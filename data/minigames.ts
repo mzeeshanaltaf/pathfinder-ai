@@ -5,7 +5,7 @@
 // Seven phases use the reusable engines (pipeline-order, sort-bins, quiz, tutorial). The other
 // thirteen use the bespoke concept simulations; their configs and content live in data/sims.ts.
 
-import { DIFFERENCE, ENTRY_POINT_NOTE, PHASES, type PhaseId, type Track } from '@/data/roadmap';
+import { CAREER_PATH_BY_ID, ENTRY_POINT_NOTE, PHASES, type PhaseId, type Track } from '@/data/roadmap';
 import {
   ATTENTION_BEAMS,
   BATCHING,
@@ -134,7 +134,7 @@ export const MINIGAMES: Record<PhaseId, MiniGameDef> = {
     id: 'tutorial',
     title: 'First Steps',
     howTo:
-      'Byte wants to check that you know your way around before you set off. Look around, jump once, then open your Skill Passport. Do all three to earn your very first badge.',
+      'Byte wants to check that you know your way around before you set off. Turn around, jump once, then open your Skill Passport. Do all three to earn your very first badge.',
     config: {},
     recapTopicIds: ['shared-foundation', 'production-ai-systems'],
   },
@@ -239,13 +239,13 @@ export const MINIGAMES: Record<PhaseId, MiniGameDef> = {
         {
           max: -5,
           title: '🟢 AI Developer',
-          text: `“${DIFFERENCE.developer.quote}” You'd be excellent at ${DIFFERENCE.developer.excellentAt.join(' + ')}.`,
+          text: `“${CAREER_PATH_BY_ID.developer.quote}” You'd be excellent at ${CAREER_PATH_BY_ID.developer.excellentAt.join(' + ')}.`,
           track: 'developer',
         },
         {
           min: 5,
           title: '🔵 AI Engineer',
-          text: `“${DIFFERENCE.engineer.quote}” You'd be excellent at ${DIFFERENCE.engineer.excellentAt.join(' + ')}.`,
+          text: `“${CAREER_PATH_BY_ID.engineer.quote}” You'd be excellent at ${CAREER_PATH_BY_ID.engineer.excellentAt.join(' + ')}.`,
           track: 'engineer',
         },
         {

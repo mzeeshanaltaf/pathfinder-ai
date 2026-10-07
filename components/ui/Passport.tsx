@@ -1,40 +1,43 @@
 'use client';
 
-import { useState } from 'react';
-import { requestTravel } from '@/components/player/playerState';
-import { BUILD_PROJECTS, getPhase, PHASE_IDS, TIMELINE_NOTE, TIMELINES, TRACK_LABELS, trackPhases, type PhaseId } from '@/data/roadmap';
+import { BUILD_PROJECTS, CAREER_PATH_BY_ID, CAREER_PATHS, getPhase, PHASE_IDS, TIMELINE_NOTE, TRACK_LABELS, trackPhases, type PhaseId, type Track } from '@/data/roadmap';
 import { GEM_COLORS, TRACK_COLORS } from '@/lib/palette';
 import { ACHIEVEMENTS, jobReady, PATH_TRACKS, preferredPath } from '@/lib/progress';
 import { useProgress } from '@/store/progress';
-import { useUi } from '@/store/ui';
-import { BadgeStamp, CloseButton, INK, ProgressRing, resumeExplore, TrackBadge, usePhaseGems, useTotals } from './kit';
+import { useUi, type PassportTab } from '@/store/ui';
+import { BadgeStamp, CloseButton, flyTo, INK, ProgressRing, resumeExplore, TrackBadge, usePhaseGems, useTotals } from './kit';
+import RoadmapTab from './RoadmapTab';
 
 const TRUNK: PhaseId[] = ['harbor', 'code-village', 'math-mountain', 'ml-meadow', 'fork'];
-const COLUMNS: { title: string; track: 'common' | 'developer' | 'engineer'; ids: PhaseId[] }[] = [
+const COLUMNS: { title: string; track: Track; ids: PhaseId[] }[] = [
   { title: 'Common trunk', track: 'common', ids: TRUNK },
-  { title: 'AI Developer', track: 'developer', ids: trackPhases('developer').map((p) => p.id) },
-  { title: 'AI Engineer', track: 'engineer', ids: trackPhases('engineer').map((p) => p.id) },
+  ...CAREER_PATHS.map((p) => ({ title: p.label, track: p.id, ids: trackPhases(p.id).map((ph) => ph.id) })),
 ];
+/** Over 3 columns, phones show the trunk as a row on top and wrap the paths 2 per row. */
+const WIDE = COLUMNS.length > 3;
+const GRID_COLS = { '--cols': `repeat(${COLUMNS.length}, minmax(0, 1fr))` } as React.CSSProperties;
 
 /** The Skill Passport: a skill-tree overview of every island, with fast travel. */
 export default function Passport() {
   const mode = useUi((s) => s.mode);
-  if (mode !== 'passport') return null;
-  return <PassportBook />;
+  // Stays mounted (hidden) while its island guide is open, so going back keeps the scroll position.
+  const behindPanel = useUi((s) => s.mode === 'panel' && s.panelFrom === 'passport');
+  if (mode !== 'passport' && !behindPanel) return null;
+  return <PassportBook hidden={behindPanel} />;
 }
 
-type PassportTab = 'map' | 'journey' | 'awards';
-
-const TABS: { id: PassportTab; label: string }[] = [
-  { id: 'map', label: '🗺 Map' },
-  { id: 'journey', label: '🎯 Job-ready' },
-  { id: 'awards', label: '🏆 Awards' },
+const TABS: { id: PassportTab; icon: string; label: string }[] = [
+  { id: 'map', icon: '🗺', label: 'Map' },
+  { id: 'roadmap', icon: '📜', label: 'Roadmap' },
+  { id: 'journey', icon: '🎯', label: 'Job-ready' },
+  { id: 'awards', icon: '🏆', label: 'Awards' },
 ];
 
-function PassportBook() {
+function PassportBook({ hidden }: { hidden: boolean }) {
   const current = useUi((s) => s.currentIsland);
-  const [selected, setSelected] = useState<PhaseId | null>(current);
-  const [tab, setTab] = useState<PassportTab>('map');
+  const selected = useUi((s) => s.passportSelected);
+  const tab = useUi((s) => s.passportTab);
+  const { setPassportSelected: setSelected, setPassportTab: setTab } = useUi.getState();
   const unlocked = useProgress((s) => Object.keys(s.achievements).length);
   const { gems, gemTotal, badges, badgeTotal } = useTotals();
   const visited = useProgress((s) => PHASE_IDS.filter((id) => s.visited[id]).length);
@@ -43,7 +46,8 @@ function PassportBook() {
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-stretch justify-center bg-[#3d3452]/35 backdrop-blur-[2px] sm:items-center sm:p-4"
+      className={`fixed inset-0 z-30 flex items-stretch justify-center bg-[#3d3452]/35 backdrop-blur-[2px] sm:items-center sm:p-4 ${hidden ? 'invisible' : ''}`}
+      aria-hidden={hidden || undefined}
       onClick={resumeExplore}
     >
       <div
@@ -84,7 +88,12 @@ function PassportBook() {
           <CloseButton onClick={resumeExplore} />
         </header>
 
-        <nav className="flex gap-1.5 border-b-4 px-3 pt-2" style={{ borderColor: INK, background: '#f6eed7' }} role="tablist" aria-label="Passport sections">
+        <nav
+          className="flex shrink-0 gap-1 overflow-x-auto border-b-4 px-2 pt-2 sm:gap-1.5 sm:px-3"
+          style={{ borderColor: INK, background: '#f6eed7', scrollbarWidth: 'none' }}
+          role="tablist"
+          aria-label="Passport sections"
+        >
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -92,45 +101,57 @@ function PassportBook() {
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className="-mb-1 min-h-10 rounded-t-xl border-[3px] border-b-0 px-3 text-xs font-extrabold whitespace-nowrap sm:text-sm"
+              className="-mb-1 min-h-10 shrink-0 rounded-t-xl border-[3px] border-b-0 px-2.5 text-xs font-extrabold whitespace-nowrap sm:px-3 sm:text-sm"
               style={{ borderColor: tab === t.id ? INK : 'transparent', background: tab === t.id ? '#fdf6e3' : 'transparent' }}
             >
+              {/* The icons drop on narrow phones so all four tabs fit without scrolling. */}
+              <span className="hidden min-[400px]:inline" aria-hidden>
+                {t.icon}{' '}
+              </span>
               {t.label}
             </button>
           ))}
         </nav>
 
+        {tab === 'roadmap' && <RoadmapTab />}
         {tab === 'journey' && <JourneyTab />}
         {tab === 'awards' && <AwardsTab />}
         {tab === 'map' && (
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4" style={{ touchAction: 'pan-y' }}>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            {COLUMNS.map((col) => (
-              <section key={col.title} className="flex min-w-0 flex-col items-center">
-                <h3
-                  className="mb-2 w-full rounded-full border-2 px-1 py-0.5 text-center text-[11px] font-extrabold sm:text-xs"
-                  style={{ background: TRACK_COLORS[col.track].light, borderColor: TRACK_COLORS[col.track].dark }}
-                >
-                  {col.title}
-                </h3>
-                {col.ids.map((id, i) => (
-                  <div key={id} className="flex w-full flex-col items-center">
-                    {i > 0 && <span className="h-3 w-1 rounded-full" style={{ background: TRACK_COLORS[col.track].dark }} aria-hidden />}
-                    <Node id={id} selected={selected === id} here={current === id} onSelect={setSelected} />
-                  </div>
-                ))}
-              </section>
-            ))}
-          </div>
-          <div className="mt-3 flex flex-col items-center">
-            <span className="mb-1 text-lg font-black" aria-hidden>
-              ↓ ↓
-            </span>
-            <div className="w-1/3 min-w-28">
-              <Node id="summit" selected={selected === 'summit'} here={current === 'summit'} onSelect={setSelected} />
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4" style={{ touchAction: 'pan-y' }}>
+            <div className={`grid gap-2 sm:grid-cols-(--cols) sm:gap-4 ${WIDE ? 'grid-cols-2' : 'grid-cols-(--cols)'}`} style={GRID_COLS}>
+              {COLUMNS.map((col, c) => {
+                const trunkRow = WIDE && c === 0;
+                return (
+                  <section key={col.title} className={`flex min-w-0 flex-col items-center ${trunkRow ? 'col-span-2 sm:col-span-1' : ''}`}>
+                    <h3
+                      className="mb-2 w-full rounded-full border-2 px-1 py-0.5 text-center text-[11px] font-extrabold sm:text-xs"
+                      style={{ background: TRACK_COLORS[col.track].light, borderColor: TRACK_COLORS[col.track].dark }}
+                    >
+                      {col.title}
+                    </h3>
+                    <div className={trunkRow ? 'grid w-full grid-cols-3 gap-1.5 sm:flex sm:flex-col sm:items-center sm:gap-0' : 'flex w-full flex-col items-center'}>
+                      {col.ids.map((id, i) => (
+                        <div key={id} className="flex w-full flex-col items-center">
+                          {i > 0 && (
+                            <span className={`h-3 w-1 rounded-full ${trunkRow ? 'hidden sm:block' : ''}`} style={{ background: TRACK_COLORS[col.track].dark }} aria-hidden />
+                          )}
+                          <Node id={id} selected={selected === id} here={current === id} onSelect={setSelected} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+            <div className="mt-3 flex flex-col items-center">
+              <span className="mb-1 text-lg font-black" aria-hidden>
+                ↓ ↓
+              </span>
+              <div className="w-1/3 min-w-28">
+                <Node id="summit" selected={selected === 'summit'} here={current === 'summit'} onSelect={setSelected} />
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         {tab === 'map' && selected && <Details id={selected} />}
@@ -163,7 +184,7 @@ function Node({
       type="button"
       onClick={() => onSelect(id)}
       aria-pressed={selected}
-      className="relative flex w-full flex-col items-center gap-1 rounded-2xl border-[3px] px-1 py-1.5 transition-transform active:scale-95"
+      className="relative flex w-full min-w-0 flex-col items-center gap-1 rounded-2xl border-[3px] px-1 py-1.5 transition-transform active:scale-95"
       style={{
         borderColor: selected ? INK : visited ? c.dark : `${INK}30`,
         background: visited ? c.light : '#ffffffb0',
@@ -178,8 +199,9 @@ function Node({
       <ProgressRing value={found} total={total} size={34} stroke={4} color={GEM_COLORS[phase.track]}>
         <span className="text-[10px] font-black">{complete ? '✓' : found}</span>
       </ProgressRing>
-      <span className={`line-clamp-2 text-center text-[11px] leading-tight font-extrabold sm:text-xs ${visited ? '' : 'opacity-60'}`}>
-        {phase.title}
+      <span className={`flex w-full min-w-0 flex-col items-center ${visited ? '' : 'opacity-60'}`}>
+        <span className="line-clamp-2 text-center text-[11px] leading-tight font-extrabold wrap-break-word sm:text-xs">{phase.title}</span>
+        <span className="line-clamp-2 text-center text-[10px] leading-tight font-semibold wrap-break-word opacity-70 sm:text-[11px]">{phase.subtitle}</span>
       </span>
       <span className="flex items-center gap-1">
         <BadgeStamp stars={badge?.stars} size="sm" />
@@ -225,7 +247,7 @@ function JourneyTab() {
       <div className="grid gap-3 sm:grid-cols-2">
         {estimates.map((e) => {
           const c = TRACK_COLORS[e.track];
-          const timeline = TIMELINES.find((t) => t.track === e.track)!;
+          const timeline = CAREER_PATH_BY_ID[e.track].timeline;
           const ready = e.ready >= 0.97;
           return (
             <section key={e.track} className="rounded-2xl border-[3px] p-3" style={{ borderColor: INK, background: c.light }} aria-label={`${TRACK_LABELS[e.track]} job-ready meter`}>
@@ -342,11 +364,6 @@ function Details({ id }: { id: PhaseId }) {
   const badge = useProgress((s) => s.badges[id]);
   const c = TRACK_COLORS[phase.track];
 
-  const travel = () => {
-    requestTravel(id);
-    resumeExplore();
-  };
-
   return (
     <div
       className="border-t-4 px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]"
@@ -367,7 +384,7 @@ function Details({ id }: { id: PhaseId }) {
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={travel}
+          onClick={() => flyTo(id)}
           className="min-h-11 flex-1 rounded-full border-[3px] px-4 text-sm font-extrabold active:translate-y-0.5"
           style={{ borderColor: INK, background: c.base, boxShadow: `0 3px 0 ${INK}` }}
         >
@@ -375,7 +392,7 @@ function Details({ id }: { id: PhaseId }) {
         </button>
         <button
           type="button"
-          onClick={() => useUi.getState().openPanel(id)}
+          onClick={() => useUi.getState().openPanel(id, 'passport')}
           className="min-h-11 flex-1 rounded-full border-[3px] bg-white px-4 text-sm font-extrabold active:translate-y-0.5"
           style={{ borderColor: INK, boxShadow: `0 3px 0 ${INK}` }}
         >

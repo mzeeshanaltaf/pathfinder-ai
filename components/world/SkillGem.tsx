@@ -74,7 +74,7 @@ export default function SkillGems() {
       const y = s.y + GEM_HEIGHT + Math.sin(t * 2 + phases[i]) * 0.14;
       if (Math.hypot(flat, y - py) < GEM_PICKUP_RADIUS) {
         if (useProgress.getState().collectGem(s.id)) {
-          useUi.getState().pushToast(s.id);
+          useUi.getState().showGemCard(s.id);
           sfx.gem();
         }
         mesh.setMatrixAt(i, HIDDEN);

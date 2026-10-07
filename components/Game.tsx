@@ -8,9 +8,10 @@ import type { DirectionalLight } from 'three';
 import MiniGameHost from '@/components/minigames/MiniGameHost';
 import MobileControls from '@/components/player/MobileControls';
 import Player from '@/components/player/Player';
-import { clearInput, KEYBOARD_MAP } from '@/components/player/useInput';
+import { KEYBOARD_MAP } from '@/components/player/useInput';
 import Certificate from '@/components/ui/Certificate';
 import CinematicOverlay from '@/components/ui/CinematicOverlay';
+import ControlsHint from '@/components/ui/ControlsHint';
 import Compass from '@/components/ui/Compass';
 import DebugHud, { renderStats } from '@/components/ui/DebugHud';
 import FadeOverlay from '@/components/ui/FadeOverlay';
@@ -26,7 +27,6 @@ import Passport from '@/components/ui/Passport';
 import PhasePanel from '@/components/ui/PhasePanel';
 import SessionManager from '@/components/ui/SessionManager';
 import Settings from '@/components/ui/Settings';
-import StartOverlay from '@/components/ui/StartOverlay';
 import TutorialTracker from '@/components/ui/TutorialTracker';
 import WelcomeBack from '@/components/ui/WelcomeBack';
 import BalloonTravel from '@/components/world/BalloonTravel';
@@ -140,17 +140,6 @@ export default function Game() {
     if (touch) useUi.getState().setPerfTier(1);
   }, [touch]);
 
-  // Track pointer lock (desktop). Esc releases it natively and the start overlay reappears.
-  useEffect(() => {
-    const onChange = () => {
-      const locked = !!document.pointerLockElement;
-      useUi.getState().setPointerLocked(locked);
-      clearInput();
-    };
-    document.addEventListener('pointerlockchange', onChange);
-    return () => document.removeEventListener('pointerlockchange', onChange);
-  }, []);
-
   const step = (d: -1 | 1) => {
     const ui = useUi.getState();
     // Climbing back stops at medium: re-enabling shadows recompiles every material (a visible hitch).
@@ -192,7 +181,7 @@ export default function Game() {
       </KeyboardControls>
 
       <SessionManager />
-      {touch ? <MobileControls /> : <StartOverlay />}
+      {touch ? <MobileControls /> : <ControlsHint />}
       <Minimap />
       <HUD />
       <Compass />

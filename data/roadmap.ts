@@ -3,7 +3,11 @@
 // authored text is the topic `bite`s, the mentor lines and short summaries that
 // paraphrase the doc's own guidance.
 
-export type Track = 'meta' | 'common' | 'developer' | 'engineer';
+/** Career paths. A new path starts here; TypeScript then points at every place that needs an entry. */
+export const PATH_IDS = ['developer', 'engineer'] as const;
+export type PathId = (typeof PATH_IDS)[number];
+
+export type Track = 'meta' | 'common' | PathId;
 
 export const PHASE_IDS = [
   'harbor',
@@ -76,13 +80,6 @@ export interface Phase {
 /** Gem id = `${phaseId}:${topic.id}` */
 export const gemId = (phaseId: PhaseId, topicId: string) => `${phaseId}:${topicId}`;
 
-export const TRACK_LABELS: Record<Track, string> = {
-  meta: 'Waypoint',
-  common: 'Common foundation',
-  developer: 'AI Developer path',
-  engineer: 'AI Engineer path',
-};
-
 // ---------------------------------------------------------------------------
 // Authoring helpers
 
@@ -104,12 +101,12 @@ const PHASE_LIST: Phase[] = [
     id: 'harbor',
     track: 'meta',
     title: 'Harbor',
-    subtitle: 'Two paths into AI',
+    subtitle: 'Your paths into AI',
     summary:
-      'This world maps two AI careers: the AI Developer and the AI Engineer. They share the first part of the roadmap, then diverge at the Fork and meet again at the Summit.',
+      'This world maps AI careers, starting with the AI Developer and the AI Engineer. They share the first part of the roadmap, then diverge at the Fork and meet again at the Summit.',
     groups: [
       g(
-        'Two careers',
+        'The careers',
         t('AI Developer', 'Builds applications using existing AI/ML models and APIs.'),
         t(
           'AI Engineer',
@@ -117,11 +114,11 @@ const PHASE_LIST: Phase[] = [
         ),
         t(
           'Shared foundation',
-          'Both paths start the same way: programming, mathematics and ML fundamentals. Then they diverge.',
+          'Every path starts the same way: programming, mathematics and ML fundamentals. Then they diverge.',
         ),
         t(
           'Production AI systems',
-          'Where both paths lead in the end: real AI systems running in production. That is the Summit at the far end of this world.',
+          'Where every path leads in the end: real AI systems running in production. That is the Summit at the far end of this world.',
         ),
       ),
     ],
@@ -131,7 +128,7 @@ const PHASE_LIST: Phase[] = [
         "Hi, I'm Byte, your guide! Welcome to Pathfinder AI.",
         'An AI Developer builds apps using existing AI models and APIs.',
         'An AI Engineer goes deeper: building, optimizing, evaluating and running AI systems in production.',
-        'Both paths share the first islands, then split at the Fork. Cross the bridge to Code Village to begin!',
+        'The paths share the first islands, then split at the Fork. Cross the bridge to Code Village to begin!',
         'Collect the glowing Skill Gems: each one is a topic. Press P (or tap 📖) for your Skill Passport.',
       ],
     },
@@ -345,12 +342,12 @@ const PHASE_LIST: Phase[] = [
     id: 'fork',
     track: 'meta',
     title: 'The Fork',
-    subtitle: 'From here the two paths diverge',
+    subtitle: 'From here the paths diverge',
     summary:
       "The AI Developer path heads one way, the AI Engineer path the other. Compare them side by side, but you don't have to choose yet: every island stays open.",
     groups: [
       g(
-        'Two goals',
+        'The goals',
         t(
           'AI Developer goal',
           "Build useful software products powered by AI. They don't necessarily need to train foundation models or deeply understand GPU optimization.",
@@ -371,7 +368,7 @@ const PHASE_LIST: Phase[] = [
         'Here the road splits: one bridge to the AI Developer path, one to the AI Engineer path. Follow the signs!',
         "AI Developer: 'I use AI models to build software.'",
         "AI Engineer: 'I understand AI models deeply enough to build and operate AI systems.'",
-        "You don't have to choose now. Both paths meet again at the Summit.",
+        "You don't have to choose now. Every path meets again at the Summit.",
         'Open the comparison board to see where each path goes deeper.',
       ],
     },
@@ -960,7 +957,7 @@ const PHASE_LIST: Phase[] = [
     docPhase: 12,
     title: 'The Summit',
     subtitle: 'Production AI Architecture',
-    summary: 'Finally, combine everything. Both paths converge here, on production AI systems.',
+    summary: 'Finally, combine everything. The paths converge here, on production AI systems.',
     diagrams: [
       {
         title: 'Production AI architecture',
@@ -1019,134 +1016,178 @@ const PHASE_LIST: Phase[] = [
 // ---------------------------------------------------------------------------
 // Meta content (Harbor, Fork, Summit)
 
-/** Top-of-doc roadmap shape: a trunk, two branches, one destination. */
-export const ROADMAP_SHAPE = {
+/** Top-of-doc roadmap shape: a trunk, one branch per career path, one destination. */
+export const ROADMAP_SHAPE: { trunk: string[]; branches: Record<PathId, string[]>; converge: string } = {
   trunk: ['Software Engineering', 'Python + SQL + APIs', 'AI / ML Fundamentals'],
-  developer: ['LLM APIs', 'Prompting', 'RAG', 'Agents', 'AI Apps', 'Integration'],
-  engineer: [
-    'Mathematics',
-    'Machine Learning',
-    'Deep Learning',
-    'Transformers',
-    'Model Training',
-    'Model Fine-tuning',
-    'AI Infrastructure',
-  ],
+  branches: {
+    developer: ['LLM APIs', 'Prompting', 'RAG', 'Agents', 'AI Apps', 'Integration'],
+    engineer: [
+      'Mathematics',
+      'Machine Learning',
+      'Deep Learning',
+      'Transformers',
+      'Model Training',
+      'Model Fine-tuning',
+      'AI Infrastructure',
+    ],
+  },
   converge: 'Production AI Systems',
 };
 
 export const DEFINITIONS = {
-  developer: 'Builds applications using existing AI/ML models and APIs.',
-  engineer:
-    'Understands the underlying ML/LLM technology and builds, optimizes, evaluates, and operates AI systems in production.',
   shared: 'They share the first part of the roadmap, then diverge.',
-};
-
-export const TRACK_GOALS = {
-  developer: 'Build useful software products powered by AI.',
-  engineer: 'Understand, build, optimize, evaluate, and operate AI/ML systems.',
 };
 
 export type Stars = 1 | 2 | 3 | 4 | 5;
 
 export interface ComparisonRow {
   area: string;
-  dev: Stars;
-  eng: Stars;
+  /** Stars per path. A path missing from a row renders "—". */
+  stars: Partial<Record<PathId, Stars>>;
 }
 
+const row = (area: string, developer: Stars, engineer: Stars): ComparisonRow => ({ area, stars: { developer, engineer } });
+
 export const COMPARISON: ComparisonRow[] = [
-  { area: 'Python', dev: 4, eng: 5 },
-  { area: 'Software Engineering', dev: 4, eng: 5 },
-  { area: 'SQL', dev: 3, eng: 4 },
-  { area: 'Mathematics', dev: 2, eng: 5 },
-  { area: 'Statistics', dev: 2, eng: 4 },
-  { area: 'ML', dev: 3, eng: 5 },
-  { area: 'Deep Learning', dev: 2, eng: 5 },
-  { area: 'PyTorch', dev: 2, eng: 5 },
-  { area: 'Transformers', dev: 3, eng: 5 },
-  { area: 'LLM APIs', dev: 5, eng: 5 },
-  { area: 'Prompt Engineering', dev: 4, eng: 4 },
-  { area: 'RAG', dev: 5, eng: 5 },
-  { area: 'Agents', dev: 5, eng: 5 },
-  { area: 'Fine-tuning', dev: 2, eng: 4 },
-  { area: 'Model Training', dev: 1, eng: 4 },
-  { area: 'Model Serving', dev: 2, eng: 5 },
-  { area: 'MLOps', dev: 2, eng: 5 },
-  { area: 'AI Evaluation', dev: 3, eng: 5 },
-  { area: 'AI Security', dev: 3, eng: 5 },
-  { area: 'Product Development', dev: 5, eng: 4 },
-  { area: 'Research', dev: 2, eng: 4 },
+  row('Python', 4, 5),
+  row('Software Engineering', 4, 5),
+  row('SQL', 3, 4),
+  row('Mathematics', 2, 5),
+  row('Statistics', 2, 4),
+  row('ML', 3, 5),
+  row('Deep Learning', 2, 5),
+  row('PyTorch', 2, 5),
+  row('Transformers', 3, 5),
+  row('LLM APIs', 5, 5),
+  row('Prompt Engineering', 4, 4),
+  row('RAG', 5, 5),
+  row('Agents', 5, 5),
+  row('Fine-tuning', 2, 4),
+  row('Model Training', 1, 4),
+  row('Model Serving', 2, 5),
+  row('MLOps', 2, 5),
+  row('AI Evaluation', 3, 5),
+  row('AI Security', 3, 5),
+  row('Product Development', 5, 4),
+  row('Research', 2, 4),
 ];
 
-/** "The Most Important Difference". */
-export const DIFFERENCE = {
-  developer: {
-    quote: 'I use AI models to build software.',
-    excellentAt: ['APIs', 'LLMs', 'RAG', 'Agents', 'Product Development'],
-  },
-  engineer: {
-    quote: 'I understand AI models deeply enough to build and operate AI systems.',
-    excellentAt: ['ML', 'Deep Learning', 'Transformers', 'LLMs', 'RAG', 'Agents', 'Evaluation', 'Infrastructure'],
-  },
-};
-
-export const DEVELOPER_FINAL_SKILLS = {
-  foundation: ['Python', 'SQL', 'FastAPI', 'Git', 'Docker'],
-  ai: [
-    'LLM APIs',
-    'Prompt Engineering',
-    'Structured Outputs',
-    'RAG',
-    'Vector Databases',
-    'Agents',
-    'Tool Calling',
-    'MCP',
-    'AI Evaluation',
-    'AI Security',
-    'Cloud Deployment',
-  ],
-  challenge: 'We need an AI assistant that answers questions about our company documents.',
-  outcome: 'and turning it into a working production application.',
-};
-
 export interface Timeline {
-  /** A career path (any track except the shared 'meta' / 'common'). */
-  track: Exclude<Track, 'meta' | 'common'>;
   total: string;
   steps: { when: string; what: string }[];
   note?: string;
 }
 
-export const TIMELINES: Timeline[] = [
+/** A path's final skill set (the doc only spells one out for the AI Developer). */
+export interface FinalSkills {
+  foundation: string[];
+  ai: string[];
+  challenge: string;
+  outcome: string;
+}
+
+/** One career path. Adding a path = an entry here + a PathId + its phases, palette and world layout. */
+export interface CareerPath {
+  id: PathId;
+  /** "AI Developer" */
+  label: string;
+  /** "AI Developer path" */
+  pathLabel: string;
+  emoji: string;
+  definition: string;
+  goal: string;
+  /** "The Most Important Difference" quote. */
+  quote: string;
+  excellentAt: string[];
+  finalSkills?: FinalSkills;
+  timeline: Timeline;
+  /** The CAREER_LADDER rung this path earns. */
+  ladderRung: string;
+  /** Specialisation rungs above it that grow out of this path (coloured with the path). */
+  ladderBranches?: string[];
+}
+
+/** Career paths in default order: the doc recommends AI Developer as the entry point. */
+export const CAREER_PATHS: CareerPath[] = [
   {
-    track: 'developer',
-    total: '~9–12 months',
-    steps: [
-      { when: 'Months 1–2', what: 'Python + SQL + APIs' },
-      { when: 'Months 3–4', what: 'ML Fundamentals' },
-      { when: 'Month 5', what: 'LLMs + Prompting' },
-      { when: 'Months 6–7', what: 'RAG' },
-      { when: 'Months 8–9', what: 'Agents' },
-      { when: 'Months 10–12', what: 'Production AI Applications' },
-    ],
-    note: 'With consistent project work: ready to apply for AI Developer / LLM Developer / Generative AI Developer roles.',
+    id: 'developer',
+    label: 'AI Developer',
+    pathLabel: 'AI Developer path',
+    emoji: '🟢',
+    definition: 'Builds applications using existing AI/ML models and APIs.',
+    goal: 'Build useful software products powered by AI.',
+    quote: 'I use AI models to build software.',
+    excellentAt: ['APIs', 'LLMs', 'RAG', 'Agents', 'Product Development'],
+    finalSkills: {
+      foundation: ['Python', 'SQL', 'FastAPI', 'Git', 'Docker'],
+      ai: [
+        'LLM APIs',
+        'Prompt Engineering',
+        'Structured Outputs',
+        'RAG',
+        'Vector Databases',
+        'Agents',
+        'Tool Calling',
+        'MCP',
+        'AI Evaluation',
+        'AI Security',
+        'Cloud Deployment',
+      ],
+      challenge: 'We need an AI assistant that answers questions about our company documents.',
+      outcome: 'and turning it into a working production application.',
+    },
+    timeline: {
+      total: '~9–12 months',
+      steps: [
+        { when: 'Months 1–2', what: 'Python + SQL + APIs' },
+        { when: 'Months 3–4', what: 'ML Fundamentals' },
+        { when: 'Month 5', what: 'LLMs + Prompting' },
+        { when: 'Months 6–7', what: 'RAG' },
+        { when: 'Months 8–9', what: 'Agents' },
+        { when: 'Months 10–12', what: 'Production AI Applications' },
+      ],
+      note: 'With consistent project work: ready to apply for AI Developer / LLM Developer / Generative AI Developer roles.',
+    },
+    ladderRung: 'AI Developer',
+    ladderBranches: ['AI Apps'],
   },
   {
-    track: 'engineer',
-    total: '~12–18 months',
-    steps: [
-      { when: 'Months 1–2', what: 'Software + Python' },
-      { when: 'Months 3–4', what: 'Math + ML' },
-      { when: 'Months 5–7', what: 'Deep Learning + PyTorch' },
-      { when: 'Months 8–9', what: 'Transformers + LLMs' },
-      { when: 'Months 10–11', what: 'RAG + Agents' },
-      { when: 'Months 12–13', what: 'Fine-tuning + Model Optimization' },
-      { when: 'Months 14–15', what: 'MLOps + Model Serving' },
-      { when: 'Months 16–18', what: 'Production AI Systems' },
-    ],
+    id: 'engineer',
+    label: 'AI Engineer',
+    pathLabel: 'AI Engineer path',
+    emoji: '🔵',
+    definition:
+      'Understands the underlying ML/LLM technology and builds, optimizes, evaluates, and operates AI systems in production.',
+    goal: 'Understand, build, optimize, evaluate, and operate AI/ML systems.',
+    quote: 'I understand AI models deeply enough to build and operate AI systems.',
+    excellentAt: ['ML', 'Deep Learning', 'Transformers', 'LLMs', 'RAG', 'Agents', 'Evaluation', 'Infrastructure'],
+    timeline: {
+      total: '~12–18 months',
+      steps: [
+        { when: 'Months 1–2', what: 'Software + Python' },
+        { when: 'Months 3–4', what: 'Math + ML' },
+        { when: 'Months 5–7', what: 'Deep Learning + PyTorch' },
+        { when: 'Months 8–9', what: 'Transformers + LLMs' },
+        { when: 'Months 10–11', what: 'RAG + Agents' },
+        { when: 'Months 12–13', what: 'Fine-tuning + Model Optimization' },
+        { when: 'Months 14–15', what: 'MLOps + Model Serving' },
+        { when: 'Months 16–18', what: 'Production AI Systems' },
+      ],
+    },
+    ladderRung: 'AI Engineer',
+    ladderBranches: ['ML/DL', 'AI Systems'],
   },
 ];
+
+export const CAREER_PATH_BY_ID = Object.fromEntries(CAREER_PATHS.map((p) => [p.id, p])) as Record<PathId, CareerPath>;
+
+export const TRACK_LABELS = {
+  meta: 'Waypoint',
+  common: 'Common foundation',
+  ...Object.fromEntries(CAREER_PATHS.map((p) => [p.id, p.pathLabel])),
+} as Record<Track, string>;
+
+export const isPathTrack = (t: Track): t is PathId => (PATH_IDS as readonly string[]).includes(t);
 
 export const TIMELINE_NOTE =
   'The timelines are approximate; projects matter more than completing a calendar schedule. (Timelines assume basic software-engineering knowledge.)';
@@ -1287,5 +1328,13 @@ if (process.env.NODE_ENV !== 'production') {
   }
   if (TOPIC_BY_GEM.size !== allGemIds.length) {
     throw new Error('roadmap: duplicate topic ids within a phase');
+  }
+  // Career-path registry: every PathId has one CareerPath, at least one phase, a timeline and a ladder rung.
+  for (const id of PATH_IDS) {
+    const path = CAREER_PATHS.filter((p) => p.id === id);
+    if (path.length !== 1) throw new Error(`roadmap: path "${id}" needs exactly one CareerPath`);
+    if (!PHASE_LIST.some((p) => p.track === id)) throw new Error(`roadmap: path "${id}" has no phases`);
+    if (!path[0].timeline.steps.length) throw new Error(`roadmap: path "${id}" has no timeline steps`);
+    if (!CAREER_LADDER.some((r) => r.includes(path[0].ladderRung))) throw new Error(`roadmap: path "${id}" ladder rung missing`);
   }
 }

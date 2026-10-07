@@ -68,7 +68,7 @@ export default function Quiz({ phaseId, config, onComplete }: MiniGameProps<Quiz
           <p className="mt-2 text-sm font-semibold">{outcome.text}</p>
         </div>
         <p className="max-w-md text-sm font-semibold">
-          Whatever you got: you don&apos;t have to choose now. Both paths share the same foundation, and you can explore every island.
+          Whatever you got: you don&apos;t have to choose now. Every path shares the same foundation, and you can explore every island.
         </p>
         <GameButton onClick={() => onComplete({ score: 100, stars: 3 })} color="#7fd99a">
           Finish ▶

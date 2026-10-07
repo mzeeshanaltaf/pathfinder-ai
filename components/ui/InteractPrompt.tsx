@@ -20,7 +20,7 @@ export default function InteractPrompt() {
   const nearby = useUi((s) => s.nearbyPhaseId);
   const challenge = useUi((s) => s.nearbyChallenge);
   const dock = useUi((s) => s.nearbyDock);
-  const visible = useUi((s) => s.mode === 'explore' && (s.pointerLocked || touch) && !s.fading);
+  const visible = useUi((s) => s.mode === 'explore' && !s.fading);
   // Same priority as the Player's E key: pedestal, then balloon dock, then landmark.
   const id = challenge ?? dock ?? nearby;
   if (!id || !visible) return null;
@@ -33,7 +33,7 @@ export default function InteractPrompt() {
   const open = () => {
     const ui = useUi.getState();
     if (challenge) ui.openMiniGame(id);
-    else if (atDock) ui.setMode('passport');
+    else if (atDock) ui.openPassport();
     else ui.openPanel(id);
   };
 

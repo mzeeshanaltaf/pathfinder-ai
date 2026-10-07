@@ -73,7 +73,8 @@ function SettingsCard() {
         <Row label="Sound" hint="Footsteps, gem chimes, fanfares, wind (M)">
           <Toggle on={!s.muted} onChange={(v) => set('muted', !v)} label="Sound" />
         </Row>
-        <Row label="Look sensitivity" hint="Mouse and touch drag">
+        {/* Stored as `settings.sensitivity` (the persisted shape is unchanged; `invertY` is kept but unused). */}
+        <Row label="Turn speed" hint="A / D, ← / →, or the stick">
           <label className="flex w-full items-center gap-3 sm:w-56">
             <input
               type="range"
@@ -84,13 +85,10 @@ function SettingsCard() {
               onChange={(e) => set('sensitivity', Number(e.target.value))}
               className="sim-range"
               style={{ '--pct': `${((s.sensitivity - 0.3) / 2.2) * 100}%`, '--fill': TRACK_COLORS.meta.base } as React.CSSProperties}
-              aria-label="Look sensitivity"
+              aria-label="Turn speed"
             />
             <span className="w-10 text-right text-sm font-extrabold tabular-nums">{s.sensitivity.toFixed(2)}×</span>
           </label>
-        </Row>
-        <Row label="Invert Y" hint="Push up to look down">
-          <Toggle on={s.invertY} onChange={(v) => set('invertY', v)} label="Invert Y" />
         </Row>
         <Row label="Graphics quality" hint={s.quality === 'auto' ? `Auto adjusts to your device (now: ${tier === 0 ? 'low' : tier === 1 ? 'medium' : 'high'})` : 'Low: no shadows, fewer clouds and flowers'}>
           <div className="flex overflow-hidden rounded-full border-[3px]" style={{ borderColor: INK }} role="radiogroup" aria-label="Graphics quality">

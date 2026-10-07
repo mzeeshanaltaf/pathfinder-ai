@@ -212,7 +212,7 @@ export default function FinalAssembly({ phaseId, config, onComplete }: MiniGameP
             </div>
             <h3 className="mt-1 text-2xl font-black">You&apos;ve reached the Summit!</h3>
             <p className="mt-1 text-sm font-semibold">
-              Frontend to monitoring: a production AI platform, assembled{attempts === 1 ? ' on the first try' : ''}. Both paths meet here, on real systems.
+              Frontend to monitoring: a production AI platform, assembled{attempts === 1 ? ' on the first try' : ''}. The paths meet here, on real systems.
             </p>
           </div>
           <GameButton onClick={finish} color="#7fd99a">

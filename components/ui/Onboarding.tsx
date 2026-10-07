@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DEFINITIONS, DIFFERENCE } from '@/data/roadmap';
+import { CAREER_PATHS, DEFINITIONS, type CareerPath } from '@/data/roadmap';
 import { isCoarsePointer } from '@/lib/device';
 import { hatColor } from '@/lib/progress';
 import { TRACK_COLORS } from '@/lib/palette';
@@ -13,19 +13,19 @@ import Sheet, { PillButton } from './Sheet';
 import { TUTORIAL_STEPS } from './TutorialTracker';
 
 const DESKTOP_KEYS: [string, string][] = [
-  ['W A S D', 'Walk'],
-  ['Mouse', 'Look around'],
+  ['W / S  ↑ / ↓', 'Walk forward / back'],
+  ['A / D  ← / →', 'Turn left / right'],
   ['Space', 'Jump'],
   ['Shift', 'Sprint'],
   ['E', 'Explore a landmark / play a Challenge'],
   ['P', 'Skill Passport'],
   ['M', 'Sound on / off'],
-  ['Esc', 'Pause and free the mouse'],
+  ['Esc', 'Close a panel or card'],
+  ['H', 'Show / hide the controls hint'],
 ];
 
 const TOUCH_CONTROLS: [string, string][] = [
-  ['🕹', 'Drag on the left half of the screen to walk (push to the edge to sprint)'],
-  ['👆', 'Drag on the right half to look around'],
+  ['🕹', 'Drag anywhere on the screen: up / down walks, left / right turns (push to the edge to sprint)'],
   ['JUMP', 'Jump'],
   ['E', 'Explore a landmark / play a Challenge (it pulses when one is near)'],
   ['📖', 'Skill Passport'],
@@ -50,20 +50,22 @@ function Bubble({ children }: { children: React.ReactNode }) {
   );
 }
 
-function CareerCard({ track, title }: { track: 'developer' | 'engineer'; title: string }) {
-  const c = TRACK_COLORS[track];
+function CareerCard({ path }: { path: CareerPath }) {
+  const c = TRACK_COLORS[path.id];
   return (
     <div className="rounded-2xl border-[3px] px-3 py-2" style={{ borderColor: INK, background: c.light }}>
-      <div className="text-sm font-extrabold">{title}</div>
-      <p className="text-sm">{DEFINITIONS[track]}</p>
+      <div className="text-sm font-extrabold">
+        {path.emoji} {path.label}
+      </div>
+      <p className="text-sm">{path.definition}</p>
       <p className="mt-1 text-sm font-bold italic" style={{ color: c.dark }}>
-        “{DIFFERENCE[track].quote}”
+        “{path.quote}”
       </p>
     </div>
   );
 }
 
-/** First visit only: Byte introduces the two careers, the controls, then starts the First Steps tutorial. */
+/** First visit only: Byte introduces the careers, the controls, then starts the First Steps tutorial. */
 export default function Onboarding() {
   const open = useUi((s) => s.mode === 'menu' && s.menu === 'onboarding');
   if (!open) return null;
@@ -93,9 +95,10 @@ function OnboardingFlow() {
   if (step === 0) {
     body = (
       <div className="flex flex-col gap-3">
-        <Bubble>Hi, I&apos;m Byte, your guide! This world maps two careers in AI. Here they are in one line each:</Bubble>
-        <CareerCard track="developer" title="AI Developer" />
-        <CareerCard track="engineer" title="AI Engineer" />
+        <Bubble>Hi, I&apos;m Byte, your guide! This world maps careers in AI. Here they are in one line each:</Bubble>
+        {CAREER_PATHS.map((p) => (
+          <CareerCard key={p.id} path={p} />
+        ))}
         <p className="text-sm font-semibold opacity-80">
           {DEFINITIONS.shared} You don&apos;t have to choose yet: every island is open from the start.
         </p>
@@ -115,7 +118,7 @@ function OnboardingFlow() {
     const rows = touch ? TOUCH_CONTROLS : DESKTOP_KEYS;
     body = (
       <div className="flex flex-col gap-3">
-        <Bubble>{touch ? 'You are on a touch screen, so here is how to get around:' : 'Here is how to get around with keyboard and mouse:'}</Bubble>
+        <Bubble>{touch ? 'You are on a touch screen, so here is how to get around:' : 'Here is how to get around with the keyboard:'}</Bubble>
         <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 rounded-2xl border-[3px] bg-white p-3" style={{ borderColor: INK }}>
           {rows.map(([k, v]) => (
             <div key={k} className="contents">

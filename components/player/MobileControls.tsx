@@ -6,12 +6,13 @@ import { touchState } from './useInput';
 
 const STICK_RADIUS = 56;
 
-/** Touch controls overlay: left half = floating joystick, right half = drag-to-look, plus Jump / Interact. */
+/**
+ * Touch controls: a floating joystick anywhere on the screen (stick Y walks, stick X turns, the rim sprints),
+ * plus Jump / Interact. The buttons stop propagation, so presses on them never start the stick.
+ */
 export default function MobileControls() {
   const stickId = useRef<number | null>(null);
   const stickOrigin = useRef({ x: 0, y: 0 });
-  const lookId = useRef<number | null>(null);
-  const lookLast = useRef({ x: 0, y: 0 });
   const baseRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
   const mode = useUi((s) => s.mode);
@@ -70,24 +71,6 @@ export default function MobileControls() {
     showStick(stickOrigin.current.x, stickOrigin.current.y, false);
   };
 
-  const onLookDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (lookId.current !== null) return;
-    lookId.current = e.pointerId;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    lookLast.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const onLookMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.pointerId !== lookId.current) return;
-    touchState.lookDX += e.clientX - lookLast.current.x;
-    touchState.lookDY += e.clientY - lookLast.current.y;
-    lookLast.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const onLookUp = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.pointerId === lookId.current) lookId.current = null;
-  };
-
   const press = (key: 'jump' | 'interact') => (e: ReactPointerEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     touchState[key] = true;
@@ -98,18 +81,12 @@ export default function MobileControls() {
   return (
     <div className="fixed inset-0 z-10 select-none touch-none">
       <div
-        className="absolute inset-y-0 left-0 w-1/2"
+        className="absolute inset-0"
+        data-joystick
         onPointerDown={onStickDown}
         onPointerMove={onStickMove}
         onPointerUp={onStickUp}
         onPointerCancel={onStickUp}
-      />
-      <div
-        className="absolute inset-y-0 right-0 w-1/2"
-        onPointerDown={onLookDown}
-        onPointerMove={onLookMove}
-        onPointerUp={onLookUp}
-        onPointerCancel={onLookUp}
       />
 
       {/* Floating joystick (positioned where the thumb lands). */}

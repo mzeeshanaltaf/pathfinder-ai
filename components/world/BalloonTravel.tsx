@@ -21,7 +21,7 @@ const EYE = 1.6;
 const RIDE_SCALE = 1.45;
 /** The basket floor sits this far below the camera (standing height): only the rim corners and ropes frame the view. */
 const FLOOR_BELOW_EYE = 1.6;
-const TRACKS: Track[] = ['meta', 'common', 'developer', 'engineer'];
+const TRACKS = Object.keys(TRACK_COLORS) as Track[];
 
 interface Flight {
   to: PhaseId;
@@ -53,9 +53,10 @@ const lerpAngle = (a: number, b: number, t: number) => a + Math.atan2(Math.sin(b
 const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** Lands the player on a dock: feet on the platform, facing the island's landmark. */
-function land(f: Pick<Flight, 'to' | 'feet' | 'arriveYaw'>) {
+function land(f: Pick<Flight, 'to' | 'feet' | 'arriveYaw'>, snap: boolean) {
   useProgress.getState().reachIsland(f.to);
-  playerControl.teleport?.(f.feet[0], f.feet[1], f.feet[2], f.arriveYaw);
+  // After a flight the third-person rig damps out from where it left the camera; a fade cuts straight there.
+  playerControl.teleport?.(f.feet[0], f.feet[1], f.feet[2], f.arriveYaw, { snap });
 }
 
 /**
@@ -98,7 +99,7 @@ export default function BalloonTravel() {
         const ui = useUi.getState();
         ui.setFading(true);
         fadeTimer.current = window.setTimeout(() => {
-          land({ to: req, feet, arriveYaw });
+          land({ to: req, feet, arriveYaw }, true);
           useUi.getState().setFading(false);
         }, RESPAWN_FADE_MS);
       } else {
@@ -152,7 +153,7 @@ export default function BalloonTravel() {
     if (u >= 1) {
       flight.current = null;
       cinematicControl.skip = false;
-      land(f);
+      land(f, false);
       const ui = useUi.getState();
       if (ui.mode === 'cinematic') ui.closeOverlay();
     }

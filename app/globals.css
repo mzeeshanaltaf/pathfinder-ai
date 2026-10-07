@@ -286,3 +286,130 @@ body {
     box-shadow: 0 0 0 12px rgb(167 139 250 / 0);
   }
 }
+
+/* Phones: while the First Steps checklist shows, the gem card sits below it. */
+.hud-toast[data-below-tracker] {
+  top: calc(max(10px, env(safe-area-inset-top)) + 306px);
+}
+@media (min-width: 640px) {
+  .hud-toast[data-below-tracker] {
+    top: calc(max(10px, env(safe-area-inset-top)) + 64px);
+  }
+}
+
+/* Printable roadmap (Passport → Roadmap → Print / Save as PDF). Hidden on screen. */
+#print-root {
+  display: none;
+}
+@page {
+  margin: 14mm;
+}
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  /* Only replace the page when a roadmap is mounted, so Ctrl+P elsewhere still prints the screen.
+     Everything else goes: the game and anything appended to <body> (e.g. the ?debug FPS panel). */
+  body:has(#print-root > *) > *:not(#print-root) {
+    display: none !important;
+  }
+  #print-root {
+    display: block;
+  }
+}
+.print-doc {
+  font-size: 10.5pt;
+  line-height: 1.4;
+  color: #000000;
+  background: #ffffff;
+}
+.print-doc h1 {
+  font-size: 18pt;
+  font-weight: 800;
+  margin: 0;
+}
+.print-doc h2 {
+  font-size: 14pt;
+  font-weight: 800;
+  margin: 14pt 0 4pt;
+  padding-bottom: 2pt;
+  border-bottom: 2px solid #000000;
+  break-after: avoid;
+}
+.print-doc h3 {
+  font-size: 12pt;
+  font-weight: 800;
+  margin: 0;
+}
+.print-doc h4 {
+  font-size: 10pt;
+  font-weight: 800;
+  margin: 6pt 0 2pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  break-after: avoid;
+}
+.print-doc p {
+  margin: 4pt 0;
+}
+.print-doc ul,
+.print-doc ol {
+  margin: 2pt 0 4pt;
+  padding-left: 16pt;
+}
+.print-doc ul {
+  list-style: none;
+  padding-left: 4pt;
+}
+.print-doc ol {
+  list-style: decimal;
+}
+.print-doc li {
+  margin: 1.5pt 0;
+  break-inside: avoid;
+}
+.print-head {
+  display: flex;
+  align-items: center;
+  gap: 10pt;
+  padding-bottom: 6pt;
+  border-bottom: 3px solid #000000;
+}
+.print-intro {
+  margin-top: 8pt;
+}
+.print-note,
+.print-kicker,
+.print-meta {
+  font-size: 9pt;
+  color: #444444;
+}
+.print-kicker {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.print-phase {
+  margin: 10pt 0 0;
+  padding-top: 6pt;
+  border-top: 1px solid #999999;
+}
+/* Each phase starts with its heading and first lines together. */
+.print-phase-head {
+  break-inside: avoid;
+  break-after: avoid;
+}
+.print-section {
+  break-before: auto;
+}
+.print-section + .print-section {
+  break-before: page;
+}
+.print-check {
+  font-family: system-ui, sans-serif;
+}
+

@@ -101,7 +101,7 @@ export default function Finale() {
       if (s.t >= DURATION || cinematicControl.skip) {
         cinematicControl.skip = false;
         // Hand back to the player, looking up at the hologram.
-        playerControl.face?.(Math.atan2(-(CENTRE.x - playerPose.x), -(CENTRE.z - playerPose.z)), 0.3);
+        playerControl.face?.(Math.atan2(-(CENTRE.x - playerPose.x), -(CENTRE.z - playerPose.z)));
         ui.openMenu('finale');
       }
     }

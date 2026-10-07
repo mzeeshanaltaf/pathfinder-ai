@@ -1,52 +1,53 @@
 'use client';
 
-import { useEffect } from 'react';
 import { topicForGem } from '@/data/roadmap';
 import { GEM_COLORS, TRACK_COLORS } from '@/lib/palette';
 import { useUi } from '@/store/ui';
-import { INK } from './kit';
+import { CloseButton, INK, usePhaseGems } from './kit';
 
-const SHOW_MS = 3000;
-/** When several gems are queued, move through them faster. */
-const FAST_MS = 1500;
-
-/** Non-blocking "💎 Topic: bite" toast. Collecting several gems quickly queues them. */
+/**
+ * "💎 Topic: bite" card for the last gem collected. It stays until closed (✕ or Esc); a new gem
+ * replaces it. Hidden, not cleared, while an overlay is open, so it never covers one.
+ */
 export default function GemToast() {
-  const head = useUi((s) => s.toastQueue[0]);
-  const queued = useUi((s) => s.toastQueue.length);
-  const backlog = queued > 1;
-  // Paused (and hidden) while a panel or the Passport is open, so toasts never cover them.
+  const id = useUi((s) => s.gemCard);
   const exploring = useUi((s) => s.mode === 'explore');
+  const belowTracker = useUi((s) => s.tutorial !== null && !s.fading);
+  const info = id ? topicForGem(id) : undefined;
+  if (!id || !info || !exploring) return null;
+  return <GemCard key={id} gem={id} info={info} belowTracker={belowTracker} />;
+}
 
-  // Restarts when the head changes, or when a backlog first forms (switching to the fast pace).
-  useEffect(() => {
-    if (!head || !exploring) return;
-    const id = window.setTimeout(() => useUi.getState().shiftToast(), backlog ? FAST_MS : SHOW_MS);
-    return () => window.clearTimeout(id);
-  }, [head, backlog, exploring]);
-
-  const info = head ? topicForGem(head) : undefined;
-  if (!info || !exploring) return null;
+function GemCard({ gem, info, belowTracker }: { gem: string; info: NonNullable<ReturnType<typeof topicForGem>>; belowTracker: boolean }) {
   const { phase, topic } = info;
+  const { found, total } = usePhaseGems(phase.id);
 
   // Mobile: left-aligned so it never covers the minimap (top-right). Desktop: centred.
   return (
     <div
-      className="hud-toast pointer-events-none fixed left-2.5 z-35 w-[calc(100vw-130px)] sm:left-1/2 sm:w-[min(400px,calc(100vw-340px))] sm:-translate-x-1/2"
+      className="hud-toast fixed left-2.5 z-35 w-[calc(100vw-130px)] sm:left-1/2 sm:w-[min(420px,calc(100vw-340px))] sm:-translate-x-1/2"
+      data-below-tracker={belowTracker || undefined}
       role="status"
       aria-live="polite"
+      data-gem={gem}
     >
       <div
-        key={head}
-        className="animate-[toast-in_220ms_ease-out] rounded-2xl border-[3px] px-3 py-2"
+        className="pointer-events-auto flex animate-[toast-in_220ms_ease-out] items-start gap-2 rounded-2xl border-[3px] py-2 pr-1.5 pl-3"
         style={{ borderColor: INK, background: TRACK_COLORS[phase.track].light, color: INK, boxShadow: `0 4px 0 ${INK}` }}
       >
-        <div className="flex items-center gap-1.5 text-sm font-extrabold">
-          <span style={{ color: GEM_COLORS[phase.track] }}>💎</span>
-          <span className="min-w-0 truncate">{topic.label}</span>
-          {queued > 1 && <span className="ml-auto shrink-0 text-[11px] font-bold opacity-60">+{queued - 1}</span>}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 text-sm leading-tight font-extrabold">
+            <span style={{ color: GEM_COLORS[phase.track] }} aria-hidden>
+              💎
+            </span>
+            <span className="min-w-0 wrap-break-word">{topic.label}</span>
+          </div>
+          <p className="mt-0.5 text-xs leading-snug">{topic.bite}</p>
+          <p className="mt-1 text-[11px] font-bold opacity-65">
+            {phase.title} · {found}/{total} gems
+          </p>
         </div>
-        <p className="line-clamp-2 text-xs leading-snug">{topic.bite}</p>
+        <CloseButton onClick={() => useUi.getState().closeGemCard()} label="Close gem card" />
       </div>
     </div>
   );

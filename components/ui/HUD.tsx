@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getPhase } from '@/data/roadmap';
 import { TRACK_COLORS } from '@/lib/palette';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
+import { isCoarsePointer } from '@/lib/device';
+import { toggleControlsHint } from './ControlsHint';
 import { INK, TrackBadge, useTotals } from './kit';
 
 export function openPassport() {
-  useUi.getState().setMode('passport');
+  useUi.getState().openPassport();
 }
 
 export function toggleMute() {
@@ -16,7 +18,11 @@ export function toggleMute() {
   p.setSetting('muted', !p.settings.muted);
 }
 
-/** Global overlay keys: P toggles the Passport, M toggles sound, Esc closes any panel, game or menu. */
+/**
+ * Global overlay keys: P toggles the Passport, M toggles sound, H toggles the controls hint.
+ * Esc goes back one level: island guide → Passport (when opened from it), else closes the panel,
+ * game or menu; while exploring it closes the gem card.
+ */
 function useOverlayKeys() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -28,10 +34,13 @@ function useOverlayKeys() {
         else if (ui.mode === 'passport') ui.closeOverlay();
       } else if (e.code === 'KeyM') {
         toggleMute();
+      } else if (e.code === 'KeyH') {
+        if (ui.mode === 'explore') toggleControlsHint();
       } else if (e.code === 'Escape') {
-        // Esc can't re-grab the mouse (not a user activation); the "Click to explore" card handles that.
-        if (ui.mode === 'panel' || ui.mode === 'passport' || ui.mode === 'minigame') ui.closeOverlay();
+        if (ui.mode === 'panel' && ui.panelFrom === 'passport') ui.backToPassport();
+        else if (ui.mode === 'panel' || ui.mode === 'passport' || ui.mode === 'minigame') ui.closeOverlay();
         else if (ui.mode === 'menu' && ui.menu !== 'onboarding') ui.closeOverlay();
+        else if (ui.mode === 'explore' && ui.gemCard) ui.closeGemCard();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -76,6 +85,7 @@ export default function HUD() {
   const streak = useProgress((s) => s.streak.count);
   const muted = useProgress((s) => s.settings.muted);
   const { gems, gemTotal, badges, badgeTotal } = useTotals();
+  const [touch] = useState(isCoarsePointer);
   if (!ready || mode !== 'explore') return null;
 
   const phase = island ? getPhase(island) : null;
@@ -128,16 +138,31 @@ export default function HUD() {
               ⚙️
             </span>
           </RoundButton>
+          {!touch && (
+            <RoundButton onClick={toggleControlsHint} label="Show controls (H)">
+              <span aria-hidden className="text-lg">
+                ⌨
+              </span>
+            </RoundButton>
+          )}
         </div>
-        <RoundButton onClick={openPassport} label="Open Skill Passport (P)" tint={TRACK_COLORS.meta.light}>
-          <span aria-hidden className="text-lg">
-            📖
-          </span>
-          <span className="hidden sm:inline">Passport</span>
-          <kbd className="hidden rounded border-2 px-1 text-[10px] sm:inline" style={{ borderColor: INK }}>
-            P
-          </kbd>
-        </RoundButton>
+        {/* Phones stack these two (like sound / settings) so the row never reaches the island pill. */}
+        <div className="flex flex-col gap-1.5 sm:flex-row-reverse">
+          <RoundButton onClick={openPassport} label="Open Skill Passport (P)" tint={TRACK_COLORS.meta.light}>
+            <span aria-hidden className="text-lg">
+              📖
+            </span>
+            <span className="hidden sm:inline">Passport</span>
+            <kbd className="hidden rounded border-2 px-1 text-[10px] sm:inline" style={{ borderColor: INK }}>
+              P
+            </kbd>
+          </RoundButton>
+          <RoundButton onClick={() => useUi.getState().openPassport('roadmap')} label="Full roadmap" tint={TRACK_COLORS.meta.light}>
+            <span aria-hidden className="text-lg">
+              📜
+            </span>
+          </RoundButton>
+        </div>
       </div>
     </>
   );

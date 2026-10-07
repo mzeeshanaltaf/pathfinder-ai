@@ -2,8 +2,8 @@
 
 > Update this file at the end of every session. See the session workflow in [CLAUDE.md](CLAUDE.md).
 
-**Next up:** All five planned phases are done. Candidates for later work are under "Known issues" and in the Phase 5 handoff notes (a real-device pass, new career paths via `data/`).
-**Last updated:** 2026-10-06 (Phase 5 session)
+**Next up:** All six planned phases are done. Candidates for later work are under "Known issues" and in the Phase 6 handoff notes: a real-device pass (iOS Safari / Android), and authoring a real third career path with the README checklist.
+**Last updated:** 2026-10-07 (Phase 6 session)
 
 ## Phase overview
 | # | Phase | Status | Session date |
@@ -13,6 +13,7 @@
 | 3 | [Mini-game Framework](docs/plan/phase-3-minigame-framework.md) | ✅ Done | 2026-10-06 |
 | 4 | [Concept Simulations](docs/plan/phase-4-concept-simulations.md) | ✅ Done | 2026-10-06 |
 | 5 | [Polish, Engagement & Finale](docs/plan/phase-5-polish-engagement-and-finale.md) | ✅ Done | 2026-10-06 |
+| 6 | [Third-Person Explorer, Keyboard Steering & Full Roadmap](docs/plan/phase-6-third-person-and-roadmap.md) | ✅ Done | 2026-10-07 |
 
 Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done with carry-overs
 
@@ -72,6 +73,17 @@ Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done wi
 - [x] Audio + mute; Settings incl. reset progress
 - [x] Performance / mobile pass, loading screen, metadata, README
 - [x] Acceptance verified; build + lint pass
+
+### Phase 6: Third-Person Explorer, Keyboard Steering & Full Roadmap
+- [x] G. Career-path registry (`PATH_IDS`, `CAREER_PATHS`), consumers switched, path-count-free copy, README checklist
+- [x] A. Keyboard tank steering; pointer lock and mouse-look removed; `ControlsHint`; joystick-only mobile; Settings "Turn speed"
+- [x] B. Explorer avatar + third-person camera rig with occlusion; cinematics hide/show it
+- [x] C. Sticky gem card with ✕ (replaces the toast queue)
+- [x] D. Passport tiles show the subject
+- [x] E. "← Passport" back navigation (tab + selection in the store)
+- [x] F. Roadmap tab + 📜 HUD button + Print / Save as PDF
+- [x] Multi-path smoke test (dummy 3rd path, then reverted)
+- [x] Acceptance verified; tsc, lint and build pass; docs updated
 
 ## Decisions log
 Record any deviation from the plan or from the CLAUDE.md contracts here (date, decision, reason).
@@ -188,6 +200,32 @@ Record any deviation from the plan or from the CLAUDE.md contracts here (date, d
   - Captions and pedestal labels hide beyond 60 m, sign faces beyond 55 m.
   - Small details are inside `<Near>` (90 m). Mentors and pedestals hide beyond 120 m.
 - 2026-10-06 (Phase 5): `app/favicon.ico` (the create-next-app default) was replaced by `app/icon.svg`. `app/opengraph-image.tsx` renders the share card at build time with the bundled Geist font. `metadataBase` comes from `NEXT_PUBLIC_SITE_URL` (localhost fallback).
+- 2026-10-07 (Phase 6): **Locked decisions changed** (user decisions from the planning session): third person instead of first person; keyboard tank steering; **no pointer lock**; joystick-only mobile (no drag-to-look). CLAUDE.md updated.
+- 2026-10-07 (Phase 6): **Contract changes**
+  - `data/roadmap.ts`: `PATH_IDS` / `PathId`; `Track = 'meta' | 'common' | PathId`; `CAREER_PATHS` + `CAREER_PATH_BY_ID` + `isPathTrack`. `DEFINITIONS.{developer,engineer}`, `TRACK_GOALS`, `DIFFERENCE`, `DEVELOPER_FINAL_SKILLS` and `TIMELINES` were folded into the registry and removed. `Timeline` lost its `track` field (it lives on its path). `TRACK_LABELS` derives path labels from `pathLabel`.
+  - `ROADMAP_SHAPE.{developer,engineer}` → `ROADMAP_SHAPE.branches: Record<PathId, string[]>`, so the compiler asks a new path for its branch (a small deviation: the plan kept `ROADMAP_SHAPE` as-is).
+  - `ComparisonRow` → `{ area; stars: Partial<Record<PathId, Stars>> }`. `Partial` so a new path doesn't have to rate every row; a missing value renders "—" (Fork panel) or a flat bar (Signpost).
+  - `CareerPath` gained `ladderBranches?` beyond the plan's fields: the specialisation rungs (AI Apps; ML/DL, AI Systems) take the path's colour on both career ladders.
+  - `lib/progress.ts`: `PATH_TRACKS = PATH_IDS`, `PathTrack = PathId`, new `roadmapSections(path)`. The "Both Paths Explored" achievement is now "All Paths Explored" (same id `both-paths`, so saves are unaffected).
+  - `data/world.ts`: `pathStart(id)`; `BRIDGE_SIGN_SUBTITLES` is derived from the registry.
+  - `store/ui.ts`: removed `pointerLocked` / `setPointerLocked` and the `exitPointerLock` in `setMode`; `toastQueue` / `pushToast` / `shiftToast` → `gemCard` / `showGemCard` / `closeGemCard`; new `panelFrom`, `passportTab`, `passportSelected`, `roadmapPath`, `openPanel(id, from?)`, `openPassport(tab?)`, `backToPassport()`, `setPassportTab`, `setPassportSelected`, `setRoadmapPath`. `openMenu`, `startCinematic` and `openMiniGame` also clear `panelFrom`.
+  - `components/player/useInput.ts`: `InputFrame = { moveY, turn, sprint, jump, interact }`; controls `turnLeft` / `turnRight`; `touchState` lost `lookDX/DY`; `clearInput` removed.
+  - `playerState.ts`: `teleport(x, feetY, z, yaw?, { snap? })` (snap defaults to true; the balloon landing passes `false` so the rig blends); `face(yaw)` (pitch is gone). `playerPose.yaw` = facing.
+  - Deleted `lib/pointerLock.ts` and `components/ui/StartOverlay.tsx`.
+- 2026-10-07 (Phase 6): **`settings.invertY` is kept in the persisted shape but unused**, and `settings.sensitivity` now scales the turn speed. So `version` stays 2 with no migration.
+- 2026-10-07 (Phase 6): **Camera rig.** Target = feet + 1.45 m; ideal = target − forward × 4.2 + up × 1.6, looking at target + forward × 2. Position and look point are damped (10/s).
+  - Occlusion casts a rapier ray from the target to the damped camera, excluding sensors and the player. A hit snaps the distance in (hit − 0.3 m, min 0.8 m); once clear it eases back out at 4/s. The avatar hides under 1.2 m.
+  - The Player keeps tracking the camera during cinematics, so the rig damps out from wherever the cinematic left it. Spawn, respawn, the debug teleport and the reduced-motion fade landing snap instead.
+- 2026-10-07 (Phase 6): **Steering.** Turn rate eases in and out (10/s), × 2.4 rad/s × the "Turn speed" setting. Walking back is 0.6× and never sprints. The avatar body eases towards the facing at 14/s.
+- 2026-10-07 (Phase 6): **Avatar** = 6 meshes, each with an outline (body, track-coloured trim, 2 arms, 2 legs in pivot groups), so about 12 draws plus shadows, not the plan's ~6. Measured worst view: 311 draws at High quality (Phase 5: ~280–350), still 60 fps. The scarf colour follows `currentIsland ?? lastIsland`, not `currentIsland ?? meta`, so it doesn't flash lavender on every bridge.
+- 2026-10-07 (Phase 6): **Passport while its island guide is open.** The Passport stays mounted but `invisible` behind a panel opened from it, so "← Passport" also keeps its scroll position and the Roadmap tab's open sections. `passportTab` / `passportSelected` live in the store as planned.
+- 2026-10-07 (Phase 6): **Roadmap print.** `RoadmapPrint` is portalled into `#print-root` (a sibling of the app in `app/layout.tsx`) for as long as the Roadmap tab is open, and the button only calls `window.print()`. The plan rendered it on click. Keeping it mounted lets Ctrl+P work too, and `@media print` hides every other `<body>` child only while `#print-root` has content (`body:has(#print-root > *)`), so printing elsewhere still prints the screen. Each section (common trunk / path / Summit) starts a new page; phases flow within a section with their headings kept with their first lines.
+- 2026-10-07 (Phase 6): **Controls hint.** Toggled by a window event (`toggleControlsHint()`), not store state. It auto-hides after 8 s of actual movement only the first time; reopened with H / ⌨ it stays until toggled off.
+- 2026-10-07 (Phase 6): **Layout details.**
+  - Phone HUD: 📖 and 📜 stack in a column (like 🔊 / ⚙️), so the right-hand group never reaches the island pill.
+  - The Passport tab icons hide under 400 px, so all four tabs fit at 375 px.
+  - The mobile gem card moves below the First Steps checklist while the tutorial runs.
+  - The guide's "← Passport" pill sits in the header's badge row.
 
 ## Handoff notes
 Each session appends a short block: what was built, key files, anything half-done, and tips for the next session.
@@ -367,10 +405,63 @@ Each session appends a short block: what was built, key files, anything half-don
 - All 20 landmarks were screenshotted and reviewed. The additive glows washed out to white against the sky, so the hologram, shield dome and attention beams now use normal blending.
 
 **Not done / tips**
-- No real-device test (iOS Safari or Android). The audio unlock path and pointer behaviour on iOS are unverified.
+- No real-device test (iOS Safari or Android). The audio unlock path on iOS is unverified. (Pointer lock no longer exists, as of Phase 6.)
 - The certificate's Print button opens a new window with the PNG and calls `print()`, so pop-up blockers may stop it. Download always works.
 - The PhasePanel mentor quote still uses the 🤖 emoji; the new overlays use `ByteAvatar`.
 - New career path: follow the "Adding a roadmap or a new career path" section in README.md.
+
+### Phase 6 session (2026-10-07)
+**What exists**
+- **Registry** (`data/roadmap.ts`): `PATH_IDS`, `CAREER_PATHS` / `CAREER_PATH_BY_ID`, per-path `ROADMAP_SHAPE.branches` and `COMPARISON.stars`. A dev check runs on every path (CareerPath, phases, timeline, ladder rung).
+  - Consumers loop over the registry: Passport columns, Onboarding cards, Harbor/Fork/Summit panels, FinaleOverlay ladder, Signpost arms + bars, BalloonTravel tints, Fork bridge signs, the job-ready meter, achievements.
+  - The Fork personality quiz is still two-way content (README says to re-author it for a new path).
+- **Steering** (`useInput.ts`, `Player.tsx`): keyboard tank controls, eased turning, no strafe or pitch.
+  - `MobileControls.tsx`: one full-screen floating joystick (X turns, Y walks, rim sprints) + JUMP / E.
+  - `ControlsHint.tsx`: desktop pill; H or the HUD ⌨ toggles it.
+- **Third person** (`Avatar.tsx`, `Player.tsx`): the explorer kid, procedurally animated (walk cycle scaled by speed, idle breathing, jump/fall pose, landing squash), and the camera rig (see Decisions).
+  - Avatar hidden during balloon flights and when the camera is pulled in under 1.2 m; visible in the finale.
+- **Gem card** (`GemToast.tsx`): sticky, ✕ / Esc, full bite + "Island · n/total gems", replaced by the next gem, hidden (not cleared) outside explore mode.
+- **Passport** (`Passport.tsx`): tiles show the subtitle; tabs Map / Roadmap / Job-ready / Awards; tab + selection in `store/ui.ts`.
+  - "Read about it" and the Roadmap's "Island guide" open the PhasePanel with "← Passport". Esc / backdrop go back one level, ✕ closes all.
+  - Over 3 columns, phones show the trunk as a 3-wide row and the paths 2 per row.
+- **Roadmap** (`RoadmapTab.tsx`, `RoadmapPrint.tsx`, `roadmapParts.tsx`):
+  - Layout: path picker (defaults to `preferredPath`), header (goal, definition, total, timeline strip), Expand / Collapse all.
+  - Phase sections in walking order: summary, every topic + bite with ✓, tools, key question, anti-patterns, diagrams, project pipeline, Island guide / Fly here.
+  - 📜 HUD button = `openPassport('roadmap')`.
+  - Print / Save as PDF (see Decisions).
+  - `roadmapParts.tsx` holds the blocks shared with PhasePanel (`Card`, `Chips`, `ToolsSection`, `KeyQuestion`, `AntiPatterns`, `TopicGroupView` chips/list, `rungColor`, `phaseHeading`).
+- **Debug hook additions:**
+  - `__aiQuest.state()` now has `camera`, `cameraDist`, `avatarVisible` and `avatar` (limb pose); `pitch` is gone.
+  - `teleport(x, feetY, z, yaw?)`, `setLook(yaw)`, `openPanel(id)`.
+
+**Verification** (Playwright + local Chrome against `next start`; scripts in this session's scratchpad: `p6-desktop.mjs`, `p6-mobile.mjs` (+ `--fresh`), `p6-flight-perf.mjs` (+ `--high`), `p6-3paths.mjs`, plus the Phase 5 `t-all.mjs`)
+- `p6-desktop` (56/56):
+  - controls: mouse never changes yaw; W/S/A/D + arrows, the eased tap, sprint, jump
+  - camera + avatar: camera behind and above, walk-cycle leg swing, jump pose, camera lag then settle, a Code Village wall pulls the camera to 1.0 m (avatar hidden) and it eases back to 4.49 m, respawn snaps behind
+  - gem card: persists > 5 s, ✕, replace, hidden under the Passport, Esc
+  - Passport: subtitles; Read about it → ← Passport / Esc keep LLM Lighthouse selected; ✕ closes all
+  - Roadmap: both paths list every phase in order, and topics = gems for the path (162 / 204); Island guide → back keeps the tab and the open section
+  - print media shows only `#print-root` with every phase; `page.pdf()` = 10 pages
+  - H toggles the hint; **all 20 pedestals open their game with E**
+- `p6-mobile` 375×812 touch (24/24):
+  - stick: up walks, sideways turns in place on either half (no drag-look); JUMP; camera behind
+  - HUD buttons clear of the island pill; the gem card clear of the minimap
+  - Passport map, guide header with the back pill, Roadmap (expanded, both paths), Job-ready, and every Harbor/Fork/Summit tab: no horizontal overflow
+- `--fresh` (5/5): onboarding cards + touch copy, and the tutorial's stick-turn step completes First Steps.
+- `p6-flight-perf` (5/5):
+  - Balloon flight Harbor → Math Mountain: the avatar is hidden during the ride, and the landing blends (max camera step 0.48 m/frame) and settles at 4.49 m.
+  - 60 fps (worst frame 17 ms) with the whole world in view: 280 draws on auto, 311 at High.
+- `t-all` regression: 28/28 desktop, 24/24 touch.
+- Multi-path smoke test (dummy `fde` path, 2 islands; dev server so the dev checks ran):
+  - It compiled once `MINIGAMES` had entries for the new phases. Everything else was data: roadmap, palette, world, `TIMELINE_PHASES`.
+  - 15/15 desktop + 15/15 touch + 2/2 onboarding: 4-column Passport (wraps at 375 px), Roadmap with 3 paths, 3 job-ready meters, Fork compare with 3 bars + "—", Summit timelines, Signpost with 3 arms, a balloon to the new island; no overflow.
+  - Reverted from backups, and grep confirms no `fde` left. No code spot needed fixing.
+- `tsc`, `npm run lint` and `npm run build` are clean. The console shows only the two known library warnings.
+
+**Not done / tips**
+- Still no real-device test (iOS Safari / Android). Tank controls on a real phone joystick are worth a feel check, as is the turn-rate default.
+- The occlusion ray also hits trees and mentors, so in a grove the camera can dip in briefly. That is by design, but not tuned with real play.
+- Mentor lines (Byte, Compass) and the Harbor / Fork / Summit summaries still describe two careers in places; they're authored content to revisit when a real third path lands.
 
 ## Known issues
 - Sim stars are generous by design where a meter is live (rank-it NDCG, perceptron accuracy, curve-fit bars): players can hill-climb. Stars mostly reward speed, first-try accuracy or efficiency.
@@ -389,7 +480,10 @@ Each session appends a short block: what was built, key files, anything half-don
 - In headless Chrome the HUD emoji (🔊 ⚙️ 🔥) render monochrome. Normal browsers show colour emoji.
 - The Phase 2/3 test scripts in older scratchpads look for "Travel here" in the Passport; the button is now "🎈 Fly here".
 - Git: each phase is committed once its session ends (commit only when the user asks). Remote: `origin` → github.com/mzeeshanaltaf/pathfinder-ai.
-- The jump is a polled key state, so a synthetic key press that goes down and up within one frame is missed. Real presses are fine; automated tests must hold Space for about 100 ms.
+- The jump is a polled key state, so a synthetic key press that goes down and up within one frame is missed. Real presses are fine; automated tests must hold Space for about 100 ms. The same goes for A/D turning: a one-frame tap turns almost nothing.
 - During the Harbor tutorial, the "Tap to play ★ First Steps" prompt still shows at the pedestal. Re-opening it just shows the intro again (harmless).
-- The gem toast queue pauses during mini-games, so a toast collected just before opening a game shows again afterwards.
 - The pedestal label uses the troika font. The ★ glyph is drawn only in HTML, never in 3D text (Geist may lack it).
+- Third-person camera: when a wall is right behind the player, the camera stops at 0.8 m and can sit inside the geometry. The avatar is hidden below 1.2 m, so the view reads as first person. A short occluder (a tree) makes the camera dip in and ease back out at 4 m/s.
+- After a balloon flight the view starts at eye height on the dock, then pulls back behind the avatar over about half a second (a blend, not a cut). The ride basket starts from the third-person camera position, which is behind and above where the avatar stood.
+- Printing uses the browser dialog. It was verified with Chrome's `page.pdf()` only, not every browser's print engine. The ☑ / ☐ glyphs come from the system font.
+- The Fork personality quiz and some mentor lines are written for two paths (see the README new-path checklist).

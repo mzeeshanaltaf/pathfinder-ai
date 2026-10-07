@@ -10,12 +10,12 @@ import { INK } from './kit';
 
 export const TUTORIAL_STEPS = (touch: boolean) =>
   [
-    { key: 'look', icon: '👀', text: touch ? 'Look around: drag on the right side of the screen' : 'Look around: move the mouse' },
+    { key: 'look', icon: '🔄', text: touch ? 'Turn around: push the stick left or right' : 'Turn around: A/D or ←/→' },
     { key: 'jump', icon: '🦘', text: touch ? 'Jump: tap the JUMP button' : 'Jump: press Space' },
     { key: 'passport', icon: '📖', text: touch ? 'Open your Skill Passport: tap 📖' : 'Open your Skill Passport: press P' },
   ] as const satisfies readonly { key: keyof TutorialSteps; icon: string; text: string }[];
 
-/** Total turning (radians, any direction) that counts as "looked around": ~57°, about one swipe on a phone. */
+/** Total turning (radians, any direction) that counts as "turned around": ~57°. */
 const LOOK_TOTAL = 1.0;
 const FINISH_DELAY_MS = 900;
 
