@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
+
+const UMAMI_SCRIPT_URL = process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL;
+const UMAMI_WEBSITE_ID = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -46,6 +50,10 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         {children}
         {/* The Passport's Roadmap tab portals its printable document here (hidden on screen). */}
         <div id="print-root" />
+        {/* Self-hosted Umami analytics; NEXT_PUBLIC_* vars are inlined at build time. */}
+        {UMAMI_SCRIPT_URL && UMAMI_WEBSITE_ID && (
+          <Script src={UMAMI_SCRIPT_URL} data-website-id={UMAMI_WEBSITE_ID} strategy="afterInteractive" />
+        )}
       </body>
     </html>
   );
