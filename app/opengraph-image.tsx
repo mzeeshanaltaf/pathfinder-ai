@@ -42,6 +42,21 @@ export default async function Image() {
           <div style={{ fontSize: 30, marginTop: 28, lineHeight: 1.3, opacity: 0.8 }}>
             Walk the AI Developer, AI Engineer and AI FDE roadmaps across a world of floating islands. Collect skills, play challenges, reach the Summit.
           </div>
+          <div
+            style={{
+              display: 'flex',
+              alignSelf: 'flex-start',
+              marginTop: 30,
+              padding: '14px 32px',
+              fontSize: 36,
+              color: '#fff',
+              background: '#8b74cf',
+              border: `4px solid ${INK}`,
+              borderRadius: 999,
+            }}
+          >
+            Start exploring free →
+          </div>
         </div>
       </div>
     ),

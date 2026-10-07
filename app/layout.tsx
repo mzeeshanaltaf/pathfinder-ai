@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
 import Script from 'next/script';
+import { SEO_DESCRIPTION, SEO_TITLE, SITE_NAME, SITE_URL } from '@/lib/seo';
 import './globals.css';
 
 const UMAMI_SCRIPT_URL = process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL;
@@ -11,26 +12,27 @@ const geistSans = Geist({
   subsets: ['latin'],
 });
 
-const DESCRIPTION =
-  'Find your path into AI. Walk the AI Developer, AI Engineer and AI Forward Deployed Engineer roadmaps across a cartoon world of floating islands: collect skills, play challenges, track projects and reach the Summit.';
-
 export const metadata: Metadata = {
-  // Absolute URLs for the Open Graph image; set NEXT_PUBLIC_SITE_URL when deploying.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
-  title: 'Pathfinder AI · Find your path into AI',
-  description: DESCRIPTION,
-  applicationName: 'Pathfinder AI',
+  // Absolute URLs for canonical + Open Graph; set NEXT_PUBLIC_SITE_URL when deploying.
+  metadataBase: new URL(SITE_URL),
+  title: SEO_TITLE,
+  description: SEO_DESCRIPTION,
+  applicationName: SITE_NAME,
   keywords: ['AI roadmap', 'AI Developer', 'AI Engineer', 'Forward Deployed Engineer', 'learn AI', 'career path', '3D game'],
+  alternates: { canonical: '/' },
+  robots: { index: true, follow: true },
   openGraph: {
-    title: 'Pathfinder AI',
-    description: DESCRIPTION,
-    siteName: 'Pathfinder AI',
+    title: SEO_TITLE,
+    description: SEO_DESCRIPTION,
+    siteName: SITE_NAME,
     type: 'website',
+    url: '/',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Pathfinder AI',
-    description: DESCRIPTION,
+    title: SEO_TITLE,
+    description: SEO_DESCRIPTION,
   },
 };
 
