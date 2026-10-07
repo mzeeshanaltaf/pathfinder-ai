@@ -19,15 +19,23 @@ export default function InteractPrompt() {
   const [touch] = useState(isCoarsePointer);
   const nearby = useUi((s) => s.nearbyPhaseId);
   const challenge = useUi((s) => s.nearbyChallenge);
+  const dock = useUi((s) => s.nearbyDock);
   const visible = useUi((s) => s.mode === 'explore' && (s.pointerLocked || touch) && !s.fading);
-  const id = challenge ?? nearby;
+  // Same priority as the Player's E key: pedestal, then balloon dock, then landmark.
+  const id = challenge ?? dock ?? nearby;
   if (!id || !visible) return null;
 
   const phase = getPhase(id);
   const c = TRACK_COLORS[phase.track];
-  const verb = challenge ? 'play' : 'explore';
-  const what = challenge ? `★ ${MINIGAMES[id].title}` : phase.title;
-  const open = () => (challenge ? useUi.getState().openMiniGame(id) : useUi.getState().openPanel(id));
+  const atDock = !challenge && !!dock;
+  const verb = challenge ? 'play' : atDock ? 'fly' : 'explore';
+  const what = challenge ? `★ ${MINIGAMES[id].title}` : atDock ? '🎈 by balloon' : phase.title;
+  const open = () => {
+    const ui = useUi.getState();
+    if (challenge) ui.openMiniGame(id);
+    else if (atDock) ui.setMode('passport');
+    else ui.openPanel(id);
+  };
 
   if (touch) {
     return (

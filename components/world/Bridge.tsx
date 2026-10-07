@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo } from 'react';
 import { CuboidCollider, RigidBody } from '@react-three/rapier';
+import { useProgress } from '@/store/progress';
 import {
   BoxGeometry,
   CatmullRomCurve3,
+  Color,
   CylinderGeometry,
   Matrix4,
   Quaternion,
@@ -31,9 +33,13 @@ const POST_HEIGHT = 1.25;
 const ROPE_SAG = 0.2;
 /** Below the ~1.5 m jump apex: leaving a bridge is possible, just never accidental. */
 const WALL_HEIGHT = 1.2;
+/** Plank colour on a lit bridge. */
+const LIT_PLANK = '#f6cf86';
 
 interface BridgeParts {
   planks: Matrix4[];
+  /** Index into BRIDGE_LAYOUTS for each plank (lit bridges tint their planks). */
+  plankBridge: number[];
   beams: Matrix4[];
   posts: Matrix4[];
   ropes: BufferGeometry;
@@ -44,8 +50,29 @@ const UP = new Vector3(0, 1, 0);
 /** Visible span: from just inside each island rim. */
 const span = (b: BridgeLayout) => ({ from: BRIDGE_OVERLAP - 0.3, to: b.length - BRIDGE_OVERLAP + 0.3 });
 
+/** Post bases (deck height) along both sides of a bridge: `[left, right]`. */
+export function bridgePostBases(b: BridgeLayout): [Vector3[], Vector3[]] {
+  const { from, to } = span(b);
+  const len = to - from;
+  const count = Math.max(2, Math.round(len / POST_SPACING) + 1);
+  const local = new Vector3();
+  const side = (s: number) =>
+    Array.from({ length: count }, (_, i) =>
+      local
+        .set(s * POST_OFFSET, 0, from + (len * i) / (count - 1))
+        .applyQuaternion(b.quaternion)
+        .add(b.start)
+        .clone(),
+    );
+  return [side(-1), side(1)];
+}
+
+/** Height of a post top above the deck. */
+export const POST_TOP = POST_HEIGHT - 0.35;
+
 function buildBridges(layouts: BridgeLayout[]): BridgeParts {
   const planks: Matrix4[] = [];
+  const plankBridge: number[] = [];
   const beams: Matrix4[] = [];
   const posts: Matrix4[] = [];
   const ropeGeos: BufferGeometry[] = [];
@@ -55,7 +82,7 @@ function buildBridges(layouts: BridgeLayout[]): BridgeParts {
   const toWorld = (b: BridgeLayout, x: number, y: number, z: number) =>
     local.set(x, y, z).applyQuaternion(b.quaternion).add(b.start).clone();
 
-  for (const b of layouts) {
+  layouts.forEach((b, bi) => {
     const rng = mulberry32(hashString(b.key));
     const { from, to } = span(b);
 
@@ -65,6 +92,7 @@ function buildBridges(layouts: BridgeLayout[]): BridgeParts {
       const pos = toWorld(b, (rng() - 0.5) * 0.1, PLANK_LIFT - PLANK_THICKNESS / 2 + (rng() - 0.5) * 0.03, z);
       jitterQ.setFromAxisAngle(UP, (rng() - 0.5) * 0.08);
       planks.push(new Matrix4().compose(pos, b.quaternion.clone().multiply(jitterQ), new Vector3(1, 1, 1)));
+      plankBridge.push(bi);
     }
 
     // Two support beams under the planks (unit box scaled along the bridge).
@@ -75,13 +103,11 @@ function buildBridges(layouts: BridgeLayout[]): BridgeParts {
     }
 
     // Vertical posts on both sides, ropes strung between their tops with a little sag.
-    const count = Math.max(2, Math.round(len / POST_SPACING) + 1);
-    for (const side of [-1, 1]) {
+    for (const bases of bridgePostBases(b)) {
       const tops: Vector3[] = [];
-      for (let i = 0; i < count; i++) {
-        const base = toWorld(b, side * POST_OFFSET, 0, from + (len * i) / (count - 1));
+      for (const base of bases) {
         posts.push(new Matrix4().makeTranslation(base.x, base.y + POST_HEIGHT / 2 - 0.25, base.z));
-        tops.push(base.add(new Vector3(0, POST_HEIGHT - 0.35, 0)));
+        tops.push(base.clone().add(new Vector3(0, POST_TOP, 0)));
       }
       const pts: Vector3[] = [];
       tops.forEach((t, i) => {
@@ -90,11 +116,11 @@ function buildBridges(layouts: BridgeLayout[]): BridgeParts {
       });
       ropeGeos.push(new TubeGeometry(new CatmullRomCurve3(pts), pts.length * 4, 0.05, 5, false));
     }
-  }
+  });
 
   const ropes = mergeGeometries(ropeGeos);
   ropeGeos.forEach((g) => g.dispose());
-  return { planks, beams, posts, ropes };
+  return { planks, plankBridge, beams, posts, ropes };
 }
 
 /** Deck + invisible low side walls so new players don't trivially walk off. */
@@ -120,6 +146,13 @@ function BridgeColliders({ b }: { b: BridgeLayout }) {
 /** All bridges, batched: planks, beams and posts are instanced; ropes are one merged mesh. */
 export default function Bridges() {
   const parts = useMemo(() => buildBridges(BRIDGE_LAYOUTS), []);
+  // A bridge lights up (golden planks) once its `from` island has a badge.
+  const litKey = useProgress((s) => BRIDGE_LAYOUTS.map((b) => (s.badges[b.from.id] ? 1 : 0)).join(''));
+  const plankColors = useMemo(() => {
+    const wood = new Color(COLORS.wood);
+    const lit = new Color(LIT_PLANK);
+    return parts.plankBridge.map((bi) => (litKey[bi] === '1' ? lit : wood));
+  }, [parts, litKey]);
   const geos = useMemo(
     () => ({
       plank: new BoxGeometry(PLANK_WIDTH, PLANK_THICKNESS, PLANK_DEPTH),
@@ -138,7 +171,7 @@ export default function Bridges() {
 
   return (
     <>
-      <ToonInstances geometry={geos.plank} matrices={parts.planks} color={COLORS.wood} outline={0.035} receiveShadow />
+      <ToonInstances geometry={geos.plank} matrices={parts.planks} colors={plankColors} outline={0.035} receiveShadow />
       <ToonInstances geometry={geos.beam} matrices={parts.beams} color={COLORS.woodDark} outline={0.03} />
       <ToonInstances geometry={geos.post} matrices={parts.posts} color={COLORS.woodDark} outline={0.035} />
       <mesh geometry={parts.ropes} castShadow>

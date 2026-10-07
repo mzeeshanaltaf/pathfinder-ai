@@ -28,6 +28,36 @@ body {
   display: block;
 }
 
+/* HUD layout. Phones: the compass sits under the island pill (left column) and the minimap moves
+   down to clear the stacked buttons. From sm up: the compass is centred at the top. */
+.hud-compass {
+  left: max(10px, env(safe-area-inset-left));
+  top: calc(max(10px, env(safe-area-inset-top)) + 66px);
+}
+.hud-minimap {
+  top: calc(max(10px, env(safe-area-inset-top)) + 104px);
+}
+.hud-toast {
+  top: calc(max(10px, env(safe-area-inset-top)) + 122px);
+}
+.hud-tracker {
+  top: calc(max(10px, env(safe-area-inset-top)) + 196px);
+}
+@media (min-width: 640px) {
+  .hud-compass {
+    left: 50%;
+    transform: translateX(-50%);
+    top: max(10px, env(safe-area-inset-top));
+  }
+  .hud-minimap,
+  .hud-toast {
+    top: calc(max(10px, env(safe-area-inset-top)) + 64px);
+  }
+  .hud-tracker {
+    top: calc(max(10px, env(safe-area-inset-top)) + 150px);
+  }
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -121,6 +151,93 @@ body {
   }
 }
 
+@keyframes beam-in {
+  from {
+    stroke-dashoffset: var(--len);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes flow-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  20%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Concept-simulation sliders: thick outlined track, chunky thumb, filled up to the value (--pct). */
+.sim-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  background: transparent;
+  touch-action: pan-y;
+  cursor: pointer;
+}
+.sim-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.sim-range::-webkit-slider-runnable-track {
+  height: 14px;
+  border-radius: 999px;
+  border: 3px solid #3d3452;
+  background: linear-gradient(to right, var(--fill, #ffd66e) var(--pct, 0%), #ffffff var(--pct, 0%));
+}
+.sim-range::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  border: 3px solid #3d3452;
+  background: linear-gradient(to right, var(--fill, #ffd66e) var(--pct, 0%), #ffffff var(--pct, 0%));
+}
+.sim-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -10px;
+  border-radius: 50%;
+  border: 3px solid #3d3452;
+  background: #ffffff;
+  box-shadow: 0 3px 0 #3d3452;
+}
+.sim-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid #3d3452;
+  background: #ffffff;
+  box-shadow: 0 3px 0 #3d3452;
+}
+.sim-range:focus-visible {
+  outline: none;
+}
+.sim-range:focus-visible::-webkit-slider-thumb {
+  outline: 3px solid #4b8fd6;
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -128,6 +245,35 @@ body {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(310%);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes flame {
+  0%,
+  100% {
+    transform: scale(1) rotate(-4deg);
+  }
+  50% {
+    transform: scale(1.15) rotate(4deg);
   }
 }
 

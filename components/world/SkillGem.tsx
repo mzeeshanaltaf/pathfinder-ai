@@ -6,6 +6,7 @@ import { Outlines } from '@react-three/drei';
 import { Color, Matrix4, Object3D, OctahedronGeometry, type InstancedMesh } from 'three';
 import { playerPose } from '@/components/player/playerState';
 import { GEM_HEIGHT, GEM_PICKUP_RADIUS, ISLAND_TRACK } from '@/data/world';
+import { sfx } from '@/lib/audio';
 import { COLORS, GEM_COLORS } from '@/lib/palette';
 import { getToonGradient } from '@/lib/toon';
 import { getGemSpawns } from '@/lib/worldLayout';
@@ -72,7 +73,10 @@ export default function SkillGems() {
 
       const y = s.y + GEM_HEIGHT + Math.sin(t * 2 + phases[i]) * 0.14;
       if (Math.hypot(flat, y - py) < GEM_PICKUP_RADIUS) {
-        if (useProgress.getState().collectGem(s.id)) useUi.getState().pushToast(s.id);
+        if (useProgress.getState().collectGem(s.id)) {
+          useUi.getState().pushToast(s.id);
+          sfx.gem();
+        }
         mesh.setMatrixAt(i, HIDDEN);
         continue;
       }

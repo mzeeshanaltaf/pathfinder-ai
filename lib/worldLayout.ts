@@ -80,6 +80,19 @@ export function landmarkOffset(def: IslandDef): [number, number] {
   return [Math.cos(best) * d, Math.sin(best) * d];
 }
 
+/** Unit XZ direction from the island centre to its landmark. */
+function landmarkDirection(def: IslandDef): [number, number] {
+  const [ox, oz] = landmarkOffset(def);
+  const len = Math.hypot(ox, oz) || 1;
+  return [ox / len, oz / len];
+}
+
+/** Walkways kept clear of scenery: one per bridge, plus the Harbor pier (centre → landmark → rim). */
+function clearDirections(def: IslandDef): [number, number][] {
+  const dirs = bridgeDirections(def.id);
+  return def.landmark === 'dock' ? [...dirs, landmarkDirection(def)] : dirs;
+}
+
 /** Clear radius around the island centre (the spawn / checkpoint spot). */
 const CENTRE_CLEARANCE = 3.5;
 /** Half-width of the clear walkway from the centre towards each bridge. */
@@ -105,9 +118,10 @@ export function scatterOnIsland(
   { edgeMargin = 1.6, avoid = [], avoidDist = 0 }: { edgeMargin?: number; avoid?: ScatterPoint[]; avoidDist?: number } = {},
 ): ScatterPoint[] {
   const rng = mulberry32(hashString(`${def.id}:${salt}`));
-  const dirs = bridgeDirections(def.id);
+  const dirs = clearDirections(def);
   const [lx, lz] = landmarkOffset(def);
   const maxR = islandWalkRadius(def.radius) - edgeMargin;
+  const keepOut = landmarkClearance(def) + 0.6;
   const out: ScatterPoint[] = [];
 
   for (let tries = 0; tries < count * 40 && out.length < count; tries++) {
@@ -116,7 +130,7 @@ export function scatterOnIsland(
     const px = Math.cos(ang) * r;
     const pz = Math.sin(ang) * r;
     if (r < CENTRE_CLEARANCE) continue;
-    if (Math.hypot(px - lx, pz - lz) < 3) continue;
+    if (Math.hypot(px - lx, pz - lz) < keepOut) continue;
     const onPath = dirs.some(([dx, dz]) => {
       const t = px * dx + pz * dz;
       return t > 0 && Math.abs(px * dz - pz * dx) < PATH_CLEARANCE;
@@ -144,13 +158,22 @@ export function sceneryObstacles(def: IslandDef) {
 /** Landmarks on big islands (the Summit) are scaled up. */
 export const landmarkScale = (def: IslandDef) => (def.landmark === 'summit-plaza' ? 1.5 : 1);
 
-/** Radius of the landmark's solid collider. */
-export const landmarkRadius = (def: IslandDef) => 1.3 * landmarkScale(def);
+/** Radius of the landmark's solid core (mentor and pedestal stand outside it). */
+export const landmarkRadius = (def: IslandDef) => 1.9 * landmarkScale(def);
+
+/** Landmark decorations reach this far (low props behind the core); gems and scenery stay out. */
+export const landmarkClearance = (def: IslandDef) => 3.6 * landmarkScale(def);
 
 /** Landmark base position in world space (on the island top). */
 export function landmarkPosition(def: IslandDef): [number, number, number] {
   const [ox, oz] = landmarkOffset(def);
   return [def.position[0] + ox, def.position[1], def.position[2] + oz];
+}
+
+/** Landmark yaw: its local +Z (front door, signs) faces the island centre. */
+export function landmarkYaw(def: IslandDef): number {
+  const [ox, oz] = landmarkOffset(def);
+  return Math.atan2(-ox, -oz);
 }
 
 /** Mentor stands between the island centre and the landmark, a little to one side. */
@@ -234,6 +257,60 @@ export function challengePosition(def: IslandDef): [number, number, number] {
   return best;
 }
 
+/** Balloon dock platform radius. */
+export const DOCK_RADIUS = 1.3;
+
+const dockCache = new Map<PhaseId, [number, number, number]>();
+
+/**
+ * Hot-air balloon dock: a free spot near the rim, preferably on the far side from the landmark,
+ * clear of walkways, the landmark, mentor, pedestal, trees, rocks and signs.
+ */
+export function dockPosition(def: IslandDef): [number, number, number] {
+  const cached = dockCache.get(def.id);
+  if (cached) return cached;
+  const [lx, lz] = landmarkDirection(def);
+  const [ox, oz] = landmarkOffset(def);
+  const away = Math.atan2(-lz, -lx);
+  const walk = islandWalkRadius(def.radius);
+  const dirs = clearDirections(def);
+  const [mx, , mz] = mentorPosition(def);
+  const [cx, , cz] = challengePosition(def);
+  const { trees, rocks } = sceneryObstacles(def);
+  const signs = SIGN_LAYOUTS.filter((s) => s.on === def.id);
+  const keepLandmark = landmarkClearance(def) + 1.6;
+
+  let best: [number, number, number] | null = null;
+  outer: for (const frac of [0.66, 0.56, 0.74, 0.48]) {
+    const r = Math.min(walk * frac, walk - DOCK_RADIUS - 0.8);
+    for (let k = 0; k <= 20; k++) {
+      const a = away + (k % 2 === 0 ? 1 : -1) * Math.ceil(k / 2) * 0.3;
+      const px = Math.cos(a) * r;
+      const pz = Math.sin(a) * r;
+      if (Math.hypot(px, pz) < CENTRE_CLEARANCE + 1.2) continue;
+      if (dirs.some(([dx, dz]) => px * dx + pz * dz > 0 && Math.abs(px * dz - pz * dx) < PATH_CLEARANCE + DOCK_RADIUS * 0.5)) continue;
+      if (Math.hypot(px - ox, pz - oz) < keepLandmark) continue;
+      const x = def.position[0] + px;
+      const z = def.position[2] + pz;
+      if (Math.hypot(x - mx, z - mz) < 3 || Math.hypot(x - cx, z - cz) < 3) continue;
+      if (trees.some((p) => Math.hypot(p.x - x, p.z - z) < DOCK_RADIUS + 1.1)) continue;
+      if (rocks.some((p) => Math.hypot(p.x - x, p.z - z) < DOCK_RADIUS + 0.9)) continue;
+      if (signs.some((s) => Math.hypot(s.position[0] - x, s.position[2] - z) < DOCK_RADIUS + 1.2)) continue;
+      best = [x, def.position[1], z];
+      break outer;
+    }
+  }
+  if (!best) throw new Error(`dock: no free spot on ${def.id}`);
+  dockCache.set(def.id, best);
+  return best;
+}
+
+/** Yaw that looks from a point on an island towards its landmark (0 = looking −Z). */
+export function yawTowardsLandmark(def: IslandDef, x: number, z: number): number {
+  const [lx, , lz] = landmarkPosition(def);
+  return Math.atan2(-(lx - x), -(lz - z));
+}
+
 export interface GemSpawn {
   id: string;
   phaseId: PhaseId;
@@ -255,11 +332,13 @@ function placeGems(def: IslandDef): GemSpawn[] {
   const [lx, , lz] = landmarkPosition(def);
   const [mx, , mz] = mentorPosition(def);
   const [cx, , cz] = challengePosition(def);
+  const [dx, , dz] = dockPosition(def);
   const { trees, rocks } = sceneryObstacles(def);
   const obstacles: { x: number; z: number; r: number }[] = [
-    { x: lx, z: lz, r: landmarkRadius(def) + 1.1 },
+    { x: lx, z: lz, r: landmarkClearance(def) },
     { x: mx, z: mz, r: 1.4 },
     { x: cx, z: cz, r: 1.6 },
+    { x: dx, z: dz, r: DOCK_RADIUS + 0.6 },
     ...trees.map((p) => ({ x: p.x, z: p.z, r: 1.1 })),
     ...rocks.map((p) => ({ x: p.x, z: p.z, r: 1 })),
     ...SIGN_LAYOUTS.filter((s) => s.on === def.id).map((s) => ({ x: s.position[0], z: s.position[2], r: 1 })),

@@ -18,16 +18,27 @@ export const playerEvents = {
   jumps: 0,
 };
 
+/** Imperative hooks the Player registers for scripted moves (balloon landing, finale). */
+export const playerControl: {
+  /** Move the player's feet to (x, feetY, z); optionally set the look direction (pitch resets to 0). */
+  teleport: ((x: number, feetY: number, z: number, yaw?: number) => void) | null;
+  /** Turn the view without moving. */
+  face: ((yaw: number, pitch?: number) => void) | null;
+} = { teleport: null, face: null };
+
 let travelRequest: PhaseId | null = null;
 
-/** Ask the Player to fade out and reappear at the centre of an island (free fast-travel). */
+/** Ask for a hot-air balloon flight to an island's dock (consumed by BalloonTravel). */
 export function requestTravel(id: PhaseId) {
   travelRequest = id;
 }
 
-/** Consumed by the Player's frame loop. */
+/** Consumed by the balloon director's frame loop. */
 export function takeTravelRequest(): PhaseId | null {
   const id = travelRequest;
   travelRequest = null;
   return id;
 }
+
+/** One-shot "skip the cinematic" flag (Skip button / Space / Enter / Esc). */
+export const cinematicControl = { skip: false };

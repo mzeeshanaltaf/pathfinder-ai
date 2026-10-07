@@ -32,8 +32,7 @@ export default function GemToast() {
   // Mobile: left-aligned so it never covers the minimap (top-right). Desktop: centred.
   return (
     <div
-      className="pointer-events-none fixed left-2.5 z-35 w-[calc(100vw-130px)] sm:left-1/2 sm:w-[min(400px,calc(100vw-340px))] sm:-translate-x-1/2"
-      style={{ top: 'calc(max(10px, env(safe-area-inset-top)) + 64px)' }}
+      className="hud-toast pointer-events-none fixed left-2.5 z-35 w-[calc(100vw-130px)] sm:left-1/2 sm:w-[min(400px,calc(100vw-340px))] sm:-translate-x-1/2"
       role="status"
       aria-live="polite"
     >

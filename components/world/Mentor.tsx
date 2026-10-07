@@ -16,7 +16,10 @@ import {
 import { playerPose } from '@/components/player/playerState';
 import { getPhase } from '@/data/roadmap';
 import { ISLAND_TRACK, ISLANDS, type IslandDef } from '@/data/world';
+import { mergeParts, part, type Part } from '@/lib/landmarkKit';
+import { vertexToon } from '@/lib/materials';
 import { COLORS, TRACK_COLORS } from '@/lib/palette';
+import { hatColor } from '@/lib/progress';
 import { getToonGradient } from '@/lib/toon';
 import { mentorPosition } from '@/lib/worldLayout';
 import { useProgress } from '@/store/progress';
@@ -30,60 +33,71 @@ const TALK_RADIUS = 7.5;
 const GREET_RADIUS = 14;
 const LINE_MS = 4500;
 const HOVER = 0.35;
+/** Mentors further than this (m) from the camera are not drawn. */
+const DRAW_RADIUS = 120;
 
-let geos: Record<'body' | 'head' | 'screen' | 'eye' | 'antenna' | 'ball' | 'hand' | 'shadow', BufferGeometry> | null = null;
+const robotCache = new Map<string, BufferGeometry>();
 
-/** Shared robot geometry (created once, reused by all 20 mentors). */
-function robotGeometry() {
-  geos ??= {
-    body: new CapsuleGeometry(0.36, 0.42, 4, 10),
-    head: new BoxGeometry(0.82, 0.6, 0.6),
-    screen: new BoxGeometry(0.64, 0.42, 0.04),
-    eye: new SphereGeometry(0.06, 8, 6),
-    antenna: new CylinderGeometry(0.025, 0.025, 0.32, 5),
-    ball: new SphereGeometry(0.09, 10, 8),
-    hand: new SphereGeometry(0.12, 10, 8),
-    shadow: new CircleGeometry(0.45, 16),
-  };
-  return geos;
+/**
+ * One robot as a single merged, vertex-coloured mesh (one draw + one outline instead of ~10),
+ * cached per accent colour. Byte drops the antenna when wearing a hat.
+ */
+function robotGeometry(accent: string, antenna: boolean): BufferGeometry {
+  const key = `${accent}|${antenna}`;
+  let g = robotCache.get(key);
+  if (!g) {
+    const head: [number, number, number] = [0, 1.38, 0];
+    const at = (x: number, y: number, z: number): [number, number, number] => [head[0] + x, head[1] + y, head[2] + z];
+    const parts: Part[] = [
+      part(new CapsuleGeometry(0.36, 0.42, 4, 10), COLORS.robotShell, [0, 0.62, 0]),
+      part(new SphereGeometry(0.12, 10, 8), accent, [-0.5, 0.55, 0.05]),
+      part(new SphereGeometry(0.12, 10, 8), accent, [0.5, 0.55, 0.05]),
+      part(new BoxGeometry(0.82, 0.6, 0.6), accent, head),
+      part(new BoxGeometry(0.64, 0.42, 0.04), COLORS.robotScreen, at(0, 0, 0.3)),
+      part(new SphereGeometry(0.06, 8, 6), COLORS.robotEyes, at(-0.14, 0.03, 0.32), [0, 0, 0], [1, 1.3, 0.4]),
+      part(new SphereGeometry(0.06, 8, 6), COLORS.robotEyes, at(0.14, 0.03, 0.32), [0, 0, 0], [1, 1.3, 0.4]),
+    ];
+    if (antenna) {
+      parts.push(part(new CylinderGeometry(0.025, 0.025, 0.32, 5), COLORS.outline, at(0, 0.46, 0)));
+      parts.push(part(new SphereGeometry(0.09, 10, 8), accent, at(0, 0.64, 0)));
+    }
+    g = mergeParts(parts);
+    robotCache.set(key, g);
+  }
+  return g;
 }
 
-function Robot({ accent }: { accent: string }) {
-  const g = robotGeometry();
+let hatGeos: Record<'brim' | 'crown' | 'band', BufferGeometry> | null = null;
+const shadowGeo = new CircleGeometry(0.45, 16);
+
+function Robot({ accent, hat = null }: { accent: string; hat?: string | null }) {
+  hatGeos ??= {
+    brim: new CylinderGeometry(0.36, 0.36, 0.05, 14),
+    crown: new CylinderGeometry(0.22, 0.25, 0.36, 14),
+    band: new CylinderGeometry(0.255, 0.255, 0.08, 14),
+  };
   const gradient = getToonGradient();
   return (
     <group>
-      <mesh geometry={g.body} position={[0, 0.62, 0]} castShadow>
-        <meshToonMaterial color={COLORS.robotShell} gradientMap={gradient} />
+      <mesh geometry={robotGeometry(accent, !hat)} material={vertexToon()} castShadow>
         <Outlines thickness={0.03} color={COLORS.outline} />
       </mesh>
-      <mesh geometry={g.hand} position={[-0.5, 0.55, 0.05]} castShadow>
-        <meshToonMaterial color={accent} gradientMap={gradient} />
-      </mesh>
-      <mesh geometry={g.hand} position={[0.5, 0.55, 0.05]} castShadow>
-        <meshToonMaterial color={accent} gradientMap={gradient} />
-      </mesh>
-      <group position={[0, 1.38, 0]}>
-        <mesh geometry={g.head} castShadow>
-          <meshToonMaterial color={accent} gradientMap={gradient} />
-          <Outlines thickness={0.03} color={COLORS.outline} />
-        </mesh>
-        <mesh geometry={g.screen} position={[0, 0, 0.3]}>
-          <meshBasicMaterial color={COLORS.robotScreen} />
-        </mesh>
-        <mesh geometry={g.eye} position={[-0.14, 0.03, 0.32]} scale={[1, 1.3, 0.4]}>
-          <meshBasicMaterial color={COLORS.robotEyes} />
-        </mesh>
-        <mesh geometry={g.eye} position={[0.14, 0.03, 0.32]} scale={[1, 1.3, 0.4]}>
-          <meshBasicMaterial color={COLORS.robotEyes} />
-        </mesh>
-        <mesh geometry={g.antenna} position={[0, 0.46, 0]}>
-          <meshToonMaterial color={COLORS.outline} gradientMap={gradient} />
-        </mesh>
-        <mesh geometry={g.ball} position={[0, 0.64, 0]}>
-          <meshToonMaterial color={accent} emissive={accent} emissiveIntensity={0.5} gradientMap={gradient} />
-        </mesh>
-      </group>
+      {hat && (
+        // Byte's streak hat: a little top hat, worn at a jaunty angle.
+        <group position={[0.06, 1.69, 0]} rotation={[0, 0, -0.18]}>
+          <mesh geometry={hatGeos.brim} castShadow>
+            <meshToonMaterial color={hat} gradientMap={gradient} />
+            <Outlines thickness={0.02} color={COLORS.outline} />
+          </mesh>
+          <mesh geometry={hatGeos.crown} position={[0, 0.2, 0]} castShadow>
+            <meshToonMaterial color={hat} gradientMap={gradient} />
+            <Outlines thickness={0.02} color={COLORS.outline} />
+          </mesh>
+          <mesh geometry={hatGeos.band} position={[0, 0.08, 0]}>
+            <meshToonMaterial color={COLORS.outline} gradientMap={gradient} />
+          </mesh>
+        </group>
+      )}
     </group>
   );
 }
@@ -117,13 +131,15 @@ function Mentor({ def }: { def: IslandDef }) {
   const colors = TRACK_COLORS[ISLAND_TRACK[def.id]];
   const position = useMemo(() => mentorPosition(def), [def]);
   const bob = useRef<Group>(null);
+  const root = useRef<Group>(null);
   const spin = useRef<Group>(null);
   const [talking, setTalking] = useState(false);
   const talkingRef = useRef(false);
   const seed = useMemo(() => position[0] * 0.37 + position[2] * 0.11, [position]);
   const isGuide = def.id === 'harbor';
+  const hat = useProgress((s) => (isGuide ? hatColor(s.byteHat) : null));
 
-  useFrame(({ clock }, dt) => {
+  useFrame(({ clock, camera }, dt) => {
     const t = clock.elapsedTime;
     if (bob.current) bob.current.position.y = HOVER + Math.sin(t * 2.2 + seed) * 0.08;
 
@@ -131,6 +147,8 @@ function Mentor({ def }: { def: IslandDef }) {
     const dz = playerPose.z - position[2];
     const dist = Math.hypot(dx, dz);
     const near = Math.abs(playerPose.y - position[1]) < 4;
+    // Far-away mentors are specks: skip drawing them (the camera, not the player, during cinematics).
+    if (root.current) root.current.visible = (camera.position.x - position[0]) ** 2 + (camera.position.z - position[2]) ** 2 < DRAW_RADIUS ** 2;
 
     if (spin.current) {
       // Face the player when near, otherwise idle-sway towards the island centre.
@@ -153,13 +171,13 @@ function Mentor({ def }: { def: IslandDef }) {
   });
 
   return (
-    <group position={position}>
-      <mesh geometry={robotGeometry().shadow} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+    <group ref={root} position={position}>
+      <mesh geometry={shadowGeo} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
         <meshBasicMaterial color={COLORS.outline} transparent opacity={0.18} depthWrite={false} />
       </mesh>
       <group ref={spin}>
         <group ref={bob}>
-          <Robot accent={colors.base} />
+          <Robot accent={colors.base} hat={hat} />
         </group>
       </group>
       {talking && <SpeechBubble name={phase.mentor.name} lines={phase.mentor.lines} accent={colors.dark} />}

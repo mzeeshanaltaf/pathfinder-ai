@@ -1,7 +1,24 @@
 import { create } from 'zustand';
 import type { PhaseId } from '@/data/roadmap';
 
-export type UiMode = 'explore' | 'panel' | 'minigame' | 'passport' | 'menu';
+/** `cinematic` (Phase 5): the camera is scripted (balloon flight, Summit finale); input is off. */
+export type UiMode = 'explore' | 'panel' | 'minigame' | 'passport' | 'menu' | 'cinematic';
+
+/** Which full-screen card `mode === 'menu'` shows. */
+export type MenuId = 'onboarding' | 'welcome' | 'settings' | 'finale' | 'certificate';
+
+export type Cinematic = { kind: 'balloon'; to: PhaseId } | { kind: 'finale' };
+
+/** A queued celebratory toast (achievement, streak milestone, new hat). */
+export interface Notice {
+  key: string;
+  icon: string;
+  title: string;
+  text: string;
+}
+
+/** Rendering tier: 2 = full, 1 = dpr 1, 0 = low (no shadows, fewer clouds / flowers / particles). */
+export type PerfTier = 0 | 1 | 2;
 
 /** A finished mini-game run, shown on the host's result screen. */
 export interface MiniGameResult {
@@ -41,8 +58,21 @@ interface UiState {
   miniGameResult: MiniGameResult | null;
   /** Harbor tutorial in progress (null when not running). */
   tutorial: TutorialSteps | null;
+  /** Balloon dock in interact range (lowest E priority). */
+  nearbyDock: PhaseId | null;
+  menu: MenuId | null;
+  cinematic: Cinematic | null;
+  notices: Notice[];
+  /** Auto-quality tier from PerformanceMonitor (used when settings.quality is 'auto'). */
+  perfTier: PerfTier;
 
   setMode: (mode: UiMode) => void;
+  setNearbyDock: (id: PhaseId | null) => void;
+  openMenu: (menu: MenuId) => void;
+  startCinematic: (c: Cinematic) => void;
+  pushNotice: (n: Notice) => void;
+  shiftNotice: () => void;
+  setPerfTier: (tier: PerfTier) => void;
   setNearby: (id: PhaseId | null) => void;
   setNearbyChallenge: (id: PhaseId | null) => void;
   setCurrentIsland: (id: PhaseId | null) => void;
@@ -75,13 +105,31 @@ export const useUi = create<UiState>()((set, get) => ({
   toastQueue: [],
   miniGameResult: null,
   tutorial: null,
+  nearbyDock: null,
+  menu: null,
+  cinematic: null,
+  notices: [],
+  perfTier: 2,
 
   setMode: (mode) => {
-    if (mode !== 'explore' && typeof document !== 'undefined' && document.pointerLockElement) {
+    // A cinematic keeps the lock so play resumes seamlessly when it ends.
+    if (mode !== 'explore' && mode !== 'cinematic' && typeof document !== 'undefined' && document.pointerLockElement) {
       document.exitPointerLock();
     }
     set({ mode });
   },
+  setNearbyDock: (nearbyDock) => set({ nearbyDock }),
+  openMenu: (menu) => {
+    get().setMode('menu');
+    set({ menu, cinematic: null });
+  },
+  startCinematic: (cinematic) => {
+    get().setMode('cinematic');
+    set({ cinematic, menu: null, activePhaseId: null, miniGameResult: null });
+  },
+  pushNotice: (n) => set((s) => ({ notices: [...s.notices, n] })),
+  shiftNotice: () => set((s) => ({ notices: s.notices.slice(1) })),
+  setPerfTier: (perfTier) => set({ perfTier }),
   setNearby: (nearbyPhaseId) => set({ nearbyPhaseId }),
   setNearbyChallenge: (nearbyChallenge) => set({ nearbyChallenge }),
   setCurrentIsland: (currentIsland) => set({ currentIsland }),
@@ -102,7 +150,7 @@ export const useUi = create<UiState>()((set, get) => ({
   },
   clearMiniGameResult: () => set({ miniGameResult: null }),
   setTutorial: (tutorial) => set({ tutorial }),
-  closeOverlay: () => set({ mode: 'explore', activePhaseId: null, miniGameResult: null }),
+  closeOverlay: () => set({ mode: 'explore', activePhaseId: null, miniGameResult: null, menu: null, cinematic: null }),
   pushToast: (gemId) => set((s) => ({ toastQueue: [...s.toastQueue, gemId] })),
   shiftToast: () => set((s) => ({ toastQueue: s.toastQueue.slice(1) })),
 }));

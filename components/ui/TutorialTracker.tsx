@@ -74,10 +74,9 @@ export default function TutorialTracker() {
 
   return (
     <div
-      className="pointer-events-none fixed z-25 w-60 max-w-[calc(100vw-130px)] rounded-2xl border-[3px] bg-white/95 px-3 py-2 animate-[toast-in_200ms_ease-out]"
+      className="hud-tracker pointer-events-none fixed z-25 w-60 max-w-[calc(100vw-130px)] rounded-2xl border-[3px] bg-white/95 px-3 py-2 animate-[toast-in_200ms_ease-out]"
       style={{
         left: 'max(10px, env(safe-area-inset-left))',
-        top: 'calc(max(10px, env(safe-area-inset-top)) + 150px)',
         borderColor: INK,
         color: INK,
         boxShadow: `0 3px 0 ${INK}`,

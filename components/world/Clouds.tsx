@@ -5,6 +5,7 @@ import { Cloud, Clouds } from '@react-three/drei';
 import { MeshBasicMaterial } from 'three';
 import { getCloudTextureUrl } from '@/lib/cloudTexture';
 import { COLORS } from '@/lib/palette';
+import { useUi } from '@/store/ui';
 
 type CloudDef = { p: [number, number, number]; b: [number, number, number]; seg: number };
 
@@ -29,20 +30,25 @@ const CLOUDS: CloudDef[] = [
   { p: [40, 18, 70], b: [18, 3, 8], seg: 10 },
 ];
 
+/** Low quality keeps every other cloud with half the puffs (drei sorts every puff on the CPU each frame). */
+const LOW_CLOUDS = CLOUDS.filter((_, i) => i % 2 === 0);
+
 export default function CloudLayer() {
   const [texture] = useState(getCloudTextureUrl);
+  const low = useUi((s) => s.perfTier === 0);
+  const clouds = low ? LOW_CLOUDS : CLOUDS;
 
   return (
     <>
       {/* Unlit so they stay bright white from every angle (lit sprites turn grey). */}
-      <Clouds texture={texture} material={MeshBasicMaterial} limit={260} frustumCulled={false}>
-        {CLOUDS.map((c, i) => (
+      <Clouds key={low ? 'low' : 'full'} texture={texture} material={MeshBasicMaterial} limit={260} frustumCulled={false}>
+        {clouds.map((c, i) => (
           <Cloud
             key={i}
             seed={i + 1}
             position={c.p}
             bounds={c.b}
-            segments={c.seg}
+            segments={low ? Math.ceil(c.seg / 2) : c.seg}
             volume={10}
             growth={6}
             speed={0.08}

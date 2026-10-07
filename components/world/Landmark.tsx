@@ -1,41 +1,16 @@
 'use client';
 
-import { Suspense, useMemo, type ReactNode } from 'react';
-import { Billboard, Outlines, Text } from '@react-three/drei';
-import { CylinderCollider, RigidBody } from '@react-three/rapier';
+import { Suspense, useMemo } from 'react';
+import { Billboard, Text } from '@react-three/drei';
+import { CuboidCollider, CylinderCollider, RigidBody } from '@react-three/rapier';
 import { getPhase } from '@/data/roadmap';
-import { ISLAND_TRACK, type IslandDef } from '@/data/world';
-import { COLORS, TRACK_COLORS } from '@/lib/palette';
-import { getToonGradient } from '@/lib/toon';
-import { landmarkPosition, landmarkRadius, landmarkScale } from '@/lib/worldLayout';
+import type { IslandDef } from '@/data/world';
+import { COLORS } from '@/lib/palette';
+import { landmarkPosition, landmarkScale, landmarkYaw } from '@/lib/worldLayout';
+import { LABEL_FONT, LandmarkContext } from './landmarks/kit';
+import { LANDMARK_SPECS } from './landmarks';
 
-export const LABEL_FONT = '/fonts/Geist-Regular.ttf';
-
-/** Phase 1 placeholder: a track-coloured pillar with a floating name label. */
-function PlaceholderLandmark({ def }: { def: IslandDef }) {
-  const colors = TRACK_COLORS[ISLAND_TRACK[def.id]];
-  const gradient = getToonGradient();
-
-  return (
-    <group scale={def.landmark === 'summit-plaza' ? 1.5 : 1}>
-      <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[1.5, 1.7, 0.6, 8]} />
-        <meshToonMaterial color={colors.dark} gradientMap={gradient} />
-        <Outlines thickness={0.05} color={COLORS.outline} />
-      </mesh>
-      <mesh position={[0, 2.5, 0]} castShadow>
-        <cylinderGeometry args={[0.8, 1.0, 4.2, 8]} />
-        <meshToonMaterial color={colors.base} gradientMap={gradient} />
-        <Outlines thickness={0.05} color={COLORS.outline} />
-      </mesh>
-      <mesh position={[0, 5.5, 0]} castShadow>
-        <octahedronGeometry args={[0.9, 0]} />
-        <meshToonMaterial color={colors.light} gradientMap={gradient} />
-        <Outlines thickness={0.05} color={COLORS.outline} />
-      </mesh>
-    </group>
-  );
-}
+export { LABEL_FONT };
 
 function Label({ text, height }: { text: string; height: number }) {
   return (
@@ -55,27 +30,41 @@ function Label({ text, height }: { text: string; height: number }) {
   );
 }
 
+/** One island's landmark: its bespoke animated body, colliders and floating name label. */
 export default function Landmark({ def }: { def: IslandDef }) {
   const position = useMemo(() => landmarkPosition(def), [def]);
+  const rotY = useMemo(() => landmarkYaw(def), [def]);
+  const ctx = useMemo(() => ({ def, position, rotY }), [def, position, rotY]);
   const s = landmarkScale(def);
-  const tall = s > 1;
-
-  let body: ReactNode;
-  switch (def.landmark) {
-    // Phase 5 adds one bespoke landmark per type here.
-    default:
-      body = <PlaceholderLandmark def={def} />;
-  }
+  const spec = LANDMARK_SPECS[def.landmark];
+  const { Body } = spec;
 
   return (
-    <group position={position}>
-      {body}
-      <RigidBody type="fixed" colliders={false}>
-        <CylinderCollider args={[2.5 * s, landmarkRadius(def)]} position={[0, 2.5 * s, 0]} />
-      </RigidBody>
-      <Suspense fallback={null}>
-        <Label text={getPhase(def.id).title} height={tall ? 10.5 : 7.5} />
-      </Suspense>
-    </group>
+    <LandmarkContext.Provider value={ctx}>
+      <group position={position}>
+        <group rotation={[0, rotY, 0]}>
+          <group scale={s}>
+            <Body />
+          </group>
+          <RigidBody type="fixed" colliders={false}>
+            {spec.colliders.map((c, i) =>
+              c.kind === 'box' ? (
+                <CuboidCollider
+                  key={i}
+                  args={[c.half[0] * s, c.half[1] * s, c.half[2] * s]}
+                  position={[c.at[0] * s, c.at[1] * s, c.at[2] * s]}
+                  rotation={[0, c.rotY ?? 0, 0]}
+                />
+              ) : (
+                <CylinderCollider key={i} args={[c.halfH * s, c.r * s]} position={[c.at[0] * s, c.at[1] * s, c.at[2] * s]} />
+              ),
+            )}
+          </RigidBody>
+        </group>
+        <Suspense fallback={null}>
+          <Label text={getPhase(def.id).title} height={spec.label} />
+        </Suspense>
+      </group>
+    </LandmarkContext.Provider>
   );
 }

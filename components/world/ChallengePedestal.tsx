@@ -5,7 +5,10 @@ import { useFrame } from '@react-three/fiber';
 import { Billboard, Outlines, Text } from '@react-three/drei';
 import { CylinderCollider, RigidBody } from '@react-three/rapier';
 import { CylinderGeometry, ExtrudeGeometry, Shape, type BufferGeometry, type Group } from 'three';
+import type { Track } from '@/data/roadmap';
 import { ISLAND_TRACK, ISLANDS, type IslandDef } from '@/data/world';
+import { mergeParts, part } from '@/lib/landmarkKit';
+import { vertexToon } from '@/lib/materials';
 import { COLORS, TRACK_COLORS } from '@/lib/palette';
 import { getToonGradient } from '@/lib/toon';
 import { challengePosition } from '@/lib/worldLayout';
@@ -14,9 +17,30 @@ import { LABEL_FONT } from './Landmark';
 
 const STAR_Y = 1.75;
 
-let geos: Record<'base' | 'column' | 'top' | 'star', BufferGeometry> | null = null;
+let geos: Record<'star', BufferGeometry> | null = null;
+const stands = new Map<string, BufferGeometry>();
 
-/** Shared pedestal geometry (created once for all 20 pedestals). */
+/** The stone stand as one merged, vertex-coloured mesh, cached per track colour. */
+function standGeometry(track: Track): BufferGeometry {
+  let g = stands.get(track);
+  if (!g) {
+    const c = TRACK_COLORS[track];
+    g = mergeParts([
+      part(new CylinderGeometry(0.8, 0.9, 0.3, 8), COLORS.rock, [0, 0.15, 0]),
+      part(new CylinderGeometry(0.45, 0.55, 0.75, 8), c.base, [0, 0.67, 0]),
+      part(new CylinderGeometry(0.7, 0.6, 0.18, 8), c.light, [0, 1.13, 0]),
+    ]);
+    stands.set(track, g);
+  }
+  return g;
+}
+
+/** Pedestal labels further than this (m) are hidden. */
+const LABEL_RADIUS = 60;
+/** Whole pedestals further than this (m) are not drawn (the collider stays). */
+const DRAW_RADIUS = 120;
+
+/** Shared star geometry (created once for all 20 pedestals). */
 function pedestalGeometry() {
   if (!geos) {
     const star = new Shape();
@@ -29,12 +53,7 @@ function pedestalGeometry() {
     star.closePath();
     const starGeo = new ExtrudeGeometry(star, { depth: 0.12, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 1 });
     starGeo.center();
-    geos = {
-      base: new CylinderGeometry(0.8, 0.9, 0.3, 8),
-      column: new CylinderGeometry(0.45, 0.55, 0.75, 8),
-      top: new CylinderGeometry(0.7, 0.6, 0.18, 8),
-      star: starGeo,
-    };
+    geos = { star: starGeo };
   }
   return geos;
 }
@@ -42,33 +61,30 @@ function pedestalGeometry() {
 function Pedestal({ def, index }: { def: IslandDef; index: number }) {
   const position = useMemo(() => challengePosition(def), [def]);
   const spinner = useRef<Group>(null);
+  const label = useRef<Group>(null);
+  const root = useRef<Group>(null);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock, camera }) => {
     const s = spinner.current;
     if (!s) return;
     const t = clock.elapsedTime;
     s.rotation.y = t * 1.4 + index;
     s.position.y = STAR_Y + Math.sin(t * 2 + index) * 0.08;
+    const d2 = (camera.position.x - position[0]) ** 2 + (camera.position.z - position[2]) ** 2;
+    if (label.current) label.current.visible = d2 < LABEL_RADIUS ** 2;
+    if (root.current) root.current.visible = d2 < DRAW_RADIUS ** 2;
   });
 
   const stars = useProgress((s) => s.badges[def.id]?.stars ?? 0);
-  const colors = TRACK_COLORS[ISLAND_TRACK[def.id]];
+  const track = ISLAND_TRACK[def.id];
+  const colors = TRACK_COLORS[track];
   const g = pedestalGeometry();
   const gradient = getToonGradient();
   const earned = stars > 0;
 
   return (
-    <group position={position}>
-      <mesh geometry={g.base} position={[0, 0.15, 0]} castShadow receiveShadow>
-        <meshToonMaterial color={COLORS.rock} gradientMap={gradient} />
-        <Outlines thickness={0.03} color={COLORS.outline} />
-      </mesh>
-      <mesh geometry={g.column} position={[0, 0.67, 0]} castShadow>
-        <meshToonMaterial color={colors.base} gradientMap={gradient} />
-        <Outlines thickness={0.03} color={COLORS.outline} />
-      </mesh>
-      <mesh geometry={g.top} position={[0, 1.13, 0]} castShadow receiveShadow>
-        <meshToonMaterial color={colors.light} gradientMap={gradient} />
+    <group ref={root} position={position}>
+      <mesh geometry={standGeometry(track)} material={vertexToon()} castShadow receiveShadow>
         <Outlines thickness={0.03} color={COLORS.outline} />
       </mesh>
       <group ref={spinner} position={[0, STAR_Y, 0]}>
@@ -83,7 +99,7 @@ function Pedestal({ def, index }: { def: IslandDef; index: number }) {
         </mesh>
       </group>
       <Suspense fallback={null}>
-        <Billboard position={[0, 2.6, 0]}>
+        <Billboard ref={label} position={[0, 2.6, 0]}>
           <Text font={LABEL_FONT} fontSize={0.36} color={COLORS.label} outlineWidth={0.05} outlineColor="#ffffff" anchorX="center" anchorY="middle">
             {earned ? `Challenge · ${stars}/3 stars` : 'Challenge'}
           </Text>

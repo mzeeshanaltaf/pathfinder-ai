@@ -71,17 +71,21 @@ The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 
 ```
 app/                 layout.tsx, page.tsx (dynamic import, ssr:false), globals.css
 components/Game.tsx  Canvas + Physics + lights + sky + World + Player; HUD mounted outside Canvas
-components/world/    Island, Bridge, Landmark (switch on type), landmarks/*, SkillGem, Mentor, QuestBoard, CompareBoard, Clouds, Ocean/void
+components/world/    Island, Bridge (+ LitBridges), Landmark (wrapper), landmarks/* (one file per type + kit.tsx + index.ts registry),
+                     SkillGem, Mentor, ChallengePedestal, Balloons (docks) + BalloonTravel, Finale, Clouds
 components/player/   Player (rapier kinematic character controller), useInput, MobileControls
-components/ui/       HUD, InteractPrompt, PhasePanel, GemToast, Passport, Minimap, Onboarding, Settings, Certificate
-components/minigames/ registry.ts, MiniGameHost.tsx, engines (PipelineOrder, SortBins, Quiz) + bespoke sims
+components/ui/       HUD, Compass, InteractPrompt, PhasePanel, GemToast, NoticeToast, Passport, Minimap, Onboarding, WelcomeBack,
+                     Settings, FinaleOverlay, Certificate, CinematicOverlay, SessionManager, Sheet, ByteAvatar, Logo
+components/minigames/ registry.ts, MiniGameHost.tsx, engines (PipelineOrder, SortBins, Quiz); sims/ = 12 bespoke sims + simKit.tsx
 data/roadmap.ts      typed roadmap content (phases, topics + bites, projects, comparison, timelines)
 data/world.ts        island positions, sizes, landmark type, bridges, spawn/checkpoints, interaction radii
 lib/worldLayout.ts   derived geometry: bridge frames, landmark/mentor positions, sign layouts, seeded gem spawns
-data/minigames.ts    per-phase mini-game id + config
+data/minigames.ts    per-phase mini-game id, title, how-to, recap + config (engine configs inline)
+data/sims.ts         sim config types + hand-authored sim content (illustrative numbers labelled in the UI)
 store/progress.ts    persisted (localStorage) progress
 store/ui.ts          non-persisted UI/game mode
-lib/                 helpers (palette, toon gradient texture, math)
+lib/                 helpers (palette, toon gradient, random, worldLayout), progress.ts (suggested next, job-ready,
+                     achievements, streak, hats), audio.ts, certificate.ts, landmarkKit.ts (merge parts), materials.ts
 ```
 
 ## Core contracts (keep stable across phases)
@@ -107,23 +111,30 @@ export interface Phase {
 export interface IslandDef { id: PhaseId; position: [number, number, number]; radius: number; landmark: LandmarkType; color: string }
 export interface BridgeDef { from: PhaseId; to: PhaseId }
 
-// store/progress.ts  (zustand persist, key 'pathfinder-ai-progress', has `version` + migrate)
+// store/progress.ts  (zustand persist, key 'pathfinder-ai-progress', version 2 + migrate)
 gems: Record<string, true>; badges: Partial<Record<PhaseId, { stars: 1|2|3; completedAt: string }>>;
 projects: Record<string, boolean>; visited: Partial<Record<PhaseId, true>>;
 lastIsland: PhaseId; checkpoint: [number, number, number];
-streak: { count: number; lastVisitDate: string }; onboardingDone: boolean;
+streak: { count: number; lastVisitDate: string; best: number }; onboardingDone: boolean;
 settings: { muted: boolean; sensitivity: number; invertY: boolean; quality: 'auto'|'low'|'high' };
+achievements: Record<string, string>;  // id → ISO date unlocked (definitions in lib/progress.ts)
+playerName: string; byteHat: string; finaleSeen: boolean;
 
 // store/ui.ts (not persisted)
-mode: 'explore' | 'panel' | 'minigame' | 'passport' | 'menu';
+mode: 'explore' | 'panel' | 'minigame' | 'passport' | 'menu' | 'cinematic';  // cinematic keeps pointer lock
+menu: 'onboarding' | 'welcome' | 'settings' | 'finale' | 'certificate' | null;  // which card mode 'menu' shows
+cinematic: { kind: 'balloon'; to: PhaseId } | { kind: 'finale' } | null;     // scripted camera (Player skips its camera)
 nearbyPhaseId: PhaseId | null;   // landmark within interact range (drives the E prompt)
-nearbyChallenge: PhaseId | null; // Challenge pedestal in range (wins over nearbyPhaseId for E)
+nearbyChallenge: PhaseId | null; // Challenge pedestal in range (E priority: pedestal > balloon dock > landmark)
+nearbyDock: PhaseId | null;      // balloon dock in range (E opens the Passport map)
 currentIsland: PhaseId | null;   // island the player is standing on (HUD)
 activePhaseId: PhaseId | null;   // phase shown by the panel / mini-game host
 miniGameResult: { phaseId; score; stars; prevStars; best } | null;  // host shows the result screen
+notices: Notice[]; perfTier: 0 | 1 | 2;  // achievement/streak toasts; auto-quality tier
 // progress.awardBadge(id, stars) keeps the best stars; mini-games finish via finishMiniGame() in components/minigames/complete.ts
+// Travel: requestTravel(id) (components/player/playerState.ts) → BalloonTravel flies to the island's dock.
 
-// components/minigames/types.ts  (configs + MiniGameId in data/minigames.ts; lazy loaders in registry.ts)
+// components/minigames/types.ts  (MiniGameId = EngineId | SimId in data/minigames.ts; sim configs in data/sims.ts; lazy loaders in registry.ts)
 export interface MiniGameProps<C = unknown> {
   phaseId: PhaseId; config: C;
   onComplete: (r: { score: number; stars: 1 | 2 | 3 }) => void;
@@ -137,6 +148,7 @@ export interface MiniGameProps<C = unknown> {
 - **No React state in `useFrame`.** Use refs for per-frame values. Write to zustand only on discrete events (gem collected, entered island radius).
 - **Mobile parity.** Every interaction needs a touch path: the Interact button, panels with big tap targets, no hover-only UI. Overlays must not scroll horizontally at 375px width.
 - **Performance budget:** ~60 fps on a mid laptop. Clamp dpr to [1, 1.75] and use drei `PerformanceMonitor` to drop quality. Instance repeated props (trees, rocks, gems). Use one shadow-casting directional light.
+- **Landmarks:** static parts go through `Static` / `mergeParts` (one draw + one outline per landmark). Materials that animate (opacity, colour) live at module scope in the landmark file: the React Compiler lint rule forbids mutating values returned by hooks. Small moving details go inside `<Near>`, and captions hide beyond 60 m.
 - **Palette:** pastel, defined once in `lib/palette.ts`. Developer = green family, Engineer = blue family, Common = warm yellow/orange, Meta = lavender.
 - **File writing:** use the Write/Edit tools, never shell heredocs (they mis-parse on this Windows machine).
 - **Shell:** Windows; PowerShell is primary, and Git Bash is available.

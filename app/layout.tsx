@@ -7,9 +7,27 @@ const geistSans = Geist({
   subsets: ['latin'],
 });
 
+const DESCRIPTION =
+  'Find your path into AI. Walk the AI Developer and AI Engineer roadmaps across a cartoon world of floating islands: collect skills, play challenges, track projects and reach the Summit.';
+
 export const metadata: Metadata = {
-  title: 'Pathfinder AI',
-  description: 'Find your path into AI. Explore AI career roadmaps across a world of floating islands.',
+  // Absolute URLs for the Open Graph image; set NEXT_PUBLIC_SITE_URL when deploying.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  title: 'Pathfinder AI · Find your path into AI',
+  description: DESCRIPTION,
+  applicationName: 'Pathfinder AI',
+  keywords: ['AI roadmap', 'AI Developer', 'AI Engineer', 'learn AI', 'career path', '3D game'],
+  openGraph: {
+    title: 'Pathfinder AI',
+    description: DESCRIPTION,
+    siteName: 'Pathfinder AI',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pathfinder AI',
+    description: DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {

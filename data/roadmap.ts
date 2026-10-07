@@ -1111,7 +1111,8 @@ export const DEVELOPER_FINAL_SKILLS = {
 };
 
 export interface Timeline {
-  track: 'developer' | 'engineer';
+  /** A career path (any track except the shared 'meta' / 'common'). */
+  track: Exclude<Track, 'meta' | 'common'>;
   total: string;
   steps: { when: string; what: string }[];
   note?: string;

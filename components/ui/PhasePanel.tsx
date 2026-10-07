@@ -36,6 +36,7 @@ import {
   TrackBadge,
   usePhaseGems,
 } from './kit';
+import { replayFinale } from './Passport';
 
 type TabId = 'overview' | 'compare' | 'topics' | 'project' | 'skills' | 'timelines' | 'build' | 'challenge';
 
@@ -135,6 +136,7 @@ function PanelBody({ id }: { id: PhaseId }) {
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-[max(16px,env(safe-area-inset-bottom))] select-text"
           style={{ touchAction: 'pan-y' }}
         >
+          {tab === 'overview' && id === 'summit' && <SummitRewards />}
           {tab === 'overview' && (id === 'harbor' ? <HarborOverview phase={phase} /> : <Overview phase={phase} />)}
           {tab === 'compare' && <ForkCompare phase={phase} />}
           {tab === 'topics' && <Topics phase={phase} />}
@@ -144,6 +146,40 @@ function PanelBody({ id }: { id: PhaseId }) {
           {tab === 'build' && <SummitBuild />}
           {tab === 'challenge' && <Challenge phase={phase} />}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Summit only: the certificate, and a replay of the celebration once it has played. */
+function SummitRewards() {
+  const badge = useProgress((s) => !!s.badges.summit);
+  const seen = useProgress((s) => s.finaleSeen);
+  return (
+    <div className="mb-4 flex flex-col gap-2 rounded-2xl border-[3px] p-3" style={{ borderColor: INK, background: '#fff6d8' }}>
+      <p className="text-sm font-bold">
+        {badge ? 'You earned the Summit badge. Your certificate is ready!' : 'Earn the Summit Challenge badge to unlock your certificate and the celebration.'}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={!badge}
+          onClick={() => useUi.getState().openMenu('certificate')}
+          className="min-h-11 flex-1 rounded-full border-[3px] px-4 text-sm font-extrabold active:translate-y-0.5 disabled:opacity-45"
+          style={{ borderColor: INK, background: '#ffc93c', boxShadow: `0 3px 0 ${INK}` }}
+        >
+          🎓 Certificate
+        </button>
+        {seen && (
+          <button
+            type="button"
+            onClick={replayFinale}
+            className="min-h-11 flex-1 rounded-full border-[3px] bg-white px-4 text-sm font-extrabold active:translate-y-0.5"
+            style={{ borderColor: INK, boxShadow: `0 3px 0 ${INK}` }}
+          >
+            🎆 Replay celebration
+          </button>
+        )}
       </div>
     </div>
   );

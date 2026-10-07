@@ -15,7 +15,7 @@ export default function MobileControls() {
   const baseRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
   const mode = useUi((s) => s.mode);
-  const nearby = useUi((s) => s.nearbyPhaseId !== null || s.nearbyChallenge !== null);
+  const nearby = useUi((s) => s.nearbyPhaseId !== null || s.nearbyChallenge !== null || s.nearbyDock !== null);
 
   // iOS Safari pinch-zoom gestures ignore touch-action; block them explicitly.
   useEffect(() => {

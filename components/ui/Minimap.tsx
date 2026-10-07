@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { playerPose } from '@/components/player/playerState';
 import { BRIDGES, ISLAND_BY_ID, ISLAND_TRACK, ISLANDS } from '@/data/world';
 import { TRACK_COLORS } from '@/lib/palette';
+import { suggestedNext } from '@/lib/progress';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
 import { INK } from './kit';
@@ -20,6 +21,7 @@ const VIEW_H = maxZ - minZ;
 /** Small top-down map of the islands, bridges and the player's position + heading. */
 export default function Minimap() {
   const visited = useProgress((s) => s.visited);
+  const target = useProgress((s) => suggestedNext(s));
   const current = useUi((s) => s.currentIsland);
   const show = useUi((s) => s.worldReady && s.mode === 'explore');
   const playerRef = useRef<SVGGElement>(null);
@@ -43,10 +45,9 @@ export default function Minimap() {
 
   return (
     <div
-      className="pointer-events-none fixed z-20 rounded-2xl border-[3px] bg-sky-100/85 p-1"
+      className="hud-minimap pointer-events-none fixed z-20 rounded-2xl border-[3px] bg-sky-100/85 p-1"
       style={{
         right: 'max(10px, env(safe-area-inset-right))',
-        top: 'calc(max(10px, env(safe-area-inset-top)) + 64px)',
         borderColor: INK,
         boxShadow: `0 3px 0 ${INK}`,
       }}
@@ -76,6 +77,19 @@ export default function Minimap() {
             />
           );
         })}
+        {target && (
+          <circle
+            cx={ISLAND_BY_ID[target].position[0]}
+            cy={ISLAND_BY_ID[target].position[2]}
+            r={ISLAND_BY_ID[target].radius + 7}
+            fill="none"
+            stroke="#ff5d8f"
+            strokeWidth={4}
+            strokeDasharray="8 6"
+          >
+            <animate attributeName="stroke-opacity" values="1;0.25;1" dur="1.6s" repeatCount="indefinite" />
+          </circle>
+        )}
         <g ref={playerRef}>
           <circle r={13} fill="#ffffff" stroke={INK} strokeWidth={3} />
           <path d="M0 -21 L10 6 L0 0 L-10 6 Z" fill="#ff5d8f" stroke={INK} strokeWidth={2.5} strokeLinejoin="round" />

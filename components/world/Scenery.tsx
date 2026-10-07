@@ -15,7 +15,8 @@ import {
 } from 'three';
 import { ISLANDS } from '@/data/world';
 import { COLORS } from '@/lib/palette';
-import { sceneryObstacles, scatterOnIsland, type ScatterPoint } from '@/lib/worldLayout';
+import { DOCK_RADIUS, dockPosition, sceneryObstacles, scatterOnIsland, type ScatterPoint } from '@/lib/worldLayout';
+import { useUi } from '@/store/ui';
 import ToonInstances from './ToonInstances';
 
 const TRUNK_HEIGHT = 1.6;
@@ -74,7 +75,9 @@ function buildScenery() {
       avoid: [...trees, ...rockPts],
       avoidDist: 1.2,
     });
+    const [dx, , dz] = dockPosition(def);
     for (const p of flowerPts) {
+      if (Math.hypot(p.x - dx, p.z - dz) < DOCK_RADIUS + 0.3) continue;
       flowers.matrices.push(compose(p.x, p.y + 0.2, p.z, p.rng() * Math.PI, 0.8 + p.rng() * 0.5));
       flowers.colors.push(new Color(pick(COLORS.flowers, p.rng)));
     }
@@ -96,6 +99,8 @@ export default function Scenery() {
     [],
   );
   useEffect(() => () => Object.values(geos).forEach((g) => g.dispose()), [geos]);
+  // Low quality drops the flowers (hundreds of tiny instances, one more draw).
+  const low = useUi((st) => st.perfTier === 0);
 
   return (
     <>
@@ -103,7 +108,7 @@ export default function Scenery() {
       <ToonInstances geometry={geos.round} {...s.round} outline={0.05} />
       <ToonInstances geometry={geos.pine} {...s.pines} outline={0.05} />
       <ToonInstances geometry={geos.rock} {...s.rocks} outline={0.04} receiveShadow />
-      <ToonInstances geometry={geos.flower} {...s.flowers} outline={0} castShadow={false} />
+      {!low && <ToonInstances geometry={geos.flower} {...s.flowers} outline={0} castShadow={false} />}
       <RigidBody type="fixed" colliders={false}>
         {s.treeColliders.map((t, i) => (
           <CylinderCollider key={`t${i}`} args={[1.2, 0.32]} position={[t.x, t.y + 1.2, t.z]} />

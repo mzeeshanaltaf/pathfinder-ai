@@ -1,4 +1,5 @@
 import type { PhaseId } from '@/data/roadmap';
+import { sfx } from '@/lib/audio';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
 import type { MiniGameRun } from './types';
@@ -7,6 +8,7 @@ import type { MiniGameRun } from './types';
 export function finishMiniGame(phaseId: PhaseId, run: MiniGameRun) {
   const { prevStars, best } = useProgress.getState().awardBadge(phaseId, run.stars);
   useUi.getState().showMiniGameResult({ phaseId, score: run.score, stars: run.stars, prevStars, best });
+  if (run.stars > prevStars) sfx.badge();
 }
 
 /** Accuracy (0–1) → stars: 90% for 3, 70% for 2. */

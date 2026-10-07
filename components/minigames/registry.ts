@@ -11,6 +11,18 @@ const LOADERS: Record<MiniGameId, () => Promise<{ default: AnyGame }>> = {
   'pipeline-order': () => import('./PipelineOrder'),
   'sort-bins': () => import('./SortBins'),
   quiz: () => import('./Quiz'),
+  'gradient-descent': () => import('./sims/GradientDescent'),
+  'curve-fit': () => import('./sims/CurveFit'),
+  temperature: () => import('./sims/Temperature'),
+  'chunk-retrieve': () => import('./sims/ChunkRetrieve'),
+  'injection-defense': () => import('./sims/InjectionDefense'),
+  perceptron: () => import('./sims/Perceptron'),
+  'attention-beams': () => import('./sims/AttentionBeams'),
+  'fit-the-gpu': () => import('./sims/FitTheGpu'),
+  'rank-it': () => import('./sims/RankIt'),
+  batching: () => import('./sims/Batching'),
+  'drift-watch': () => import('./sims/DriftWatch'),
+  'final-assembly': () => import('./sims/FinalAssembly'),
 };
 
 export const MINIGAME_REGISTRY = Object.fromEntries(

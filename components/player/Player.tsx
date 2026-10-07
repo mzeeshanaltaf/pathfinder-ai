@@ -12,12 +12,21 @@ import {
 import { Euler, Vector3 } from 'three';
 import { MINIGAMES } from '@/data/minigames';
 import type { PhaseId } from '@/data/roadmap';
-import { BRIDGES, CHALLENGE_RADIUS, INTERACT_RADIUS, ISLAND_BY_ID, ISLANDS, RESPAWN_Y } from '@/data/world';
+import { BRIDGES, CHALLENGE_RADIUS, DOCK_INTERACT_RADIUS, INTERACT_RADIUS, ISLAND_BY_ID, ISLANDS, RESPAWN_Y } from '@/data/world';
+import { sfx } from '@/lib/audio';
 import { hasQueryFlag, isCoarsePointer } from '@/lib/device';
-import { challengePosition, getGemSpawns, islandAt, landmarkPosition, landmarkScale, mentorPosition } from '@/lib/worldLayout';
+import {
+  challengePosition,
+  dockPosition,
+  getGemSpawns,
+  islandAt,
+  landmarkPosition,
+  landmarkScale,
+  mentorPosition,
+} from '@/lib/worldLayout';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
-import { playerEvents, playerPose, takeTravelRequest } from './playerState';
+import { playerControl, playerEvents, playerPose } from './playerState';
 import { useInput } from './useInput';
 
 // Capsule: 2 × 0.35 + 2 × 0.5 = 1.7 tall. Body origin is the capsule centre.
@@ -52,6 +61,15 @@ const CHALLENGES = ISLANDS.map((def) => {
   const [x, y, z] = challengePosition(def);
   return { id: def.id, x, y, z };
 });
+
+/** Balloon docks (one per island): E opens the Passport map to pick a destination. */
+const DOCKS = ISLANDS.map((def) => {
+  const [x, y, z] = dockPosition(def);
+  return { id: def.id, x, y, z };
+});
+
+/** Distance walked per footstep sound (m). */
+const STRIDE = 1.9;
 
 type CharacterController =ReturnType<ReturnType<typeof useRapier>['world']['createCharacterController']>;
 
@@ -96,7 +114,8 @@ export default function Player() {
   const currentIsland = useRef<PhaseId | null>(null);
   const nearLandmark = useRef<PhaseId | null>(null);
   const nearChallenge = useRef<PhaseId | null>(null);
-  const travelYaw = useRef<number | null>(null);
+  const nearDock = useRef<PhaseId | null>(null);
+  const stepDist = useRef(0);
   const respawning = useRef(false);
   const pendingTeleport = useRef(false);
   const fadeTimer = useRef<number | undefined>(undefined);
@@ -119,12 +138,34 @@ export default function Player() {
 
   useEffect(() => () => window.clearTimeout(fadeTimer.current), []);
 
+  // Scripted moves (balloon landing, finale framing).
+  useEffect(() => {
+    playerControl.teleport = (x, feetY, z, yaw) => {
+      pos.current.set(x, feetY + CENTER_HEIGHT, z);
+      vel.current.set(0, 0, 0);
+      bodyRef.current?.setTranslation(pos.current, true);
+      bodyRef.current?.setNextKinematicTranslation(pos.current);
+      if (yaw !== undefined) {
+        look.current.yaw = yaw;
+        look.current.pitch = 0;
+      }
+    };
+    playerControl.face = (yaw, pitch = 0) => {
+      look.current.yaw = yaw;
+      look.current.pitch = pitch;
+    };
+    return () => {
+      playerControl.teleport = null;
+      playerControl.face = null;
+    };
+  }, []);
+
   // `?debug` test hook: read player state and teleport from the console / automated checks.
   useEffect(() => {
     if (!hasQueryFlag('debug')) return;
     const w = window as unknown as Record<string, unknown>;
     w.__aiQuest = {
-      world: { islands: ISLANDS, bridges: BRIDGES, landmarks: LANDMARKS, challenges: CHALLENGES, gems: getGemSpawns() },
+      world: { islands: ISLANDS, bridges: BRIDGES, landmarks: LANDMARKS, challenges: CHALLENGES, docks: DOCKS, gems: getGemSpawns() },
       minigames: MINIGAMES,
       state: () => ({
         position: pos.current.toArray(),
@@ -134,16 +175,13 @@ export default function Player() {
         grounded: grounded.current,
         island: currentIsland.current,
       }),
-      teleport: (x: number, feetY: number, z: number) => {
-        pos.current.set(x, feetY + CENTER_HEIGHT, z);
-        vel.current.set(0, 0, 0);
-        bodyRef.current?.setTranslation(pos.current, true);
-        bodyRef.current?.setNextKinematicTranslation(pos.current);
-      },
+      teleport: (x: number, feetY: number, z: number) => playerControl.teleport?.(x, feetY, z),
       setLook: (yaw: number, pitch = 0) => {
         look.current.yaw = yaw;
         look.current.pitch = pitch;
       },
+      /** Open a phase's mini-game at its intro card (tests drive each sim from there). */
+      openGame: (id: PhaseId) => useUi.getState().openMiniGame(id),
     };
     return () => {
       delete w.__aiQuest;
@@ -172,11 +210,6 @@ export default function Player() {
       v.set(0, 0, 0);
       body.setTranslation(p, true);
       body.setNextKinematicTranslation(p);
-      if (travelYaw.current !== null) {
-        look.current.yaw = travelYaw.current;
-        look.current.pitch = 0;
-        travelYaw.current = null;
-      }
       ui.setFading(false);
     }
 
@@ -222,9 +255,20 @@ export default function Player() {
     p.set(p.x + m.x, p.y + m.y, p.z + m.z);
     body.setNextKinematicTranslation(p);
 
-    // Camera at eye height.
-    camera.position.set(p.x, p.y - CENTER_HEIGHT + EYE_HEIGHT, p.z);
-    camera.quaternion.setFromEuler(euler.current.set(pitch, yaw, 0, 'YXZ'));
+    // Footsteps: one soft tick per stride while walking on the ground.
+    if (grounded.current && active) {
+      stepDist.current += Math.hypot(m.x, m.z);
+      if (stepDist.current > (input.sprint ? STRIDE * 1.3 : STRIDE)) {
+        stepDist.current = 0;
+        sfx.footstep(input.sprint);
+      }
+    }
+
+    // Camera at eye height (a cinematic drives the camera itself).
+    if (ui.mode !== 'cinematic') {
+      camera.position.set(p.x, p.y - CENTER_HEIGHT + EYE_HEIGHT, p.z);
+      camera.quaternion.setFromEuler(euler.current.set(pitch, yaw, 0, 'YXZ'));
+    }
 
     const feetY = p.y - CENTER_HEIGHT;
     playerPose.x = p.x;
@@ -264,23 +308,22 @@ export default function Player() {
       nearChallenge.current = challenge;
       ui.setNearbyChallenge(challenge);
     }
+    // Balloon dock (lowest priority: only when no pedestal is in range).
+    let dock: PhaseId | null = null;
+    for (const d of DOCKS) {
+      if (Math.abs(feetY - d.y) < 3 && Math.hypot(p.x - d.x, p.z - d.z) < DOCK_INTERACT_RADIUS) {
+        dock = d.id;
+        break;
+      }
+    }
+    if (dock !== nearDock.current) {
+      nearDock.current = dock;
+      ui.setNearbyDock(dock);
+    }
     if (input.interact && active) {
       if (challenge) ui.openMiniGame(challenge);
+      else if (dock) ui.setMode('passport');
       else if (near) ui.openPanel(near);
-    }
-
-    // Fast travel (Passport): fade out, then reappear at the island centre facing its landmark.
-    const travel = takeTravelRequest();
-    if (travel && !respawning.current) {
-      useProgress.getState().reachIsland(travel);
-      const def = ISLAND_BY_ID[travel];
-      const [lx, , lz] = landmarkPosition(def);
-      travelYaw.current = Math.atan2(-(lx - def.position[0]), -(lz - def.position[2]));
-      respawning.current = true;
-      ui.setFading(true);
-      fadeTimer.current = window.setTimeout(() => {
-        pendingTeleport.current = true;
-      }, RESPAWN_FADE_MS);
     }
 
     // Fell off the world: fade to white, then teleport to the checkpoint.

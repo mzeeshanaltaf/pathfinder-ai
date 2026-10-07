@@ -2,8 +2,8 @@
 
 > Update this file at the end of every session. See the session workflow in [CLAUDE.md](CLAUDE.md).
 
-**Next up:** Phase 4 ([phase-4-concept-simulations.md](docs/plan/phase-4-concept-simulations.md))
-**Last updated:** 2026-10-06 (Phase 3 session)
+**Next up:** All five planned phases are done. Candidates for later work are under "Known issues" and in the Phase 5 handoff notes (a real-device pass, new career paths via `data/`).
+**Last updated:** 2026-10-06 (Phase 5 session)
 
 ## Phase overview
 | # | Phase | Status | Session date |
@@ -11,8 +11,8 @@
 | 1 | [Scaffold & World Movement](docs/plan/phase-1-scaffold-and-world-movement.md) | ✅ Done | 2026-10-06 |
 | 2 | [Roadmap Content & Interaction](docs/plan/phase-2-roadmap-content-and-interaction.md) | ✅ Done | 2026-10-06 |
 | 3 | [Mini-game Framework](docs/plan/phase-3-minigame-framework.md) | ✅ Done | 2026-10-06 |
-| 4 | [Concept Simulations](docs/plan/phase-4-concept-simulations.md) | ⬜ Not started | |
-| 5 | [Polish, Engagement & Finale](docs/plan/phase-5-polish-engagement-and-finale.md) | ⬜ Not started | |
+| 4 | [Concept Simulations](docs/plan/phase-4-concept-simulations.md) | ✅ Done | 2026-10-06 |
+| 5 | [Polish, Engagement & Finale](docs/plan/phase-5-polish-engagement-and-finale.md) | ✅ Done | 2026-10-06 |
 
 Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done with carry-overs
 
@@ -49,29 +49,29 @@ Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done wi
 - [x] Acceptance verified; build passes
 
 ### Phase 4: Concept Simulations
-- [ ] gradient-descent (math-mountain)
-- [ ] curve-fit (ml-meadow)
-- [ ] temperature (dev-llm-lighthouse)
-- [ ] chunk-retrieve (dev-rag-library)
-- [ ] injection-defense normal (dev-shield-fort) + hard (eng-security-citadel)
-- [ ] perceptron (eng-neural-garden)
-- [ ] attention-beams (eng-transformer-tower)
-- [ ] fit-the-gpu (eng-model-forge)
-- [ ] rank-it (eng-deep-archive)
-- [ ] batching (eng-gpu-plant)
-- [ ] drift-watch (eng-mlops-conveyor)
-- [ ] final-assembly (summit)
-- [ ] Acceptance verified; build passes
+- [x] gradient-descent (math-mountain)
+- [x] curve-fit (ml-meadow)
+- [x] temperature (dev-llm-lighthouse)
+- [x] chunk-retrieve (dev-rag-library)
+- [x] injection-defense normal (dev-shield-fort) + hard (eng-security-citadel)
+- [x] perceptron (eng-neural-garden)
+- [x] attention-beams (eng-transformer-tower)
+- [x] fit-the-gpu (eng-model-forge)
+- [x] rank-it (eng-deep-archive)
+- [x] batching (eng-gpu-plant)
+- [x] drift-watch (eng-mlops-conveyor)
+- [x] final-assembly (summit)
+- [x] Acceptance verified; build passes
 
 ### Phase 5: Polish, Engagement & Finale
-- [ ] 20 unique animated landmarks
-- [ ] Onboarding with Byte
-- [ ] Suggested-next + compass, lit bridges, streak, welcome-back card
-- [ ] Balloon fast travel, job-ready meter, achievements
-- [ ] Summit finale + certificate PNG + career ladder
-- [ ] Audio + mute; Settings incl. reset progress
-- [ ] Performance / mobile pass, loading screen, metadata, README
-- [ ] Acceptance verified; build + lint pass
+- [x] 20 unique animated landmarks
+- [x] Onboarding with Byte
+- [x] Suggested-next + compass, lit bridges, streak, welcome-back card
+- [x] Balloon fast travel, job-ready meter, achievements
+- [x] Summit finale + certificate PNG + career ladder
+- [x] Audio + mute; Settings incl. reset progress
+- [x] Performance / mobile pass, loading screen, metadata, README
+- [x] Acceptance verified; build + lint pass
 
 ## Decisions log
 Record any deviation from the plan or from the CLAUDE.md contracts here (date, decision, reason).
@@ -116,6 +116,78 @@ Record any deviation from the plan or from the CLAUDE.md contracts here (date, d
 - 2026-10-06 (Phase 3): The Harbor tutorial runs *in the world*: "Let's go!" closes the overlay and `components/ui/TutorialTracker.tsx` ticks off look (≥ 1 rad of turning in total), jump and Passport. When all three are done it calls `finishMiniGame`, which reopens the host on the result screen. The checklist isn't persisted (a reload cancels it).
 - 2026-10-06 (Phase 3): Exit paths: ✕ / "Back to island" → `resumeExplore()` (re-locks immediately, since it runs from a click). Esc → `closeOverlay()`, then "Click to explore" re-locks. The backdrop does **not** close a game, so a stray tap can't lose progress.
 - 2026-10-06 (Phase 3): Content: the plan names "Calculator" as a Tool Router bin. It isn't in the doc, but it is the plan's own choice, and the items apply the doc's tool-calling idea (LLMs slip on exact maths). Deep Archive uses 4 of the doc's 7 metrics (Recall@K, Precision@K, MRR, faithfulness) to stay within the 2–4 bin limit.
+
+- 2026-10-06 (Phase 4): **Contract changes (all additive):**
+  - `MiniGameId = EngineId | SimId` in `data/minigames.ts`. `SimId` lists the 12 sims. Loaders live in `registry.ts` (each sim is its own lazy chunk, 10–17 KB).
+  - Sim **configs + content live in a new `data/sims.ts`** (types + `GRADIENT_DESCENT`, `CURVE_FIT`, …). `MINIGAMES` entries in `data/minigames.ts` still own `id` / `title` / `howTo` / `recapTopicIds` and reference those configs through a `sim()` helper. This keeps `minigames.ts` readable; the plan said to put configs in the entry itself. `data/sims.ts` has its own dev-only sanity check.
+  - Shared sim UI in `components/minigames/sims/simKit.tsx` (`Slider`, `Segmented`, `Meter`, `Stat`, `SimCard`, `RoundHeader`, `HintCard`, `Illustrative`, `useRaf`, `starsFromPoints`). Slider styling is the `.sim-range` class in `globals.css`. New keyframes: `beam-in`, `pulse-dot`, `flow-down`.
+  - `?debug` hook: `window.__aiQuest.openGame(phaseId)` opens a phase's mini-game intro directly (used by the sim tests).
+- 2026-10-06 (Phase 4): **Sim design / scoring decisions:**
+  - gradient-descent: 2 rounds (a bowl, then two valleys from x = −3.5). Discrete learning rates 0.01–1. Big LRs fall into the local minimum or diverge on round 2. Stars by total steps across all attempts (≤ 10 → 3★, ≤ 22 → 2★). The "chain rule" bonus is a collapsible hint card. Tuned numerically: best play is 0.45 then 0.1, for 5 steps.
+  - curve-fit: fixed seeded dataset (12 train / 10 validation). Validation RMSE is lowest at degree 3. Round 2 tames degree 9 with ridge λ (target val RMSE ≤ 0.175). Stars: 0 wrong lock-ins → 3★, 1 → 2★.
+  - temperature: 8 "Sample ×10" presses. "Creative but sane" requires ≥ 3 distinct words **and** zero probability left on the weird tokens (top-p must cut them). "Deterministic" requires only one token kept. Stars = tasks done (min 1).
+  - chunk-retrieve: valid chunks hold one topic and 2–4 sentences, so the topic boundaries are the only valid chunking. Retrieval uses the canonical topic chunks. Score = ½ chunk quality (1 / 0.6 / 0.3 by check number, 0 if revealed after 3) + ½ precision@3.
+  - injection-defense: one card at a time marches to the gate. Tap or swipe the card (or press Block / B / ←) to block; Allow / A / → lets it in, and so does reaching the gate. Misses pause with a "why" card. Speed ramps 9 → 5.5 s (normal) and 8 → 4.5 s (hard). Stars by accuracy. Items reuse the Phase 3 Shield Fort set. Hard mode adds source tags and indirect injection, exfiltration and excessive-agency items.
+  - perceptron: 2 separable gardens + XOR. Stars: up to 2 points for time (both gardens ≤ 90 s → 2, ≤ 180 s → 1) + 1 for answering "No" to "can one line separate XOR?". The best single line on XOR is 9/12 (brute-force checked). The reveal shows the two-line hidden-layer solution and a small network diagram.
+  - attention-beams: tap-to-guess, then a bertviz-style beam view (query on the left, tokens on the right). Round 5 is causal-masked. Ends with an animated attend → predict → append loop (skippable). Stars by accuracy (5/5 → 3★, 4/5 → 2★).
+  - fit-the-gpu: illustrative memory model (bytes/param FP16 2 · INT8 1 · 4-bit 0.5; full FT adds gradients 2 + Adam 8; LoRA adds 0.1 GB per B params). Full FT is FP16-only, QLoRA is 4-bit-only, and LoRA uses FP16 or INT8. 3 jobs (7B / 24 GB tune, 13B / 24 GB tune, 13B / 16 GB serve at quality ≥ 97). A star for each job launched first time with the highest quality that fits.
+  - rank-it: Recall@3 and MRR use binary relevance (grade ≥ 2). NDCG uses graded gains (2^g − 1). Gauges are live and Submit unlocks at NDCG ≥ 0.80. Stars by average NDCG over 2 queries (≥ 0.97 → 3★, ≥ 0.9 → 2★). Players can hill-climb to 1.0; that's accepted, since the point is feeling what each metric rewards.
+  - batching: added a **GPUs-to-rent** knob (1–4) beside batch size / max wait, because without a cost dimension any batch ≥ 8 trivially "won". A deterministic seeded rush hour (8 → 60 → 30 req/s over 20 s, played back in 6.5 s). Win = p95 ≤ 500 ms and ≥ 98% served. Stars by the cheapest winning run (1 GPU → 3★, 2 → 2★, else 1★). GPU util = useful work / capacity. The doc's "Latency ↓ Cost ↓ GPU util ↑ Throughput ↑" scoreboard shows after each run.
+  - drift-watch: drift starts on a random day (16–26). PSI on an 8-bin feature histogram; the alert at 0.2 **latches** once raised (noise around the threshold made it flicker). Accuracy lags drift by 6 days (labels arrive late). Triggering before the alert = wasted run; at the alert before accuracy breaches 85% = perfect. Stage 2 embeds the `PipelineOrder` engine (loop mode, the doc's lifecycle minus "Retraining"). Final stars = round((stage1 + stage2) / 2).
+  - final-assembly: 7 layers from the Summit diagram; any order within a row. Tap-select then tap a slot, or drag. The tray is sticky so it stays reachable while the layers scroll. Stars by checks (like PipelineOrder). Ends with the "You've reached the Summit!" banner and data-flow pulses. The certificate is still Phase 5.
+
+- 2026-10-06 (Phase 5): **Contract changes**
+  - `store/progress.ts` is now **version 2**.
+    - New fields: `achievements`, `playerName`, `byteHat`, `finaleSeen`, plus `streak.best`. The v1 → v2 migrate seeds `best` from `count`; `merge` fills the rest.
+    - New actions: `touchStreak`, `unlockAchievements`, `setSetting`, `setPlayerName`, `setByteHat`, `completeOnboarding`, `setFinaleSeen`, `resetProgress` (keeps settings).
+  - `store/ui.ts`:
+    - New mode `'cinematic'`. `setMode('cinematic')` does *not* release pointer lock, so play resumes seamlessly after a flight.
+    - New state: `menu` (which card `mode === 'menu'` shows), `cinematic`, `nearbyDock`, `notices` (+ `pushNotice` / `shiftNotice`), `perfTier`, `openMenu()`, `startCinematic()`.
+    - `closeOverlay()` also clears `menu` and `cinematic`.
+  - `components/player/playerState.ts`:
+    - `requestTravel` is now consumed by `BalloonTravel`, not by the Player.
+    - New `playerControl.teleport` / `face`, registered by the Player.
+    - New `cinematicControl.skip`.
+  - `data/world.ts`: `DOCK_INTERACT_RADIUS`. `data/roadmap.ts`: `Timeline.track` widened to any career-path track.
+  - `lib/worldLayout.ts`: `landmarkYaw`, `landmarkClearance`, `dockPosition`, `DOCK_RADIUS`, `yawTowardsLandmark`.
+- 2026-10-06 (Phase 5): **Layout change.** Landmarks have a bigger footprint:
+  - `landmarkRadius` 1.3 → 1.9 m. Scenery keeps out to `landmarkClearance` (3.6 m) + 0.6, and gems to 3.6 m.
+  - The Harbor pier also gets a clear corridor to the rim.
+  - Mentors, pedestals, trees and **gem positions shifted** on every island. Gem ids are unchanged, so saves are unaffected.
+  - Each island also got a balloon dock (gems and flowers avoid it).
+- 2026-10-06 (Phase 5): Landmarks face the island centre (local +Z). Colliders are per landmark in `landmarks/index.ts`. The Harbor has no core collider: you can walk out on the pier, which has railings and an end rail.
+- 2026-10-06 (Phase 5): **Suggested next** = first trunk badge missing (Code Village → Math Mountain → ML Meadow → Fork; the Harbor tutorial belongs to onboarding). Then the next phase on the path with the most progress (badges ×10 + gem fraction, ties → Developer). Then the Summit. Then the other path(s).
+  - The compass points at the target island's **Challenge pedestal** once you stand on that island, because earning the badge is what moves the suggestion on.
+  - Paths come from `PATH_TRACKS` (`PathTrack = Exclude<Track, 'meta' | 'common'>`), so a new career path is data plus a `TIMELINE_PHASES` row.
+- 2026-10-06 (Phase 5): **Job-ready meter.**
+  - Each timeline step of the doc maps to islands (`TIMELINE_PHASES` in `lib/progress.ts`).
+  - Step completion = 35% knowledge (half gem fraction, half stars/3) + 65% "I built this" projects, if the step has any; otherwise knowledge only.
+  - "Production AI: Complete SaaS" has no island, so it counts in the final step of both paths.
+  - Months left = remaining fraction × the doc's range (9–12 / 12–18). Labelled as an illustrative estimate in the UI.
+- 2026-10-06 (Phase 5): **Achievements** (11): the plan's 7 plus Gem Hoarder (100 gems), On a Roll (3-day streak), Island Hopper (all 20) and Pathfinder (all badges).
+  - "Both Paths Explored" = a badge on every path. "All Common Badges" = the 3 `common`-track islands.
+  - Existing saves unlock silently on load; new unlocks toast.
+- 2026-10-06 (Phase 5): **Streak and hats.**
+  - Consecutive local calendar dates. It is counted when the world loads and again when the tab becomes visible, so a tab left open past midnight still counts.
+  - Hats unlock from the **best** streak: Sunny Yellow at 3 days, Berry Pink at 7, Galaxy Purple at 30. They are chosen in Settings and shown on Byte (3D) and in the SVG avatar.
+- 2026-10-06 (Phase 5): **Welcome back.** "Continue" flies the balloon to the *suggested next* island, because the player already spawns at their last island.
+- 2026-10-06 (Phase 5): **Balloon travel.** From the player's current eye position, a cubic curve rises to cruise height and lands on the destination dock (3.2–7 s, by distance), skippable.
+  - Docks: E opens the Passport map.
+  - `prefers-reduced-motion` → a quick fade instead of the flight.
+- 2026-10-06 (Phase 5): **Finale.**
+  - Triggers once (`finaleSeen`) when the player stands on the Summit with its badge, in explore mode.
+  - 9 s fly-around of the hologram with fireworks (skippable), then the finale card (Byte + an interactive career ladder whose rung notes are doc text), then the certificate.
+  - It can be replayed from the Summit panel or the Passport.
+  - The certificate unlocks with the Summit badge.
+- 2026-10-06 (Phase 5): **Audio** is synthesized with Web Audio: footsteps, gem chime, badge fanfare, achievement, UI clicks (any `<button>`), balloon whoosh, fireworks and a wind loop. It unlocks on the first gesture, suspends while the tab is hidden, and M toggles mute.
+- 2026-10-06 (Phase 5): **Quality tiers.** 2 = full, 1 = dpr 1, 0 = no shadows, half the clouds (half the puffs), no flowers, fewer bridge motes, and landmarks animate within half the radius.
+  - Settings can force low or high. Auto follows `PerformanceMonitor`. Touch devices start at tier 1.
+  - Auto never climbs back from tier 0, because re-enabling shadows recompiles every material.
+- 2026-10-06 (Phase 5): **Draw-call pass.** The worst view (Harbor looking down the trunk, the whole world visible) went from 978 to ~280–350 draws:
+  - Mentors became one merged mesh each; pedestal stands became merged meshes.
+  - Captions and pedestal labels hide beyond 60 m, sign faces beyond 55 m.
+  - Small details are inside `<Near>` (90 m). Mentors and pedestals hide beyond 120 m.
+- 2026-10-06 (Phase 5): `app/favicon.ico` (the create-next-app default) was replaced by `app/icon.svg`. `app/opengraph-image.tsx` renders the share card at build time with the bundled Geist font. `metadataBase` comes from `NEXT_PUBLIC_SITE_URL` (localhost fallback).
 
 ## Handoff notes
 Each session appends a short block: what was built, key files, anything half-done, and tips for the next session.
@@ -218,15 +290,104 @@ Each session appends a short block: what was built, key files, anything half-don
 - Bespoke sims receive `MiniGameProps<C>`: call `onComplete({ score, stars })` once at the end. The host handles the result, Retry (remounts the game with a new `key`) and exit. Use `GameButton` / `Feedback` / `useDragDrop` from `kit.tsx` for a consistent look.
 - `starsForAccuracy()` gives the shared 90 / 70 % thresholds. The test harness in `p3-desktop.mjs` auto-solves by engine id; Phase 4 sims need their own solver (or a `?debug` win hook).
 
+### Phase 4 session (2026-10-06)
+**What exists**
+- 12 sims in `components/minigames/sims/`: `GradientDescent`, `CurveFit`, `Temperature`, `ChunkRetrieve`, `InjectionDefense`, `Perceptron`, `AttentionBeams`, `FitTheGpu`, `RankIt`, `Batching`, `DriftWatch`, `FinalAssembly`, plus `simKit.tsx`.
+  - All are SVG or HTML inside the existing host overlay (no second canvas). Animation uses rAF + refs (`useRaf`) or short timers.
+  - Every control is a native range input, a button, or pointer-event drag via `useDragDrop`.
+- All 13 sim phases are assigned in `MINIGAMES`, and no temporary configs remain. The engines still serve code-village, fork, prompt-workshop, agent-hq, app-factory and clockwork-keep, plus the harbor tutorial. The graded-quiz mode is now unused, but the engine is kept.
+- Illustrative numbers are tagged with the `Illustrative` pill: probabilities, similarity scores, attention weights, GPU memory and quality, batching cost and latency, and drift data ("Simulated data").
+- Content: chunk-retrieve (travel policy doc), rank-it (2 queries × 6 passages), defense items and attention sentences are hand-authored in `data/sims.ts`. Every item applies a topic from the doc.
+
+**Verification** (Playwright + local Chrome; scripts in this session's scratchpad: `h.mjs` helpers, `t-math`, `t-llm`, `t-defense`, `t-attn`, `t-rank`, `t-ops`, `t-all`; tuning scripts `tune-gd`, `tune-fit`, `tune-batch`)
+- Each sim was played to completion on dev **and** on `next start`, desktop and 375×812 touch: 6 files, 109 checks. Wins, fail paths and star thresholds were checked (e.g. GD bounce / crawl / local-minimum / diverge, CF under/overfit labels, a RAG missing-citation answer, a GPU OOM and quality fail, a batching queue explosion and SLA miss, drift wasted-run → on-time).
+- Mouse drag (rank-it handle, final-assembly tile) and CDP touch drag (rank-it, final-assembly, the temperature slider) both work. A tap or click on a moving defense card blocks it.
+- `t-all` on production: every one of the 20 phases opens its intro and renders its game with no horizontal overflow (desktop + 375 px). Pedestal → E opens a sim and releases pointer lock. Only that sim's chunk loads on intro (12 separate chunks, none at startup).
+- Badges persist via the existing host. `tsc`, `eslint .` and `npm run build` are clean. Console: only the two known library warnings.
+
+**Tips for Phase 5**
+- Every sim calls `onComplete` exactly once from a Finish button, so the result screen, badge and recap are unchanged host behaviour.
+- Final-assembly's banner is where the Phase 5 Summit finale / certificate could hook in, e.g. by watching `progress.badges.summit`.
+- Audio hooks: natural cue points are sim feedback moments (win / fail), the defense block / breach, and the drift alert.
+
+### Phase 5 session (2026-10-06)
+**What exists**
+- **Landmarks:** `components/world/landmarks/` has one file per type and is wired through `index.ts` (body, label height, colliders) and `Landmark.tsx` (position, face-the-centre yaw, scale, colliders, label).
+  - `kit.tsx` provides the shared pieces:
+    - `Static` / `StaticGlow`: merged vertex-coloured meshes.
+    - `useLandmarkFrame`: idle animation only within 140 m, or 70 m on low quality.
+    - `Caption`: troika text, hidden beyond 60 m, `frontOnly` for translucent panels.
+    - `Near`: distance culling for small details.
+    - `useGeo`, `useHiddenInstances`, `useInstanceColors`.
+  - Builders are in `lib/landmarkKit.ts` (`mergeParts`, `beam`, `slab`, `prism`, `extrude`, `strokeGlyph` for `{ }` and `∫`, `gearGeometry`, `transformParts`). Shared materials are in `lib/materials.ts`.
+  - Content that comes from the doc:
+    - the Fork star bars use `COMPARISON`
+    - the Clockwork Keep gears are the agent-loop steps
+    - the MLOps stations are the lifecycle steps
+    - the Summit hologram is the Phase 12 architecture
+- **World additions:**
+  - `Balloons.tsx`: 20 docks merged into one mesh, 20 parked balloons as one instanced mesh tinted per track, plus colliders.
+  - `BalloonTravel.tsx`: the flight director.
+  - `LitBridges.tsx`: post-top lanterns and drifting motes; the lit planks themselves are tinted in `Bridge.tsx`.
+  - `Finale.tsx`: the fly-around and a 324-particle firework pool.
+  - Byte's hat is in `Mentor.tsx`.
+- **UI:**
+  - Overlays: `Compass` (HUD arrow + distance, the minimap rings the same target), `NoticeToast`, `Onboarding`, `WelcomeBack`, `Settings`, `FinaleOverlay`, `Certificate` (canvas drawing in `lib/certificate.ts`), `CinematicOverlay` (letterbox, caption, Skip).
+  - `SessionManager` handles streak, achievements, the first card and the finale trigger.
+  - Building blocks: `Sheet` (shared modal), `ByteAvatar` (SVG), `Logo` (also `app/icon.svg` and the OG image).
+  - The Passport has Map / Job-ready / Awards tabs, and "Fly here" travels by balloon.
+  - HUD additions: 🔥 streak, 🔊 mute, ⚙️ settings. Esc closes menus (except onboarding), M toggles mute.
+  - The loading screen shows the logo and a progress bar.
+- **Debug:**
+  - `?debug` HUD now shows the quality tier, draw calls, triangles, geometries and programs.
+  - `window.__aiQuest.world.docks` lists the dock positions.
+  - `window.__aiQuestScene` exposes the scene (debug only).
+
+**Verification** (Playwright + local Chrome, dev and `next start`; scripts in this session's scratchpad: `p5-smoke`, `p5-features`, `p5-overflow`, `p5-perf`, `p5-reduced`, `shots-landmarks`, `draws`, plus the Phase 4 `t-all`)
+- `p5-smoke` (desktop + 375 px touch, 9/9 each):
+  - a fresh save gets onboarding (doc quotes, device-specific controls, tutorial start)
+  - the compass points to Code Village
+  - streak 1, no overflow
+- `p5-features` (desktop 33/33, touch 32/32):
+  - welcome back + streak 2 → 3 with "+1 today" and the Sunny hat notice; Continue → balloon flight → lands on the Code Village dock
+  - Passport "Fly here" + Space skip (≈ 0.3 s); dock prompt
+  - First Gem and Summit achievements persist
+  - Settings (hat, mute, sensitivity, quality persist; locked hat disabled; HUD mute state)
+  - job-ready 9–12 months → 0% → 37% / 6–8 months after projects + badges; Awards tab
+  - compass after the trunk → LLM Lighthouse, and → Model Forge when the Engineer path leads
+  - finale auto-triggers → skip → career ladder climb + doc rung note → certificate (name persists, PNG downloaded, ~190 KB)
+  - Reset (confirm) → onboarding again with settings kept
+- `p5-overflow`: 13/13 overlays with no horizontal overflow at 375 px.
+- `p5-reduced`: a reduced-motion fade lands on the dock.
+- `t-all` regression: 28/28 desktop + 24/24 touch on production, so all 20 mini-games still open from their (moved) pedestals.
+- **Performance** (production, local GPU):
+  - Desktop, whole world in view: 60 fps, worst frame 17 ms, ~280 draws.
+  - Mobile emulation + 4× CPU throttle: auto quality drops from tier 2 to tier 0 in ~6 s, then 60 fps.
+- `npm run lint` and `npm run build` are clean. The console shows only the two known library warnings.
+- All 20 landmarks were screenshotted and reviewed. The additive glows washed out to white against the sky, so the hologram, shield dome and attention beams now use normal blending.
+
+**Not done / tips**
+- No real-device test (iOS Safari or Android). The audio unlock path and pointer behaviour on iOS are unverified.
+- The certificate's Print button opens a new window with the PNG and calls `print()`, so pop-up blockers may stop it. Download always works.
+- The PhasePanel mentor quote still uses the 🤖 emoji; the new overlays use `ByteAvatar`.
+- New career path: follow the "Adding a roadmap or a new career path" section in README.md.
+
 ## Known issues
+- Sim stars are generous by design where a meter is live (rank-it NDCG, perceptron accuracy, curve-fit bars): players can hill-climb. Stars mostly reward speed, first-try accuracy or efficiency.
+- Drift-watch needs about 15–30 s of watching. There is Pause but no fast-forward.
+- In automated touch tests, mixing a raw CDP touch drag with Playwright `tap()` straight afterwards occasionally dropped a tap. 30 rapid taps alone all registered, so the tests just pace their taps; this hasn't been seen with real input.
 - Two console warnings come from library internals and can't be fixed from our code: `THREE.Clock` deprecated (R3F) and "deprecated parameters for the initialization function" (rapier-compat WASM init).
 - Shadows only cover ±40 m around the player. Distant islands show no cast shadows (by design, for performance).
 - Island labels are small at long range (the Phase 2 bridge signs help up close).
 - Speech bubbles are drei `Html`: they are not occluded by geometry (a bubble can show through a landmark), and they hide when their anchor is behind the camera.
-- The mentor icon in panels is an emoji (🤖), so it looks different on each platform. Phase 5 could swap in a small SVG of the robot.
+- The mentor icon in the Phase Panel is still an emoji (🤖), so it looks different on each platform. The Phase 5 overlays (onboarding, welcome back, finale, settings) use the SVG `ByteAvatar`.
 - Gem pickup is a distance check against the body centre, so gems can also be grabbed through a thin obstacle. All gems are placed ≥ 1 m from trees, rocks, signs, mentors and landmarks, so this is unlikely in practice.
 - Still only tested in Chromium (desktop + mobile emulation), not on a real phone or iOS Safari.
-- `README.md` is still the create-next-app boilerplate. It gets rewritten in Phase 5.
+- Landmark colliders are boxes and cylinders, so a few decorations can be walked through: the Farm's pens and hay-bale plot, the Mountain's floating glyphs, the parked balloons' ropes. The main buildings are solid.
+- Additive glows (lighthouse beam, token blocks, sparks) can look pale against the bright sky. The big translucent shapes switched to normal blending for that reason.
+- The balloon flight is a fixed curve: it can pass through another island's landmark or a cloud on long routes. It is short, and Space skips it.
+- In headless Chrome the HUD emoji (🔊 ⚙️ 🔥) render monochrome. Normal browsers show colour emoji.
+- The Phase 2/3 test scripts in older scratchpads look for "Travel here" in the Passport; the button is now "🎈 Fly here".
 - Git: each phase is committed once its session ends (commit only when the user asks). Remote: `origin` → github.com/mzeeshanaltaf/pathfinder-ai.
 - The jump is a polled key state, so a synthetic key press that goes down and up within one frame is missed. Real presses are fine; automated tests must hold Space for about 100 ms.
 - During the Harbor tutorial, the "Tap to play ★ First Steps" prompt still shows at the pedestal. Re-opening it just shows the intro again (harmless).

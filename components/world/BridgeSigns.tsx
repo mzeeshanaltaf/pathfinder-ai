@@ -1,8 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
-import { BoxGeometry, CylinderGeometry, Euler, Matrix4, Quaternion, Vector3 } from 'three';
+import { BoxGeometry, CylinderGeometry, Euler, Matrix4, Quaternion, Vector3, type Group } from 'three';
 import { getPhase } from '@/data/roadmap';
 import { BRIDGE_SIGN_SUBTITLES, ISLAND_TRACK } from '@/data/world';
 import { COLORS, TRACK_COLORS } from '@/lib/palette';
@@ -15,6 +16,8 @@ const BOARD_H = 1.05;
 const BOARD_D = 0.12;
 const POST_H = BOARD_Y + BOARD_H / 2;
 const TITLE_SIZE = 0.32;
+/** Sign faces beyond this distance (m) are hidden: the board alone reads fine from afar. */
+const SIGN_TEXT_RADIUS = 55;
 
 interface SignInfo extends SignLayout {
   title: string;
@@ -55,13 +58,30 @@ export default function BridgeSigns() {
     return { boards, posts };
   }, [signs]);
 
+  // Sign faces (chevron + two texts each) are unreadable from afar: draw only the nearby ones.
+  const faces = useRef<Group[]>([]);
+  useFrame(({ camera }) => {
+    const { x, z } = camera.position;
+    signs.forEach((s, i) => {
+      const g = faces.current[i];
+      if (g) g.visible = (s.position[0] - x) ** 2 + (s.position[2] - z) ** 2 < SIGN_TEXT_RADIUS ** 2;
+    });
+  });
+
   return (
     <>
       <ToonInstances geometry={geos.board} matrices={boards} color={COLORS.signBoard} outline={0.04} />
       <ToonInstances geometry={geos.post} matrices={posts} color={COLORS.woodDark} outline={0.03} />
       <Suspense fallback={null}>
-        {signs.map((s) => (
-          <group key={s.key} position={s.position} rotation={[0, s.rotationY, 0]}>
+        {signs.map((s, i) => (
+          <group
+            key={s.key}
+            ref={(g) => {
+              if (g) faces.current[i] = g;
+            }}
+            position={s.position}
+            rotation={[0, s.rotationY, 0]}
+          >
             <group position={[0, BOARD_Y, BOARD_D / 2 + 0.01]}>
               {/* "Ahead" chevron */}
               <mesh position={[0, 0.34, 0]} rotation={[0, 0, Math.PI / 2]}>
