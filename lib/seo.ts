@@ -15,3 +15,6 @@ export const pathSlug = (label: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+
+/** Site path of a career path's static roadmap page, e.g. "/roadmaps/ai-developer". */
+export const roadmapHref = (path: { label: string }) => `/roadmaps/${pathSlug(path.label)}`;

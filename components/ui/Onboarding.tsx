@@ -8,6 +8,7 @@ import { TRACK_COLORS } from '@/lib/palette';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
 import ByteAvatar from './ByteAvatar';
+import { RoadmapPageLink } from './RoadmapPageLinks';
 import { INK, resumeExplore } from './kit';
 import Sheet, { PillButton } from './Sheet';
 import { TUTORIAL_STEPS } from './TutorialTracker';
@@ -61,6 +62,7 @@ function CareerCard({ path }: { path: CareerPath }) {
       <p className="mt-1 text-sm font-bold italic" style={{ color: c.dark }}>
         “{path.quote}”
       </p>
+      <RoadmapPageLink path={path} className="mt-1 inline-block text-sm" />
     </div>
   );
 }

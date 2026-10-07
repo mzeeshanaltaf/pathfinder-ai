@@ -35,7 +35,7 @@ npm run start      # serve the production build
 npm run lint
 ```
 
-Requires Node 20+. Nothing is fetched at runtime: there's no backend and no accounts. All art is procedural, and progress is saved in `localStorage`. To set the canonical, sitemap, robots and Open Graph URLs when deploying, set `NEXT_PUBLIC_SITE_URL` (build time, no trailing slash). SEO: the home page ships a server-rendered outline of the roadmaps, and each career path gets a static page at `/roadmaps/<slug>` (generated from `CAREER_PATHS`, see `lib/seo.ts`).
+Requires Node 20+. Nothing is fetched at runtime: there's no backend and no accounts. All art is procedural, and progress is saved in `localStorage`. To set the canonical, sitemap, robots and Open Graph URLs when deploying, set `NEXT_PUBLIC_SITE_URL` (build time, no trailing slash). SEO: the home page ships a server-rendered outline of the roadmaps, and each career path gets a static page at `/roadmaps/<slug>` (generated from `CAREER_PATHS`, see `lib/seo.ts`). In the game, those pages are linked from the intro's career cards, the Welcome back card and the Passport's Roadmap tab.
 
 ## Controls
 

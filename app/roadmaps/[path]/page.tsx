@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CAREER_PATHS, COMPARISON, getPhase, shortPathLabel, trackPhases, type CareerPath } from '@/data/roadmap';
-import { SITE_NAME, SITE_URL, pathSlug } from '@/lib/seo';
+import { SITE_NAME, SITE_URL, pathSlug, roadmapHref } from '@/lib/seo';
 
 const bySlug = (slug: string) => CAREER_PATHS.find((p) => pathSlug(p.label) === slug);
 
@@ -182,7 +182,7 @@ export default async function RoadmapPage({ params }: PageProps<'/roadmaps/[path
           <ul className="mt-3 flex flex-wrap gap-3">
             {others.map((p) => (
               <li key={p.id}>
-                <Link href={`/roadmaps/${pathSlug(p.label)}`} className="underline font-bold">
+                <Link href={roadmapHref(p)} className="underline font-bold">
                   {p.emoji} {p.label} roadmap
                 </Link>
               </li>

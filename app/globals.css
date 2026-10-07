@@ -22,6 +22,17 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Tailwind v4's preflight gives buttons the default arrow; show the hand on anything clickable.
+   In the base layer so utilities like disabled:cursor-not-allowed still win. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='radio'],
+  summary {
+    cursor: pointer;
+  }
+}
+
 #game,
 #game canvas {
   touch-action: none;

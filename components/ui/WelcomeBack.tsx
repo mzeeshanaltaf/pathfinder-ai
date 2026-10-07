@@ -7,6 +7,7 @@ import { hatColor, suggestedNext } from '@/lib/progress';
 import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
 import ByteAvatar from './ByteAvatar';
+import RoadmapPageLinks from './RoadmapPageLinks';
 import { INK, resumeExplore, usePhaseGems } from './kit';
 import { sessionInfo } from './SessionManager';
 import Sheet, { PillButton } from './Sheet';
@@ -77,6 +78,9 @@ function WelcomeCard() {
         </span>
         {streak}-day streak{grew ? ' (+1 today!)' : ''}
         <span className="ml-auto text-xs font-bold opacity-60">Come back tomorrow to keep it going</span>
+      </div>
+      <div className="mt-3">
+        <RoadmapPageLinks />
       </div>
     </Sheet>
   );

@@ -26,9 +26,20 @@ export function toggleMute() {
 function useOverlayKeys() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       const ui = useUi.getState();
+      // Space is jump while exploring. A HUD button keeps focus after a click, and Space would then
+      // "click" it again (e.g. toggle sound), so drop that focus: the keyup then lands on the body.
+      if (e.code === 'Space' && ui.mode === 'explore') {
+        const el = document.activeElement;
+        if (el instanceof HTMLElement && el !== document.body) {
+          e.preventDefault();
+          el.blur();
+        }
+        return;
+      }
+      if (e.repeat) return;
       if (e.code === 'KeyP') {
         if (ui.mode === 'explore' || ui.mode === 'panel') openPassport();
         else if (ui.mode === 'passport') ui.closeOverlay();

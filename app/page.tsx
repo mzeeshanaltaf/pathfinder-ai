@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import GameLoader from '@/components/GameLoader';
 import { CAREER_PATHS, trackPhases } from '@/data/roadmap';
-import { SEO_DESCRIPTION, SITE_NAME, SITE_URL, pathSlug } from '@/lib/seo';
+import { SEO_DESCRIPTION, SITE_NAME, SITE_URL, roadmapHref } from '@/lib/seo';
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -46,7 +46,7 @@ export default function Page() {
         {CAREER_PATHS.map((path) => (
           <section key={path.id}>
             <h2>
-              <Link href={`/roadmaps/${pathSlug(path.label)}`}>{path.label} roadmap</Link>
+              <Link href={roadmapHref(path)}>{path.label} roadmap</Link>
             </h2>
             <p>{path.definition}</p>
             <p>{path.goal}</p>

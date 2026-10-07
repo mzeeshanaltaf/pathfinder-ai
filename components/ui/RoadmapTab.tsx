@@ -9,6 +9,7 @@ import { useProgress } from '@/store/progress';
 import { useUi } from '@/store/ui';
 import { BadgeStamp, Flow, flyTo, INK, SectionTitle, usePhaseGems } from './kit';
 import { AntiPatterns, KeyQuestion, phaseHeading, ToolsSection, TopicGroupView } from './roadmapParts';
+import { RoadmapPageLink } from './RoadmapPageLinks';
 import RoadmapPrint from './RoadmapPrint';
 
 /** Passport → 📜 Roadmap: one career path's whole roadmap, phase by phase, with print / save as PDF. */
@@ -69,6 +70,9 @@ export default function RoadmapTab() {
           Goal: <b>{path.goal}</b>
         </p>
         <p className="mt-1 text-sm">{path.definition}</p>
+        <RoadmapPageLink path={path} className="mt-1 inline-block text-sm">
+          Open as a web page
+        </RoadmapPageLink>
         <ol className="mt-2 flex flex-wrap gap-1.5" aria-label="Timeline">
           {path.timeline.steps.map((s) => (
             <li key={s.when} className="rounded-xl border-2 bg-white/85 px-2 py-0.5 text-[11px] leading-tight" style={{ borderColor: c.dark }}>
