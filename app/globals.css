@@ -400,6 +400,11 @@ body {
   font-size: 9pt;
   color: #444444;
 }
+
+.print-blurb {
+  font-weight: normal;
+  color: #555555;
+}
 .print-kicker {
   text-transform: uppercase;
   font-weight: 700;

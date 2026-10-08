@@ -206,7 +206,11 @@ function PhaseBlock({ phase }: { phase: ReturnType<typeof getPhase> }) {
       <p className="mt-2">{phase.summary}</p>
       {phase.groups.map((g) => (
         <div key={g.title} className="mt-2">
-          <h4 className="font-bold">{g.title}</h4>
+          <h4 className="font-bold">
+            {g.emoji ? `${g.emoji} ` : ''}
+            {g.title}
+            {g.blurb && <span className="font-semibold text-[#3d3452]/70">: {g.blurb}</span>}
+          </h4>
           <p className="text-sm">{g.topics.map((t) => t.label).join(' · ')}</p>
         </div>
       ))}

@@ -87,7 +87,11 @@ function PrintPhase({ id }: { id: PhaseId }) {
       <p>{phase.summary}</p>
       {phase.groups.map((g) => (
         <div key={g.title} className="print-group">
-          <h4>{g.title}</h4>
+          <h4>
+            {g.emoji ? `${g.emoji} ` : ''}
+            {g.title}
+            {g.blurb && <span className="print-blurb">: {g.blurb}</span>}
+          </h4>
           <ul>
             {g.topics.map((t) => (
               <li key={t.id}>

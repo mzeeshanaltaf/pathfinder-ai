@@ -10,7 +10,7 @@ Pathfinder AI is a cartoon 3D world in the browser. Instead of reading an AI car
 
 On every island you can:
 
-- **Collect Skill Gems.** There is one per topic, 334 in all, and each comes with a plain-English explanation.
+- **Collect Skill Gems.** There is one per topic, 377 in all, and each comes with a plain-English explanation. Topics are grouped into category cards (an emoji, a title and a one-line blurb), like the roadmap infographics.
 - **Read the phase.** Walk up to the landmark and press E.
 - **Play its Challenge.** Each island has a mini-game or concept simulation that awards a 1–3 star badge.
 - **Mark projects "I built this"** to track the portfolio projects you've built.
@@ -23,7 +23,7 @@ Your **Skill Passport** gathers all of this in one place:
 - your achievements
 - a certificate once you reach the Summit
 
-Every island is open from the start. The compass, lit bridges and a "next stop" suggestion guide you, but nothing is locked. The content comes from [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md) and [docs/AI Forward Deployed Engineer.md](docs/AI%20Forward%20Deployed%20Engineer.md).
+Every island is open from the start. The compass, lit bridges and a "next stop" suggestion guide you, but nothing is locked. The content comes from [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md) and [docs/AI Forward Deployed Engineer.md](docs/AI%20Forward%20Deployed%20Engineer.md). Lists marked **➕ Addition** in the first doc, and its Phase 10 (AI Observability), were added later from a ten-part AI Developer / AI Engineer roadmap infographic series.
 
 ## Run it
 
@@ -56,13 +56,14 @@ The view moves only with the keyboard or the stick: there is no mouse-look and n
 
 ## What's in the world
 
-- **26 islands, 26 landmarks.** Every island has a landmark with an idle animation that shows the topic, for example:
+- **27 islands, 27 landmarks.** Every island has a landmark with an idle animation that shows the topic, for example:
   - a lighthouse sweeping a beam of token blocks
   - a library where retrieved chunks fly into an answer orb
   - a transformer tower with attention beams
   - the agent-loop gears of the Clockwork Keep
   - a crane and data packets flowing through the Integration Docks' pipes
   - the Go-Live Beacon sending out signal rings
+  - the Watchtower (AI Observability) with its sweeping spyglass and a live trace filling in span by span
   - the Summit's holographic architecture
 - **Mini-games.** Pipelines, sorting and quizzes, plus 12 hands-on simulations (gradient descent, curve fitting, temperature, chunking, attention, GPU memory, batching, drift…). The Fork's "Which path fits you?" quiz suggests one of the three paths.
 - **Guidance.** A compass points to the suggested next island and its distance. Bridges glow once you've earned the badge for the island they lead from. The minimap rings your next stop.

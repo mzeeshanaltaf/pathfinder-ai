@@ -21,6 +21,7 @@ export type LandmarkType =
   | 'control-tower'
   | 'factory'
   | 'fort'
+  | 'watchtower'
   | 'neuron-trees'
   | 'tower'
   | 'forge'
@@ -90,6 +91,7 @@ export const ISLANDS: IslandDef[] = [
   island('dev-agent-hq', [-106, 5, -308], 12, 'control-tower'),
   island('dev-app-factory', [-92, 4, -350], 13, 'factory'),
   island('dev-shield-fort', [-48, 5, -385], 12, 'fort'),
+  island('dev-watchtower', [-50, 6, -428], 11, 'watchtower'),
   // Engineer path (+X)
   island('eng-neural-garden', [42, 2, -205], 12, 'neuron-trees'),
   island('eng-transformer-tower', [82, 3.5, -222], 12, 'tower'),
@@ -124,6 +126,7 @@ export const BRIDGES: BridgeDef[] = [
     'dev-agent-hq',
     'dev-app-factory',
     'dev-shield-fort',
+    'dev-watchtower',
     'summit',
   ]),
   ...chain([

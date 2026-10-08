@@ -314,9 +314,11 @@ function Topics({ phase }: { phase: Phase }) {
       <p className="text-sm font-semibold">
         💎 {found} of {total} Skill Gems found on this island. Tap a topic to read about it.
       </p>
-      {phase.groups.map((g) => (
-        <TopicGroupView key={g.title} phase={phase} group={g} />
-      ))}
+      <div className="grid items-start gap-3 sm:grid-cols-2">
+        {phase.groups.map((g) => (
+          <TopicGroupView key={g.title} phase={phase} group={g} />
+        ))}
+      </div>
       <ToolsSection phase={phase} />
     </div>
   );

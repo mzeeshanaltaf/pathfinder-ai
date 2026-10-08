@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { CAREER_PATHS, gemId, getPhase, TRACK_LABELS, type Phase, type PhaseId, type Topic, type TopicGroup, type Track } from '@/data/roadmap';
-import { GEM_COLORS, TRACK_COLORS } from '@/lib/palette';
+import { CATEGORY_TINTS, GEM_COLORS, TRACK_COLORS } from '@/lib/palette';
 import { useProgress } from '@/store/progress';
 import { INK, SectionTitle } from './kit';
 
@@ -29,8 +29,9 @@ export function Chips({ items, track }: { items: string[]; track: Track }) {
   );
 }
 
-/** Heading for a phase's tool chips (the doc calls some of these lists "Technologies"). */
-export const toolsTitle = (phase: Phase) => (phase.id === 'dev-rag-library' || phase.id === 'eng-gpu-plant' ? 'Technologies' : 'Tools');
+/** Heading for a phase's tool chips (the doc calls some of these lists "Technologies" or "Platforms"). */
+export const toolsTitle = (phase: Phase) =>
+  phase.id === 'dev-rag-library' || phase.id === 'eng-gpu-plant' ? 'Technologies' : phase.id === 'dev-watchtower' ? 'Platforms' : 'Tools';
 
 export function ToolsSection({ phase }: { phase: Phase }) {
   if (!phase.tools) return null;
@@ -69,21 +70,43 @@ export function AntiPatterns({ phase }: { phase: Phase }) {
   );
 }
 
+/** A category's card tint: categories cycle through CATEGORY_TINTS in the phase's group order. */
+export const categoryTint = (phase: Phase, group: TopicGroup) => CATEGORY_TINTS[Math.max(0, phase.groups.indexOf(group)) % CATEGORY_TINTS.length];
+
 /**
- * One topic group. `chips` (island guide): tap a topic to read its bite.
- * `list` (Roadmap): every topic with its bite, collected gems ticked.
+ * One topic category, as a card: a tinted header (emoji, title, one-line blurb, gems found) over its topics.
+ * `chips` (island guide): tap a topic to read its bite. `list` (Roadmap): every topic with its bite, collected gems ticked.
  */
 export function TopicGroupView({ phase, group, variant = 'chips' }: { phase: Phase; group: TopicGroup; variant?: 'chips' | 'list' }) {
   const gems = useProgress((s) => s.gems);
   const [open, setOpen] = useState<Topic | null>(null);
   const c = TRACK_COLORS[phase.track];
   const gemColor = GEM_COLORS[phase.track];
+  const tint = categoryTint(phase, group);
+  const found = group.topics.filter((tp) => gems[gemId(phase.id, tp.id)]).length;
+
+  const header = (
+    <header className="flex items-start gap-2 border-b-[3px] px-3 py-2" style={{ background: tint.light, borderColor: tint.dark }}>
+      {group.emoji && (
+        <span className="text-xl leading-none" aria-hidden>
+          {group.emoji}
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <h3 className="text-sm leading-tight font-black">{group.title}</h3>
+        {group.blurb && <p className="text-xs leading-snug font-semibold opacity-75">{group.blurb}</p>}
+      </span>
+      <span className="shrink-0 text-xs font-extrabold tabular-nums" title="Skill Gems found in this category">
+        💎 {found}/{group.topics.length}
+      </span>
+    </header>
+  );
 
   if (variant === 'list') {
     return (
-      <section>
-        <SectionTitle>{group.title}</SectionTitle>
-        <ul className="flex flex-col gap-1.5">
+      <section className="overflow-hidden rounded-2xl border-[3px] bg-white" style={{ borderColor: tint.dark }}>
+        {header}
+        <ul className="flex flex-col gap-1.5 p-2">
           {group.topics.map((tp) => {
             const got = !!gems[gemId(phase.id, tp.id)];
             return (
@@ -108,9 +131,9 @@ export function TopicGroupView({ phase, group, variant = 'chips' }: { phase: Pha
   }
 
   return (
-    <section>
-      <SectionTitle>{group.title}</SectionTitle>
-      <div className="flex flex-wrap gap-1.5">
+    <section className="overflow-hidden rounded-2xl border-[3px] bg-white" style={{ borderColor: tint.dark }}>
+      {header}
+      <div className="flex flex-wrap gap-1.5 p-2.5">
         {group.topics.map((tp) => {
           const got = !!gems[gemId(phase.id, tp.id)];
           const selected = open?.id === tp.id;
@@ -139,7 +162,7 @@ export function TopicGroupView({ phase, group, variant = 'chips' }: { phase: Pha
       </div>
       {open && (
         <div
-          className="mt-2 rounded-2xl border-[3px] px-3 py-2 text-sm animate-[toast-in_200ms_ease-out]"
+          className="mx-2.5 mb-2.5 rounded-2xl border-[3px] px-3 py-2 text-sm animate-[toast-in_200ms_ease-out]"
           style={{ borderColor: INK, background: c.light }}
         >
           <div className="font-extrabold">{open.label}</div>

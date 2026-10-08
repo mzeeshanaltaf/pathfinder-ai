@@ -9,6 +9,16 @@ export const TRACK_COLORS: Record<Track, { base: string; light: string; dark: st
   fde: { base: '#ff9292', light: '#ffd3d1', dark: '#e0606a' },
 };
 
+/** Topic category cards cycle through these tints (in group order), like the roadmap infographics. */
+export const CATEGORY_TINTS: { light: string; dark: string }[] = [
+  { light: '#e2f5e6', dark: '#5fb97a' },
+  { light: '#fde4e8', dark: '#e07084' },
+  { light: '#fff1c7', dark: '#ddb03a' },
+  { light: '#ece5fb', dark: '#9b84d9' },
+  { light: '#e0eefb', dark: '#5f9fd9' },
+  { light: '#ffe7d4', dark: '#e8955a' },
+];
+
 /** Saturated gem colours per track, so Skill Gems pop against the pastel islands. */
 export const GEM_COLORS: Record<Track, string> = {
   meta: '#a07cf2',

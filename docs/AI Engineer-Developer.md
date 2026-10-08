@@ -5,6 +5,8 @@
 
 They share the first part of the roadmap, then diverge.
 
+> **➕ Additions (October 2026).** Lists headed **➕ Addition** were added after the original roadmap was written. They come from a ten-part "AI Developer / AI Engineer Roadmap" infographic series (01 Programming & Software Engineering, 02 AI/ML Foundation, 03 Generative AI, 04 LLM Application Engineering, 05 RAG Engineering, 06 AI Agents, 07 Agent Orchestration, 08 AI Evaluation Engineering, 09 AI Observability, 10 AI Security & Guardrails). Only topics the original didn't already cover were added, trimmed to a core set. The series also adds a new AI Developer phase: **Phase 10: AI Observability**. Everything not marked as an addition is the original text.
+
 # AI Developer vs AI Engineer Roadmap
 
 ```text
@@ -86,6 +88,10 @@ Learn:
 * debugging
 * unit testing
 * API design
+
+**➕ Addition:**
+
+* cloud fundamentals
 
 ### SQL
 
@@ -309,6 +315,12 @@ Learn:
 * hallucination
 * model limitations
 
+**➕ Addition:**
+
+* open models
+* model selection
+* multimodal models (vision, audio, speech, documents)
+
 Understand the basic Transformer architecture conceptually.
 
 Learn APIs from major providers such as:
@@ -337,6 +349,10 @@ Learn:
 * Pydantic
 * prompt templates
 * prompt versioning
+
+**➕ Addition:**
+
+* context engineering
 
 Also learn what **doesn't** work:
 
@@ -404,6 +420,13 @@ Learn:
 * citations
 * retrieval evaluation
 
+**➕ Addition:**
+
+* parsing & OCR
+* vector databases
+* metadata filtering
+* grounding
+
 Technologies:
 
 * PostgreSQL + pgvector
@@ -454,11 +477,20 @@ Learn:
 * retries
 * human approval
 
+**➕ Addition:**
+
+* ReAct
+* workflow patterns (sequential, parallel, conditional, event-driven)
+
 Then learn:
 
 * LangGraph
 * OpenAI Agents SDK
 * MCP
+
+**➕ Addition:**
+
+* MCP primitives (tools, resources, prompts)
 
 ### Project
 
@@ -504,6 +536,13 @@ Learn:
 * API design
 * error handling
 
+**➕ Addition:**
+
+* model routing
+* semantic caching
+* LLM gateways
+* cost optimization
+
 Build:
 
 **Production AI SaaS**
@@ -544,6 +583,12 @@ Learn:
 * RAG evaluation
 * regression testing
 
+**➕ Addition (agent evaluation):**
+
+* agent task success
+* tool-call accuracy
+* trajectory evaluation
+
 ### Security
 
 * prompt injection
@@ -552,6 +597,62 @@ Learn:
 * tool abuse
 * authorization
 * tenant isolation
+
+**➕ Addition:**
+
+* indirect prompt injection
+* input & output guardrails
+* least privilege
+
+---
+
+# AI Developer — Phase 10 (➕ Addition)
+
+## AI Observability
+
+You can't fix what you can't see. Go from a black box to full visibility.
+
+Learn:
+
+### Traces
+
+* traces & spans
+* LLM & tool call tracing
+* retrieval tracing
+
+### Metrics
+
+* latency
+* token usage & cost
+* success & failure rates
+
+### Logs
+
+* error & request logs
+* tool logs
+* audit logs
+
+### OpenTelemetry
+
+* OpenTelemetry
+* GenAI semantic conventions
+
+Platforms:
+
+* LangSmith
+* Langfuse
+* Arize Phoenix
+* Cloud observability (AWS / Azure / GCP)
+
+Understand:
+
+```text
+Traces  |  Metrics  |  Logs
+            ↓
+      OpenTelemetry
+            ↓
+LangSmith | Langfuse | Arize Phoenix | Cloud
+```
 
 ---
 
@@ -777,6 +878,11 @@ Learn:
 * context relevance
 * groundedness
 
+**➕ Addition:**
+
+* corrective RAG
+* multimodal RAG
+
 ---
 
 # AI Engineer — Phase 8
@@ -821,6 +927,12 @@ Understand:
 * human-in-the-loop
 * long-running agents
 * agent memory
+
+**➕ Addition:**
+
+* supervisor agents
+* checkpointing
+* episodic & semantic memory
 
 ---
 
@@ -888,6 +1000,10 @@ Learn:
 * drift detection
 * evaluation pipelines
 
+**➕ Addition:**
+
+* LLM tracing
+
 Tools:
 
 * MLflow
@@ -944,6 +1060,13 @@ For enterprise AI:
 * audit logging
 * secrets management
 * encryption
+
+**➕ Addition (guardrails):**
+
+* guardrails
+* agent sandboxing
+* MCP security
+* AI red teaming
 
 ---
 

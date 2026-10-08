@@ -491,6 +491,67 @@ export const MINIGAMES: Record<PhaseId, MiniGameDef> = {
     ['prompt-injection', 'jailbreaks', 'tenant-isolation'],
   ),
 
+  // ------------------------------------------------------------ Watchtower
+  'dev-watchtower': sortBins(
+    'Trace, Metric or Log?',
+    'Signals are streaming in from a live AI assistant. Sort each one: is it a trace (the steps of one request), a metric (a number measured over time) or a log (a record of one event)? Tap the bin, or drag the card onto it. 90% correct earns 3 stars.',
+    {
+      bins: [
+        { id: 'trace', label: '🧵 Trace' },
+        { id: 'metric', label: '📊 Metric' },
+        { id: 'log', label: '📜 Log' },
+      ],
+      items: [
+        {
+          text: 'Request 42: retrieval 120 ms → LLM call 1.8 s → tool "search" 600 ms → reply.',
+          bin: 'trace',
+          why: 'The timed steps of one request, each a span inside it: that is a trace.',
+        },
+        {
+          text: 'The planner agent handed the task to the writer agent, which then called the PDF tool.',
+          bin: 'trace',
+          why: 'Handoffs and tool calls within one agent run are spans in its trace.',
+        },
+        {
+          text: 'The exact chunks the retriever returned for the question "refund policy?"',
+          bin: 'trace',
+          why: 'A retrieval span records the query and the chunks it found, so a bad answer can be traced back to bad retrieval.',
+        },
+        {
+          text: 'p95 latency over the last hour: 2.4 s.',
+          bin: 'metric',
+          why: 'A number aggregated over many requests and tracked over time: a metric.',
+        },
+        {
+          text: 'Tokens used today: 1.2 million (about $18).',
+          bin: 'metric',
+          why: 'Token usage and cost, summed over time and watched for spikes: a metric.',
+        },
+        {
+          text: 'Agent run success rate this week: 96%.',
+          bin: 'metric',
+          why: 'Success and failure rates are metrics: ratios over many runs.',
+        },
+        {
+          text: '12:03:17 ERROR tool "crm_lookup" timed out after 10 s (request 81f).',
+          bin: 'log',
+          why: 'One timestamped error event with a request id to search by: a log line.',
+        },
+        {
+          text: 'User u-81 exported the customer list at 09:12.',
+          bin: 'log',
+          why: 'Who did what, and when: an audit log entry.',
+        },
+        {
+          text: '09:40:02 POST /chat → 500, tenant "acme", request 9c2.',
+          bin: 'log',
+          why: 'One request, written down as a single event line: a request log.',
+        },
+      ],
+    },
+    ['traces-spans', 'token-usage-cost', 'error-request-logs'],
+  ),
+
   // ------------------------------------------------------------ Neural Garden
   'eng-neural-garden': sim(
     'perceptron',

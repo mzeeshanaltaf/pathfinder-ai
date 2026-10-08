@@ -114,7 +114,7 @@ const TIMELINE_PHASES: Record<PathTrack, PhaseId[][]> = {
     ['dev-llm-lighthouse', 'dev-prompt-workshop'],
     ['dev-rag-library'],
     ['dev-agent-hq'],
-    ['dev-app-factory', 'dev-shield-fort', 'summit'],
+    ['dev-app-factory', 'dev-shield-fort', 'dev-watchtower', 'summit'],
   ],
   engineer: [
     ['code-village'],

@@ -26,6 +26,7 @@ import Signpost, { CHART_HALF_WIDTH } from './Signpost';
 import SummitPlaza from './SummitPlaza';
 import Tower from './Tower';
 import Vault from './Vault';
+import Watchtower from './Watchtower';
 import Workshop from './Workshop';
 
 /** Solid shapes in landmark space (before the landmark's scale). */
@@ -101,6 +102,7 @@ export const LANDMARK_SPECS: Record<LandmarkType, LandmarkSpec> = {
     ],
   },
   fort: { Body: Fort, label: 5.6, colliders: [cylC(2.05, 1.4)] },
+  watchtower: { Body: Watchtower, label: 7.0, colliders: [cylC(1.45, 0.125, [0, 0.125, -0.3]), boxC([0.95, 1.75, 1.05], [0, 1.75, -0.2])] },
   'neuron-trees': {
     Body: NeuronTrees,
     label: 6.0,

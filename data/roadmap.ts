@@ -1,8 +1,9 @@
 // Roadmap content. Sources of truth: docs/AI Engineer-Developer.md (trunk, AI Developer,
 // AI Engineer, Summit) and docs/AI Forward Deployed Engineer.md (the AI FDE path).
-// Every topic, project, duration and diagram below comes from those docs; the only
-// authored text is the topic `bite`s, the mentor lines and short summaries that
-// paraphrase the docs' own guidance.
+// Every topic, project, duration and diagram below comes from those docs (including the
+// lists marked "➕ Addition" there); the only authored text is the topic `bite`s, the
+// category cards (how topics are grouped, their emoji and blurb), the mentor lines and
+// short summaries that paraphrase the docs' own guidance.
 
 /** Career paths. A new path starts here; TypeScript then points at every place that needs an entry. */
 export const PATH_IDS = ['developer', 'engineer', 'fde'] as const;
@@ -22,6 +23,7 @@ export const PHASE_IDS = [
   'dev-agent-hq',
   'dev-app-factory',
   'dev-shield-fort',
+  'dev-watchtower',
   'eng-neural-garden',
   'eng-transformer-tower',
   'eng-model-forge',
@@ -48,8 +50,13 @@ export interface Topic {
   bite: string;
 }
 
+/** A category of topics, shown as a card (emoji + title + one-line blurb) like the roadmap infographics. */
 export interface TopicGroup {
   title: string;
+  /** Additive (Phase 8): category icon. */
+  emoji?: string;
+  /** Additive (Phase 8): one-line description of the category. */
+  blurb?: string;
   topics: Topic[];
 }
 
@@ -97,7 +104,8 @@ const slug = (s: string) =>
     .replace(/^-|-$/g, '');
 
 const t = (label: string, bite: string, id = slug(label)): Topic => ({ id, label, bite });
-const g = (title: string, ...topics: Topic[]): TopicGroup => ({ title, topics });
+/** A topic category: emoji, title, one-line blurb, then its topics. */
+const g = (emoji: string, title: string, blurb: string, ...topics: Topic[]): TopicGroup => ({ title, emoji, blurb, topics });
 
 // ---------------------------------------------------------------------------
 // Phases
@@ -113,7 +121,9 @@ const PHASE_LIST: Phase[] = [
       'This world maps AI careers: the AI Developer, the AI Engineer and the AI Forward Deployed Engineer. They share the first part of the roadmap, then diverge at the Fork and meet again at the Summit.',
     groups: [
       g(
+        '🧭',
         'The careers',
+        'Three ways into AI, and where they all lead.',
         t('AI Developer', 'Builds applications using existing AI/ML models and APIs.'),
         t(
           'AI Engineer',
@@ -158,7 +168,9 @@ const PHASE_LIST: Phase[] = [
       'Become comfortable with Python, everyday software-engineering tools and SQL. This establishes the foundation needed for everything that follows.',
     groups: [
       g(
+        '🐍',
         'Python',
+        'The language every AI path is written in.',
         t('variables and data types', 'Named boxes that hold values such as numbers, text and lists. The type decides what you can do with a value.'),
         t('conditions', 'if / elif / else let a program choose what to do depending on whether something is true.'),
         t('loops', 'for and while repeat a block of code, for example once for every item in a list.'),
@@ -167,34 +179,46 @@ const PHASE_LIST: Phase[] = [
         t('inheritance', 'A class can extend another class, reusing its behaviour and adding or overriding parts of it.'),
         t('exceptions', 'Errors raised while code runs. try / except lets you catch them and recover gracefully.'),
         t('modules/packages', 'Code split across files (modules) and folders (packages) that you bring in with import.'),
-        t('virtual environments', 'An isolated Python setup per project (e.g. venv), so each project keeps its own library versions.'),
         t('file handling', 'Opening, reading and writing files, ideally with `with open(...)` so they close automatically.'),
-        t('JSON', "A text format for structured data. Python's json module turns it into dicts and lists and back again."),
-        t('REST APIs', 'Web services you talk to over HTTP, using URLs for resources and methods like GET and POST.'),
-        t('HTTP', 'The request/response protocol of the web: methods, URLs, headers, bodies and status codes like 200 or 404.'),
         t('async programming', 'async / await lets one program juggle many slow I/O tasks, like API calls, without waiting on each in turn.'),
         t('type hints', 'Annotations like `def f(x: int) -> str` that document types and let tools catch mistakes early.'),
-        t('logging', 'Recording what a program does, with levels like INFO and ERROR, so you can debug it later.'),
         t('testing', "Writing code that checks your code (e.g. with pytest), so changes don't silently break things."),
       ),
       g(
-        'Then',
+        '🌐',
+        'Web & APIs',
+        'How programs talk to each other over the web.',
+        t('JSON', "A text format for structured data. Python's json module turns it into dicts and lists and back again."),
+        t('REST APIs', 'Web services you talk to over HTTP, using URLs for resources and methods like GET and POST.'),
+        t('HTTP', 'The request/response protocol of the web: methods, URLs, headers, bodies and status codes like 200 or 404.'),
+        t('API design', 'Choosing clear endpoints, inputs, outputs and error responses so others can use your service easily.'),
+      ),
+      g(
+        '📊',
+        'Data stack',
+        "Then: Python's tools for arrays, tables and charts.",
         t('NumPy', "Fast arrays and maths on whole arrays at once. The base layer of Python's data and ML stack."),
         t('Pandas', 'DataFrames: spreadsheet-like tables in Python for loading, cleaning, filtering and grouping data.'),
         t('basic data visualization', 'Plotting data as lines, bars, scatters or histograms to spot patterns and problems at a glance.'),
       ),
       g(
-        'Software engineering',
+        '🛠',
+        'Dev engineering',
+        'Everyday tools to build, ship and debug.',
+        t('virtual environments', 'An isolated Python setup per project (e.g. venv), so each project keeps its own library versions.'),
+        t('environment variables', 'Settings handed to a program from outside (like API keys), so secrets and config stay out of the code.'),
         t('Git/GitHub', 'Git tracks every change to your code; GitHub hosts repositories so you can share, review and collaborate.'),
         t('Linux command line', 'Navigating files, running programs and managing servers from a terminal. Most AI systems run on Linux.'),
         t('Docker fundamentals', 'Packaging an app and everything it needs into a container that runs the same way everywhere.'),
-        t('environment variables', 'Settings handed to a program from outside (like API keys), so secrets and config stay out of the code.'),
+        t('logging', 'Recording what a program does, with levels like INFO and ERROR, so you can debug it later.'),
         t('debugging', 'Finding out why code misbehaves: reading errors, using breakpoints and checking assumptions step by step.'),
         t('unit testing', 'Small automated tests that each check one function or class in isolation.'),
-        t('API design', 'Choosing clear endpoints, inputs, outputs and error responses so others can use your service easily.'),
+        t('cloud fundamentals', 'Renting servers, storage and managed services (AWS, Azure, GCP) instead of owning hardware. Where most AI apps end up running.'),
       ),
       g(
+        '🗄',
         'SQL',
+        'Ask questions of a database.',
         t('SELECT', 'Reads rows and columns from a table, optionally filtered with WHERE and sorted with ORDER BY.'),
         t('JOIN', 'Combines rows from two tables through a related column, e.g. orders with their customers.'),
         t('GROUP BY', 'Groups rows that share a value so you can aggregate them, e.g. total sales per country.'),
@@ -231,7 +255,9 @@ const PHASE_LIST: Phase[] = [
     keyQuestion: 'Why are embeddings represented as vectors?',
     groups: [
       g(
+        '📐',
         'Linear Algebra',
+        'The language of vectors and matrices.',
         t('vectors', 'Ordered lists of numbers. In AI a vector can describe a data point or the meaning of a word.'),
         t('matrices', 'Grids of numbers. They hold datasets and the weights of neural-network layers.'),
         t('matrix multiplication', 'Combines two matrices by taking dot products of rows and columns. It is the core operation inside neural networks.'),
@@ -242,7 +268,9 @@ const PHASE_LIST: Phase[] = [
         t('vector spaces', 'Sets of vectors you can add and scale. Embeddings live in high-dimensional vector spaces where closeness means similarity.'),
       ),
       g(
+        '🎲',
         'Probability',
+        'Reasoning about uncertainty.',
         t('probability', 'A number from 0 to 1 for how likely an event is.'),
         t('conditional probability', 'The probability of A given that B has happened, written P(A | B).'),
         t('Bayes theorem', 'Updates a belief with new evidence: P(A | B) = P(B | A) × P(A) / P(B).'),
@@ -251,7 +279,9 @@ const PHASE_LIST: Phase[] = [
         t('variance', 'How spread out outcomes are around the expected value.'),
       ),
       g(
+        '📊',
         'Statistics',
+        'Describing data, and telling signal from chance.',
         t('mean', 'The average: add up the values and divide by how many there are.'),
         t('median', 'The middle value once the data is sorted. Less thrown off by extreme outliers than the mean.'),
         t('standard deviation', 'The typical distance of values from the mean (the square root of the variance).'),
@@ -262,7 +292,9 @@ const PHASE_LIST: Phase[] = [
         t('hypothesis testing', 'Checking whether an observed difference is real or could just be chance, e.g. with p-values.'),
       ),
       g(
+        '📈',
         'Calculus',
+        'How things change, and how models learn.',
         t('derivatives', 'The rate of change of a function: how much the output moves when the input is nudged.'),
         t('partial derivatives', 'The derivative with respect to one input while all the other inputs are held fixed.'),
         t('gradients', 'The vector of all partial derivatives. It points in the direction of steepest increase.'),
@@ -294,7 +326,9 @@ const PHASE_LIST: Phase[] = [
     tools: ['NumPy', 'Pandas', 'Matplotlib', 'Scikit-learn'],
     groups: [
       g(
+        '🎯',
         'Supervised learning',
+        'Learn from labelled examples.',
         t('regression', 'Predicting a number, such as a house price, from input features.'),
         t('classification', "Predicting a category, such as 'will churn' vs 'will stay', or spam vs not spam."),
         t('decision trees', 'A flowchart of yes/no questions about the features that ends in a prediction. Easy to interpret.'),
@@ -302,12 +336,16 @@ const PHASE_LIST: Phase[] = [
         t('gradient boosting', "Trees built one after another, each fixing the previous ones' mistakes (e.g. XGBoost). Very strong on tabular data."),
       ),
       g(
+        '🧩',
         'Unsupervised learning',
+        'Find structure without labels.',
         t('clustering', 'Grouping similar items without any labels, e.g. customer segments with k-means.'),
         t('dimensionality reduction', 'Compressing many features into a few while keeping the important structure, e.g. PCA.'),
       ),
       g(
+        '🧠',
         'ML concepts',
+        'The ideas behind every model.',
         t('features', 'The input variables a model learns from, e.g. tenure, plan type and monthly bill.'),
         t('labels', 'The answers you want to predict, e.g. whether a customer churned.'),
         t('training', "Fitting the model's parameters to examples so its predictions match the labels."),
@@ -320,7 +358,9 @@ const PHASE_LIST: Phase[] = [
         t('feature engineering', "Creating or transforming inputs so patterns are easier to learn, e.g. 'days since last login'."),
       ),
       g(
+        '📏',
         'Evaluation',
+        'How good is the model, really?',
         t('accuracy', 'The share of predictions that are correct. Misleading when one class is much rarer than the other.'),
         t('precision', 'Of everything predicted positive, the share that really was positive.'),
         t('recall', 'Of all the real positives, the share the model found.'),
@@ -359,7 +399,9 @@ const PHASE_LIST: Phase[] = [
       "The AI Developer path heads one way and the AI Engineer path the other, while the AI FDE path runs straight down the middle. Compare them side by side, but you don't have to choose yet: every island stays open.",
     groups: [
       g(
+        '🪧',
         'The goals',
+        'Where each path is heading.',
         t(
           'AI Developer goal',
           "Build useful software products powered by AI. They don't necessarily need to train foundation models or deeply understand GPU optimization.",
@@ -404,17 +446,32 @@ const PHASE_LIST: Phase[] = [
     tools: ['OpenAI API', 'Anthropic API', 'Google API'],
     groups: [
       g(
-        'LLM concepts',
+        '🔤',
+        'How LLMs read',
+        'Text goes in as tokens and becomes vectors inside.',
         t('what LLMs are', 'Large language models: neural networks trained on huge amounts of text to predict the next token, which lets them write, summarise and answer.'),
         t('tokens', 'The chunks of text an LLM reads and writes, often a word or part of a word. Usage and limits are counted in tokens.'),
         t('tokenization', "Splitting text into tokens from a fixed vocabulary and turning each one into a number the model can read."),
         t('embeddings', 'Vectors of numbers that capture meaning, so similar texts end up close together.'),
         t('context window', 'The maximum number of tokens a model can consider at once: your instructions, any documents, and its reply.'),
+      ),
+      g(
+        '🎛',
+        'Generation & limits',
+        'How a model picks its next words, and where it slips.',
         t('inference', 'Running a trained model to get an output, as opposed to training it.'),
         t('temperature', 'Controls randomness when choosing the next token. Low is focused and repeatable; high is more varied and creative.'),
         t('top-p', 'Nucleus sampling: only choose from the smallest set of likely tokens whose probabilities add up to p.'),
         t('hallucination', 'When a model confidently states something false or made up. Validate anything important.'),
         t('model limitations', 'LLMs have knowledge cut-offs and limited context, can slip on exact maths or logic, and can be inconsistent.'),
+      ),
+      g(
+        '🧰',
+        'Choosing models',
+        'Pick the right model for the job.',
+        t('open models', 'Models whose weights you can download and run yourself (e.g. Llama, Mistral or Qwen), instead of only calling a hosted API.'),
+        t('model selection', 'Choosing a model by quality, speed, cost, context length and privacy needs. The biggest model is rarely the right default.'),
+        t('multimodal models', 'Models that take images, audio, speech or whole documents as input, not just text, e.g. reading a chart or transcribing a call.'),
       ),
     ],
     mentor: {
@@ -444,13 +501,29 @@ const PHASE_LIST: Phase[] = [
     ],
     groups: [
       g(
-        'Prompting',
+        '💬',
+        'Instructing',
+        'Tell the model what you want, with the right context.',
         t('system instructions', "Top-level instructions that set the model's role, rules and tone for the whole conversation."),
         t('user prompts', "The end user's message: the specific request the model should answer."),
         t('few-shot prompting', 'Including a few worked examples in the prompt so the model follows the pattern.'),
+        t(
+          'context engineering',
+          'Choosing what goes into the context window (instructions, examples, documents, history, tool results) and compressing or dropping the rest. Better context beats longer prompts.',
+        ),
+      ),
+      g(
+        '🧱',
+        'Structured outputs',
+        'Answers your code can rely on.',
         t('structured outputs', 'Asking the model to answer in a fixed, machine-readable shape (like JSON) that your code can rely on.'),
         t('JSON Schema', 'A standard way to describe the shape of JSON: fields, types and required keys. Many LLM APIs accept one to constrain outputs.'),
         t('Pydantic', 'A Python library that defines data models with type hints and validates data against them. Ideal for checking LLM output.'),
+      ),
+      g(
+        '🗂',
+        'Prompts as code',
+        'Reuse, track and test your prompts.',
         t('prompt templates', 'Reusable prompts with placeholders (like {question}) that your code fills in.'),
         t('prompt versioning', 'Tracking prompt changes like code, so you can compare versions, test them and roll back.'),
       ),
@@ -489,14 +562,30 @@ const PHASE_LIST: Phase[] = [
     ],
     groups: [
       g(
-        'RAG',
-        t('embeddings', 'Each chunk and each question is turned into a vector, so meaning can be compared with maths.'),
-        t('vector search', 'Finding the stored vectors closest to the question vector: the most similar chunks.'),
+        '📥',
+        'Ingestion',
+        'Turn documents into searchable chunks.',
+        t('parsing & OCR', 'Extracting clean text and structure (headings, tables) from PDFs, web pages and slides. OCR reads the text in scans and images.'),
         t('chunking', 'Splitting documents into smaller passages that fit the context window and can be retrieved on their own.'),
         t('metadata', 'Extra info stored with each chunk (source, date, permissions) for filtering and citations.'),
+        t('embeddings', 'Each chunk and each question is turned into a vector, so meaning can be compared with maths.'),
+      ),
+      g(
+        '🔍',
+        'Retrieval',
+        'Find the right chunks for each question.',
+        t('vector databases', 'Databases built to store embeddings and find the nearest ones fast, using a vector index (e.g. pgvector or Qdrant).'),
+        t('vector search', 'Finding the stored vectors closest to the question vector: the most similar chunks.'),
         t('similarity search', 'Ranking items by a similarity score, such as the cosine similarity between vectors.'),
+        t('metadata filtering', "Narrowing the search by metadata, e.g. only this customer's documents, or only this year's, so the wrong chunks never compete."),
         t('hybrid search', 'Combining keyword search with vector search to catch both exact terms and meaning.'),
         t('reranking', 'A second, more precise model reorders the top results before they reach the LLM.'),
+      ),
+      g(
+        '✍️',
+        'Answer & check',
+        'Answer from the sources, cite them, and measure retrieval.',
+        t('grounding', "Telling the model to answer only from the retrieved context, and to say it doesn't know when the answer isn't there."),
         t('citations', 'Showing which source each part of the answer came from, so users can check it.'),
         t('retrieval evaluation', 'Measuring whether the right chunks are found, using test questions with known answers.'),
       ),
@@ -527,22 +616,47 @@ const PHASE_LIST: Phase[] = [
     summary: 'Let LLMs take actions: call tools, loop, plan, remember and ask a human when it matters. Then learn the main agent frameworks and MCP.',
     groups: [
       g(
-        'Agent building blocks',
-        t('tool calling', 'Letting an LLM decide to use external tools (search, databases, APIs) and read back their results.'),
+        '🛠',
+        'Tools',
+        'How agents act on the real world.',
+        t('tool calling', 'Letting an LLM decide to use external tools (search, databases, APIs, code, files) and read back their results.'),
         t('function calling', 'The API mechanism behind tool calling: the model returns a function name plus JSON arguments, and your code runs it.'),
+      ),
+      g(
+        '💡',
+        'Reasoning',
+        'Think, act, observe, repeat.',
         t('agent loops', 'Think, act, observe, repeat: the model keeps calling tools until it decides the task is done.'),
+        t('ReAct', 'A pattern where the model alternates Reasoning ("I should look up X") and Acting (calling a tool), reading each result before its next step.'),
+        t('planning', 'Breaking a goal into steps before or while acting.'),
+      ),
+      g(
+        '💾',
+        'State & memory',
+        'What the agent knows mid-task, and later.',
         t('state', "Everything the agent tracks during a task: the goal, steps taken, tool results and what's left to do."),
         t('memory', 'What an agent remembers: short-term (this conversation) and long-term (stored facts it can recall later).'),
-        t('planning', 'Breaking a goal into steps before or while acting.'),
+      ),
+      g(
+        '🔀',
+        'Orchestration',
+        'Wire steps together, and keep a human in control.',
+        t('workflow patterns', 'Common shapes for agent steps: sequential, parallel, conditional branches, loops and event-driven triggers. Use the simplest that works.'),
         t('routing', 'Sending each request to the right tool, prompt, model or sub-agent.'),
         t('retries', 'Trying a failed step again, with limits and backoff, because tools and models sometimes fail.'),
         t('human approval', 'Pausing so a person can approve risky actions, like sending an email or spending money.'),
       ),
       g(
-        'Then learn',
+        '🧩',
+        'Frameworks & MCP',
+        'Then learn the standard tools of the trade.',
         t('LangGraph', 'A framework for building agents as graphs of steps with explicit state, branches and loops.'),
         t('OpenAI Agents SDK', "OpenAI's lightweight framework for agents with tools, handoffs between agents, and guardrails."),
         t('MCP', 'Model Context Protocol: an open standard for connecting AI apps to tools and data sources through one common interface.'),
+        t(
+          'MCP primitives',
+          'What an MCP server offers to an MCP client (the AI app): tools (actions it can run), resources (data it can read) and prompts (reusable templates).',
+        ),
       ),
     ],
     project: {
@@ -571,15 +685,36 @@ const PHASE_LIST: Phase[] = [
     summary: 'Turn AI features into a real product: fast, reliable, secure and ready for many users.',
     groups: [
       g(
-        'Application engineering',
+        '⚡',
+        'Speed & scale',
+        'Fast replies, even under real load.',
         t('streaming responses', 'Sending tokens to the user as they are generated, so replies start appearing instantly.'),
         t('async processing', 'Handling many requests at once without blocking while waiting on LLMs, databases or APIs.'),
         t('background jobs', 'Running slow work (like ingesting documents) in a queue outside the request, then reporting when done.'),
         t('caching', 'Storing results (e.g. in Redis) so repeated requests are faster and cheaper.'),
-        t('rate limiting', 'Capping how many requests each user can make, to protect your service and your LLM bill.'),
+        t('semantic caching', 'Reusing a stored answer when a new question means the same as an earlier one, matched by embeddings rather than exact text.'),
+      ),
+      g(
+        '🔐',
+        'Users & access',
+        'Who can use what, and how much.',
         t('authentication', 'Verifying who a user is, e.g. with a login or a token.'),
         t('authorization', 'Deciding what an authenticated user is allowed to do or see.'),
         t('multi-tenancy', "One app serving many customer organisations while keeping each one's data separate."),
+        t('rate limiting', 'Capping how many requests each user can make, to protect your service and your LLM bill.'),
+      ),
+      g(
+        '🧭',
+        'Model layer',
+        'Route, govern and pay for model calls wisely.',
+        t('model routing', 'Sending each request to the best-fit model: a small, cheap one for easy requests, a stronger one for hard ones, and a fallback if one is down.'),
+        t('LLM gateways', 'One proxy in front of all your model providers that handles keys, routing, retries, rate limits and usage logs in one place.'),
+        t('cost optimization', 'Cutting spend per request with smaller models, shorter prompts, caching and batching, while tracking cost per user and feature.'),
+      ),
+      g(
+        '🧱',
+        'Robust APIs',
+        'Clean endpoints that fail gracefully.',
         t('API design', 'Clear, versioned endpoints with well-defined request and response shapes for your AI features.'),
         t('error handling', 'Catching failures (timeouts, bad model output, provider outages) and responding gracefully, with fallbacks.'),
       ),
@@ -595,6 +730,7 @@ const PHASE_LIST: Phase[] = [
         'Welcome to the App Factory, where demos become products!',
         'Stream responses so users see answers right away.',
         'Move slow work to background jobs, and cache what you can.',
+        'Route easy requests to small models, and put an LLM gateway in front of your providers.',
         'Authentication, authorization and multi-tenancy keep customers safe and separate.',
         'Build a production AI SaaS: Next.js, FastAPI, orchestration, an LLM, PostgreSQL with pgvector, and Redis.',
       ],
@@ -609,7 +745,9 @@ const PHASE_LIST: Phase[] = [
     summary: 'Even an AI Developer needs this: measure whether your AI actually works, and defend it against attacks.',
     groups: [
       g(
-        'Evaluation',
+        '🧪',
+        'LLM & RAG evaluation',
+        'Is the answer right, and grounded in the sources?',
         t('test datasets', 'A fixed set of example inputs with expected outputs, used to score your AI system repeatably.'),
         t('LLM-as-a-judge', 'Using an LLM to grade outputs against a rubric, so evaluation scales beyond manual review.'),
         t('hallucination testing', 'Checking whether answers contain claims the sources or facts do not support.'),
@@ -617,11 +755,33 @@ const PHASE_LIST: Phase[] = [
         t('regression testing', 'Re-running your evals after every prompt, model or code change to catch anything that got worse.'),
       ),
       g(
-        'Security',
+        '🤖',
+        'Agent evaluation',
+        'Did the agent finish the job, the right way?',
+        t('agent task success', 'Scoring whether the agent actually achieved the goal end to end, across many test tasks, not just whether its last message sounds right.'),
+        t('tool-call accuracy', 'Checking that the agent picked the right tool at each step and passed it correct arguments.'),
+        t('trajectory evaluation', 'Judging the path, not just the result: were the steps sensible, efficient and safe, with no needless or risky tool calls?'),
+      ),
+      g(
+        '🗡',
+        'Attacks',
+        'How AI systems get tricked.',
         t('prompt injection', 'Malicious instructions hidden in the input that try to override your system instructions.'),
+        t('indirect prompt injection', 'Hidden instructions inside content the AI reads, like a web page, an email or an uploaded file, rather than typed by the user.'),
         t('jailbreaks', 'Prompts crafted to trick a model into ignoring its safety rules.'),
         t('sensitive data leakage', "The model revealing private data, such as another user's details, secrets or the system prompt."),
         t('tool abuse', 'Tricking an agent into misusing its tools, e.g. deleting data or sending unwanted messages.'),
+      ),
+      g(
+        '🛡',
+        'Guardrails & access',
+        'Limit what the AI can see and do.',
+        t(
+          'input & output guardrails',
+          'Checks before the model (block attacks, strip personal data, stay on topic) and after it (validate the format, filter unsafe or leaked content).',
+          'guardrails',
+        ),
+        t('least privilege', 'Give the AI and each tool only the permissions the task needs, e.g. read-only access, so a tricked agent can do little harm.'),
         t('authorization', 'Making sure the AI and its tools can only reach what the current user is allowed to reach.'),
         t('tenant isolation', "Ensuring one customer's data never shows up in another customer's results or prompts."),
       ),
@@ -632,8 +792,68 @@ const PHASE_LIST: Phase[] = [
         'Welcome to Shield Fort. Even an AI Developer needs this!',
         'Build test datasets and run evals after every change.',
         'LLM-as-a-judge helps evaluation scale, but check the judge too.',
+        'Evaluate agents as well: did they finish the task, with the right tools and sensible steps?',
         'Assume prompt injection will happen. Limit what tools can do and who they act for.',
         "Keep every tenant's data isolated.",
+      ],
+    },
+  },
+  {
+    id: 'dev-watchtower',
+    track: 'developer',
+    docPhase: 10,
+    title: 'Watchtower',
+    subtitle: 'AI Observability',
+    summary:
+      "You can't fix what you can't see. Trace every LLM call, tool call and retrieval, watch latency, tokens and cost, and keep good logs, so your AI goes from a black box to full visibility.",
+    tools: ['LangSmith', 'Langfuse', 'Arize Phoenix', 'Cloud observability (AWS / Azure / GCP)'],
+    diagrams: [
+      {
+        title: 'From black box to full visibility',
+        steps: ['Traces | Metrics | Logs', 'OpenTelemetry', 'LangSmith | Langfuse | Arize Phoenix | Cloud'],
+      },
+    ],
+    groups: [
+      g(
+        '🧵',
+        'Traces',
+        'Follow one request from start to finish.',
+        t('traces & spans', 'A trace is the whole story of one request; each step inside it (a model call, a tool call, a search) is a timed span.'),
+        t('LLM & tool call tracing', 'Recording every prompt, model reply, tool call and agent handoff with its inputs, outputs and timing, so you can see where a run went wrong.'),
+        t('retrieval tracing', 'Logging the query and the exact chunks the retriever returned, so a bad answer can be traced back to bad retrieval.'),
+      ),
+      g(
+        '📊',
+        'Metrics',
+        'The numbers that show health and spend.',
+        t('latency', 'How long users wait: time to first token and to the full reply. Watch the slow tail (p95), not just the average.'),
+        t('token usage & cost', 'Tokens in and out per request, turned into money per user, feature and day, so a runaway bill shows up early.'),
+        t('success & failure rates', 'The share of requests and agent runs that finish well versus error out, time out or get a thumbs-down.'),
+      ),
+      g(
+        '📜',
+        'Logs',
+        'The written record, for debugging and audits.',
+        t('error & request logs', 'One line per event: what was asked, by which user or tenant, what happened, and any error, with a request id to search by.'),
+        t('tool logs', 'A record of every tool an agent called, with its arguments and result, so you can replay or debug its actions.'),
+        t('audit logs', 'A tamper-evident record of who did what and when, including actions the AI took for them.'),
+      ),
+      g(
+        '🔭',
+        'OpenTelemetry',
+        'One open standard to instrument everything.',
+        t('OpenTelemetry', 'An open standard (and SDKs) for emitting traces, metrics and logs from any service, then sending them to the platform of your choice.'),
+        t('GenAI semantic conventions', "OpenTelemetry's shared names for AI data, such as the model, token counts and tool names, so every platform understands your traces."),
+      ),
+    ],
+    mentor: {
+      name: 'Argus',
+      lines: [
+        'Welcome to the Watchtower! From up here, nothing in your AI system stays hidden.',
+        'Trace every request end to end: LLM calls, tool calls, retrieval and handoffs.',
+        'Watch the numbers: latency, tokens, cost, and success and failure rates.',
+        'Keep logs of errors, requests and tool calls. Audit logs show who did what.',
+        'Instrument with OpenTelemetry, then pick a platform: LangSmith, Langfuse, Arize Phoenix or your cloud.',
       ],
     },
   },
@@ -650,21 +870,35 @@ const PHASE_LIST: Phase[] = [
     tools: ['PyTorch'],
     groups: [
       g(
-        'Neural networks',
+        '🧠',
+        'Building blocks',
+        'Neurons, layers and what they compute.',
         t('neural networks', 'Layers of simple connected units (neurons) whose weights are learned from data.'),
         t('perceptrons', 'The simplest neuron: a weighted sum of inputs plus a bias, passed through a step to make a yes/no decision.'),
         t('activation functions', 'Non-linear functions (ReLU, sigmoid, tanh) applied after each layer so networks can learn complex patterns.'),
-        t('loss functions', 'A score of how wrong the predictions are (e.g. cross-entropy or MSE). Training tries to minimise it.'),
         t('forward propagation', 'Passing inputs through the layers, one after another, to produce a prediction.'),
+      ),
+      g(
+        '🎯',
+        'Training',
+        'How networks learn from their mistakes.',
+        t('loss functions', 'A score of how wrong the predictions are (e.g. cross-entropy or MSE). Training tries to minimise it.'),
         t('backpropagation', 'Working backwards from the loss with the chain rule to find how much each weight contributed to the error.'),
         t('gradient descent', 'Nudging every weight a small step against its gradient to reduce the loss, over and over.'),
         t('optimizers', 'Algorithms that decide how to update weights from their gradients, such as SGD or Adam.'),
+      ),
+      g(
+        '🧰',
+        'Training tricks',
+        'Keep training fast, stable and general.',
         t('regularization', 'Techniques like weight decay that keep a network from overfitting.'),
         t('batch normalization', "Normalising a layer's inputs over each mini-batch to make training faster and more stable."),
         t('dropout', "Randomly switching off neurons during training so the network can't rely on any single one."),
       ),
       g(
-        'Then',
+        '🧬',
+        'Architectures',
+        'Then: networks for images and sequences.',
         t('CNN', 'Convolutional neural networks slide small learned filters over images to detect edges, textures and objects.'),
         t('RNN', 'Recurrent neural networks read sequences one step at a time, carrying a hidden state forward.'),
         t('LSTM', 'An RNN with gates that decide what to remember and what to forget, so it copes with longer sequences.'),
@@ -705,14 +939,21 @@ const PHASE_LIST: Phase[] = [
     ],
     groups: [
       g(
-        'Transformers',
+        '👀',
+        'Attention',
+        'How every token looks at the others.',
         t('attention', 'Each token scores how relevant every other token is and blends their information according to those scores.'),
         t('self-attention', 'Attention where a sequence attends to itself, so every token can pull context from every other token.'),
         t('multi-head attention', 'Several attention heads run in parallel, each free to focus on different relationships in the text.'),
+        t('causal attention', 'Masked attention in which each token can only see earlier tokens, never future ones.'),
+      ),
+      g(
+        '🏗',
+        'Architecture & generation',
+        'The parts, and how the next token is produced.',
         t('positional encoding', 'Information added to the embeddings so the model knows the order of tokens, which attention alone ignores.'),
         t('encoder', 'The part that reads the whole input at once to build rich representations (e.g. BERT).'),
         t('decoder', 'The part that generates output tokens one at a time. GPT-style LLMs are decoder-only.'),
-        t('causal attention', 'Masked attention in which each token can only see earlier tokens, never future ones.'),
         t('autoregressive generation', 'Producing text one token at a time, feeding each new token back in to predict the next one.'),
       ),
     ],
@@ -736,19 +977,28 @@ const PHASE_LIST: Phase[] = [
     tools: ['Hugging Face Transformers', 'Hugging Face Datasets', 'Hugging Face Tokenizers', 'Hugging Face PEFT'],
     groups: [
       g(
-        'Training & adapting',
+        '🏋️',
+        'Training',
+        'Where knowledge and behaviour come from.',
         t('pretraining', 'Training a model from scratch on massive amounts of text to predict the next token. This is where its general knowledge comes from.'),
         t('supervised fine-tuning', 'Further training a pretrained model on curated input → output examples to teach it a task or style.'),
         t('instruction tuning', 'Fine-tuning on many instruction–response pairs so the model follows instructions instead of just continuing text.'),
         t('RLHF', 'Reinforcement Learning from Human Feedback: people rank outputs, a reward model learns their preferences, and the LLM is tuned towards them.'),
         t('preference optimization', "Methods such as DPO that tune a model directly on 'preferred vs rejected' answer pairs, without a separate reward model."),
+      ),
+      g(
+        '🪶',
+        'Efficient adapting',
+        'Smaller, cheaper and faster models.',
         t('LoRA', 'Low-Rank Adaptation: freeze the model and train small add-on matrices, which makes fine-tuning far cheaper.'),
         t('QLoRA', 'LoRA on top of a 4-bit quantized base model, so large models can be fine-tuned on a single GPU.'),
         t('quantization', 'Storing weights with fewer bits (e.g. 4 or 8 instead of 16) to cut memory and speed up inference, at a small quality cost.'),
         t('distillation', "Training a small 'student' model to imitate a large 'teacher', keeping much of the quality at a lower cost."),
       ),
       g(
-        'Understand',
+        '⚙️',
+        'Inference economics',
+        'Understand what drives speed and cost.',
         t('model parameters', 'The learned weights. Their count (e.g. 7B) drives capability, memory needs and cost.'),
         t('context length', 'How many tokens the model can attend to at once. Longer contexts cost more memory and compute.'),
         t('inference', 'Generating output: one pass over the whole prompt, then one decoding step for every new token.'),
@@ -778,7 +1028,9 @@ const PHASE_LIST: Phase[] = [
     summary: 'The AI Engineer should go considerably deeper than the AI Developer: stronger retrieval, advanced architectures and rigorous evaluation.',
     groups: [
       g(
+        '🔍',
         'Retrieval',
+        'Find the right passages: dense, sparse or both.',
         t('dense retrieval', 'Searching with embedding vectors that capture meaning, so paraphrases still match.'),
         t('sparse retrieval', 'Keyword-based search over word counts (like BM25). Great for exact terms, names and codes.'),
         t('hybrid retrieval', 'Running dense and sparse retrieval together and merging the results for the best of both.'),
@@ -788,16 +1040,22 @@ const PHASE_LIST: Phase[] = [
         t('query rewriting', 'Using an LLM to rephrase a vague or conversational question into a better search query.'),
       ),
       g(
+        '🏛',
         'Advanced architectures',
+        'Smarter ways to retrieve and assemble context.',
         t('parent-child retrieval', 'Search small, precise chunks, but hand the LLM their larger parent section for full context.'),
         t('hierarchical retrieval', 'Searching in levels: first find the right document or section, then the best passages inside it.'),
         t('multi-hop retrieval', 'Answering questions that need several lookups, using what one retrieval finds to drive the next.'),
         t('graph RAG', 'Building a knowledge graph of entities and relationships from documents, and retrieving through it.'),
         t('agentic RAG', "An agent decides when, where and how to retrieve, and searches again if the results aren't good enough."),
         t('contextual retrieval', "Adding a short note about each chunk's surrounding document before indexing it, so chunks aren't misread out of context."),
+        t('corrective RAG', 'Grade the retrieved chunks first; if they look weak or off-topic, rewrite the query or try another source (like web search) before answering.'),
+        t('multimodal RAG', 'Retrieving across images, tables, charts and audio as well as text, e.g. answering from a diagram in a manual.'),
       ),
       g(
+        '📏',
         'Evaluation',
+        'Measure retrieval and answers with real metrics.',
         t('Recall@K', 'Of all the relevant documents, the fraction that appear in the top K results.'),
         t('Precision@K', 'Of the top K results, the fraction that are relevant.'),
         t('MRR', 'Mean Reciprocal Rank: rewards putting the first relevant result near the top (1 for first place, ½ for second, and so on).'),
@@ -827,17 +1085,35 @@ const PHASE_LIST: Phase[] = [
     diagrams: [{ title: 'The agent loop', steps: ['Planner', 'Executor', 'Tools', 'State', '↻ back to Planner'] }],
     groups: [
       g(
-        'Agent internals',
-        t('agent state', "The structured record of an agent's progress (goal, plan, tool results, messages) that every step reads and updates."),
+        '🧭',
+        'Planning & control',
+        'How the agent decides what to do next.',
         t('planning', 'Breaking a goal into steps, and revising the plan as results come in.'),
         t('tool selection', 'How an agent picks the right tool for each step, and why clear tool names and descriptions matter.'),
         t('reflection', 'The agent critiques its own output or progress and corrects course.'),
         t('retries', 'Recovering from failed tool calls or bad outputs with limited, smarter re-attempts.'),
         t('state machines', 'Modelling an agent as explicit states and transitions, which makes its behaviour predictable and testable.'),
-        t('multi-agent systems', 'Several specialised agents that hand off work or collaborate, e.g. a planner directing several workers.'),
-        t('human-in-the-loop', 'Points where a person reviews, approves or corrects the agent before it continues.'),
+      ),
+      g(
+        '💾',
+        'State & memory',
+        'Keep progress safe, across steps and sessions.',
+        t('agent state', "The structured record of an agent's progress (goal, plan, tool results, messages) that every step reads and updates."),
+        t('checkpointing', "Saving the agent's state after each step, so a crash, a timeout or a human pause can resume where it left off."),
         t('long-running agents', 'Agents that work for minutes or days, which need checkpoints, persistence and resumable state.'),
         t('agent memory', 'How an agent stores and recalls information across steps and sessions, short-term and long-term.'),
+        t(
+          'episodic & semantic memory',
+          "Episodic memory recalls past events ('last time, this user wanted a summary'); semantic memory stores facts and knowledge the agent has learned.",
+        ),
+      ),
+      g(
+        '👥',
+        'Agents & humans',
+        'Teams of agents, with people in the loop.',
+        t('multi-agent systems', 'Several specialised agents that hand off work or collaborate, e.g. a planner directing several workers.'),
+        t('supervisor agents', 'A manager agent that splits a task, hands the parts to specialist worker agents, and combines their results.'),
+        t('human-in-the-loop', 'Points where a person reviews, approves or corrects the agent before it continues.'),
       ),
     ],
     mentor: {
@@ -864,13 +1140,25 @@ const PHASE_LIST: Phase[] = [
     ],
     groups: [
       g(
-        'Serving',
+        '🖥',
+        'GPU basics',
+        'The hardware that runs the maths.',
         t('GPU fundamentals', 'GPUs run thousands of simple cores in parallel, which suits the matrix maths at the heart of neural networks.'),
         t('CUDA concepts', "NVIDIA's platform for GPU programming: kernels, threads and blocks, and moving data between CPU and GPU memory."),
         t('GPU memory', "VRAM must hold the model weights, the KV cache and activations. It's usually what limits which models you can serve."),
+      ),
+      g(
+        '🚀',
+        'Serving at speed',
+        'More tokens per second from every GPU.',
         t('inference optimization', 'Making generation faster and cheaper, e.g. with better kernels, caching, batching and quantization.'),
         t('batching', 'Serving many requests together. Continuous batching adds and removes requests on the fly to keep the GPU busy.'),
         t('quantization', 'Lower-precision weights so a model fits in less GPU memory and runs faster.'),
+      ),
+      g(
+        '🌐',
+        'Scaling out',
+        "When one GPU isn't enough.",
         t('model parallelism', "Splitting one model across several GPUs when it's too big for one."),
         t('distributed inference', 'Serving across multiple GPUs or machines, with replicas and load balancing, to handle more traffic.'),
       ),
@@ -902,15 +1190,28 @@ const PHASE_LIST: Phase[] = [
     ],
     groups: [
       g(
-        'Operations',
+        '🧪',
+        'Track & version',
+        'Know exactly what produced each model.',
         t('model versioning', 'Tracking each model version together with the exact code, data and settings that produced it.'),
         t('experiment tracking', 'Logging the parameters, metrics and outputs of every training run so results can be compared and reproduced.'),
         t('model registry', 'A central catalogue of approved model versions and their stage, such as staging or production.'),
+      ),
+      g(
+        '🚚',
+        'Ship',
+        'Move data and models to production safely.',
         t('data pipelines', 'Automated steps that collect, clean and transform data for training and evaluation.'),
         t('model deployment', 'Releasing a model to real traffic safely, e.g. to a small share of users first.'),
-        t('monitoring', 'Watching latency, errors, cost and quality in production, with dashboards and alerts.'),
-        t('drift detection', 'Noticing when live data or model behaviour moves away from what the model was trained and tested on.'),
         t('evaluation pipelines', 'Automated evals that run on every new model or prompt before, and after, it ships.'),
+      ),
+      g(
+        '📡',
+        'Watch',
+        'Spot problems in production early.',
+        t('monitoring', 'Watching latency, errors, cost and quality in production, with dashboards and alerts.'),
+        t('LLM tracing', "Recording each request's steps (prompts, model calls, tool calls, retrieval) as a trace, e.g. with OpenTelemetry or Langfuse, to debug production."),
+        t('drift detection', 'Noticing when live data or model behaviour moves away from what the model was trained and tested on.'),
       ),
     ],
     mentor: {
@@ -933,7 +1234,9 @@ const PHASE_LIST: Phase[] = [
     summary: 'A deep dive into how AI systems are attacked, and the controls enterprise AI needs.',
     groups: [
       g(
-        'Deep dive',
+        '🗡',
+        'Attacks',
+        'A deep dive into how AI systems get attacked.',
         t('prompt injection', 'Instructions smuggled into input that hijack the model. Defend in layers, never with the prompt alone.'),
         t('indirect prompt injection', 'Malicious instructions hidden in content the AI reads (web pages, emails, documents) rather than typed by the user.'),
         t('model extraction', "Querying a model many times to copy its behaviour, or to steal its weights or hidden prompts."),
@@ -946,7 +1249,18 @@ const PHASE_LIST: Phase[] = [
         t('model supply-chain security', 'Trusting only verified models, datasets and libraries, because downloaded weights or packages can be tampered with.'),
       ),
       g(
+        '🛡',
+        'Guardrails & containment',
+        'Limit the blast radius when an attack gets through.',
+        t('guardrails', 'Input and output checks around the model: block injections and unsafe content, strip personal data, and validate every answer and tool call.'),
+        t('agent sandboxing', 'Running agent-written code and tool actions in an isolated environment with no access to secrets, the network or production data by default.'),
+        t('MCP security', 'Treat MCP servers as untrusted code: verify their source, scope their permissions, and watch for tool descriptions that smuggle in instructions.'),
+        t('AI red teaming', 'Deliberately attacking your own AI system (injections, jailbreaks, data leaks) before real attackers do, and turning each finding into a test.'),
+      ),
+      g(
+        '🏢',
         'Enterprise AI',
+        'The access controls enterprise customers expect.',
         t('RBAC', 'Role-Based Access Control: permissions granted by role, such as admin, editor or viewer.'),
         t('ABAC', 'Attribute-Based Access Control: rules based on attributes of the user, the resource and the context, like department or region.'),
         t('RLS', 'Row-Level Security: the database itself filters which rows each user can read, e.g. in PostgreSQL.'),
@@ -986,7 +1300,9 @@ const PHASE_LIST: Phase[] = [
     ],
     groups: [
       g(
+        '👂',
         'Understand the customer',
+        'Learn how the work really gets done.',
         t('stakeholder interviews', 'Talking to everyone the system touches (users, their managers, IT, security) to learn how work really gets done.'),
         t(
           'asking good questions (the Mom Test)',
@@ -998,7 +1314,9 @@ const PHASE_LIST: Phase[] = [
         t('success metrics / ROI', 'Numbers agreed up front (hours saved, tickets resolved, error rate) that prove whether the project paid off.', 'success-metrics'),
       ),
       g(
+        '✂️',
         'Scope it',
+        'Pick one workflow you can win on.',
         t(
           'constraints (data, security, latency, budget)',
           "The hard limits: what data you may use, where it may go, how fast answers must be, and what the customer can spend.",
@@ -1038,7 +1356,9 @@ const PHASE_LIST: Phase[] = [
     tools: ['Postman', 'Airflow', 'dbt', 'MCP SDKs'],
     groups: [
       g(
+        '🔌',
         'Connect to their systems',
+        'APIs, identity and the tools they already use.',
         t('reading unfamiliar API docs', "Quickly finding the endpoints, auth, limits and quirks of a system you've never seen, often with patchy docs.", 'reading-api-docs'),
         t('OAuth2 / JWT', 'OAuth2 lets your app act for a user with a scoped token instead of their password; a JWT is a signed token that carries who they are.', 'oauth2-jwt'),
         t('SSO (SAML / OIDC)', "Single sign-on: users log in once with the company's identity provider, and your app trusts it through SAML or OpenID Connect.", 'sso'),
@@ -1047,7 +1367,9 @@ const PHASE_LIST: Phase[] = [
         t('MCP servers for internal tools', "Wrapping a customer's internal APIs as MCP servers, so any MCP-aware assistant can use them through one standard interface.", 'mcp-servers'),
       ),
       g(
+        '🧹',
         'Move and clean their data',
+        'Get messy enterprise data flowing reliably.',
         t('ETL / ELT', 'Extract data from sources, transform it and load it somewhere useful (or load first, then transform inside the warehouse).', 'etl-elt'),
         t('messy data cleaning', 'Fixing duplicates, missing fields, odd formats and encodings, because enterprise data is never as clean as the demo.'),
         t('document ingestion (PDF / OCR)', 'Turning PDFs, scans and slides into clean text and structure; OCR reads text from images.', 'document-ingestion'),
@@ -1083,7 +1405,9 @@ const PHASE_LIST: Phase[] = [
     tools: ['Terraform', 'GitHub Actions', 'Helm', 'AWS Bedrock', 'Azure OpenAI', 'Google Vertex AI'],
     groups: [
       g(
+        '📦',
         'Package and ship',
+        'Build once, release the same way every time.',
         t('Docker', 'Packaging the app and its dependencies into an image that runs the same on your laptop and in the customer\'s cloud.'),
         t('Kubernetes basics', 'Running containers at scale: pods, deployments, services and autoscaling. Many enterprises standardise on it.'),
         t('infrastructure as code', 'Describing servers, networks and permissions in code (e.g. Terraform), so an environment can be rebuilt exactly.'),
@@ -1091,7 +1415,9 @@ const PHASE_LIST: Phase[] = [
         t('staging → production', 'Testing a release in a copy of production first, then promoting the same build, never a different one.', 'staging-to-production'),
       ),
       g(
+        '☁️',
         'Their cloud, their rules',
+        "Deploy inside the customer's own environment.",
         t('AWS / Azure / GCP', 'The big three clouds. An FDE deploys into whichever one the customer already uses.', 'cloud-providers'),
         t('IAM', 'Identity and Access Management: which people and services may do what. Grant the least privilege that works.'),
         t('networking (VPC, private endpoints, TLS)', 'Private networks, endpoints that never touch the public internet, and encrypted traffic. Security teams check all three.', 'networking'),
@@ -1131,7 +1457,9 @@ const PHASE_LIST: Phase[] = [
     tools: ['Langfuse', 'LangSmith', 'OpenTelemetry'],
     groups: [
       g(
+        '🧪',
         'Evaluate in the field',
+        'Prove it works on their real tasks.',
         t('golden datasets from real tasks', "Test cases built from the customer's actual tickets, documents and questions, with answers their experts agree on.", 'golden-datasets'),
         t('LLM-as-judge', 'An LLM grades outputs against a rubric, so you can score thousands of answers. Spot-check the judge against humans.'),
         t('offline vs online evals', 'Offline: score a fixed dataset before release. Online: measure live traffic and user feedback after it.', 'offline-vs-online-evals'),
@@ -1139,7 +1467,9 @@ const PHASE_LIST: Phase[] = [
         t('regressions after model upgrades', 'A new model version can quietly break prompts that used to work. Re-run your evals before switching.', 'model-upgrade-regressions'),
       ),
       g(
+        '📡',
         'Watch it in production',
+        'Find out fast when it stops working.',
         t('tracing (OpenTelemetry, Langfuse / LangSmith)', 'Recording every step of a request (retrieval, prompts, tool calls) so you can see exactly where it went wrong.', 'tracing'),
         t('latency & cost tracking', 'Measuring response time and spend per request and per customer, so slowdowns and runaway bills show up early.', 'latency-cost-tracking'),
         t('guardrails', 'Checks around the model: validating inputs and outputs, blocking unsafe content, and keeping answers on topic.'),
@@ -1175,7 +1505,9 @@ const PHASE_LIST: Phase[] = [
     tools: ['Microsoft Presidio', 'HashiCorp Vault', 'Cloud KMS'],
     groups: [
       g(
+        '🔐',
         'Protect the data',
+        'Keep customer data safe and separate.',
         t('PII detection & redaction', 'Finding personal data (names, emails, account numbers) and masking it before it reaches a model or a log.', 'pii-redaction'),
         t('encryption', 'Scrambling data in transit (TLS) and at rest, with keys the customer controls, so stolen data is unreadable.'),
         t('secrets management', 'API keys and passwords live in a vault and are injected at runtime, never in code, prompts or chat logs.'),
@@ -1183,7 +1515,9 @@ const PHASE_LIST: Phase[] = [
         t('tenant isolation', "One customer's documents, embeddings and prompts can never leak into another customer's answers."),
       ),
       g(
+        '📋',
         'Prove it',
+        'Show the security team the evidence.',
         t('data residency & retention', 'Where data is stored (e.g. only in the EU) and how long it is kept before deletion, often written into contracts.', 'data-residency'),
         t('SOC 2 / GDPR / HIPAA', 'Common frameworks and laws for security controls, personal data and health data. Customers will ask which ones you meet.', 'compliance-frameworks'),
         t('audit logs', 'A tamper-evident record of who asked what and what the AI and its tools did, for investigations and auditors.'),
@@ -1219,7 +1553,9 @@ const PHASE_LIST: Phase[] = [
     antiPatterns: ['throwing the system over the wall at go-live', 'measuring success by demos instead of adoption'],
     groups: [
       g(
+        '🚀',
         'Go live',
+        'Launch, train people, hand it over.',
         t('demos & pilots', 'Show it working on their data, then run a time-boxed pilot with a small group of real users.'),
         t('go-live plans', 'Who switches on when, what gets monitored, and how to roll back. Written down and agreed before launch day.'),
         t('user training', 'Teaching people how and when to use the new system, and when not to trust it.'),
@@ -1228,7 +1564,9 @@ const PHASE_LIST: Phase[] = [
         t('change management', 'Helping people and processes adapt: champions, feedback loops and patience, because new tools change jobs.'),
       ),
       g(
+        '📣',
         'Prove it and share it',
+        'Show the value, and feed lessons back.',
         t('adoption & ROI measurement', 'Tracking real usage and the success metrics agreed in discovery, so the value is visible to the people who paid.', 'adoption-roi'),
         t('architecture decision records', 'Short documents that capture each big technical decision, the options considered, and why one was chosen.', 'adrs'),
         t('technical writing', 'Clear docs, design notes and case studies. An FDE writes for engineers, executives and end users.'),
@@ -1277,16 +1615,33 @@ const PHASE_LIST: Phase[] = [
     ],
     groups: [
       g(
-        'Production AI architecture',
+        '🖥',
+        'App layer',
+        'Where users meet the system.',
         t('Frontend', 'The user-facing app where people chat, upload files and see results.'),
         t('API Layer', 'The backend that authenticates users, validates requests and exposes your AI features.'),
+      ),
+      g(
+        '🧠',
+        'Orchestration',
+        'Decide who handles each request.',
         t('AI Orchestration', 'The coordinating layer that decides which agents, retrieval and tools handle each request.'),
         t('Agents', 'Components that plan and act with tools to complete multi-step tasks.'),
         t('RAG', 'Retrieval that grounds answers in your own documents.'),
         t('Tools', 'External actions and APIs the system can call, like search, databases or business systems.'),
+      ),
+      g(
+        '🗄',
+        'Models & data',
+        'The model and the stores behind it.',
         t('LLM API', 'The language model that generates responses, hosted by a provider or served yourself.'),
         t('Vector DB', 'Stores embeddings for semantic search over your knowledge.'),
         t('PostgreSQL', 'The relational database for users, app data and conversation history.'),
+      ),
+      g(
+        '📡',
+        'Operate',
+        'Measure it and keep watching it.',
         t('Evaluation/Tracing', 'Recording every step of each request and scoring quality, so you can debug and improve.'),
         t('Monitoring', 'Dashboards and alerts on latency, cost, errors and quality in production.'),
       ),

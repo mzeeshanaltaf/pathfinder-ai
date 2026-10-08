@@ -28,8 +28,9 @@ The project is built in phases, **one phase per Claude Code session**.
 | 5 | [phase-5-polish-engagement-and-finale.md](docs/plan/phase-5-polish-engagement-and-finale.md) |
 | 6 | [phase-6-third-person-and-roadmap.md](docs/plan/phase-6-third-person-and-roadmap.md) |
 | 7 | [phase-7-fde-path.md](docs/plan/phase-7-fde-path.md) |
+| 8 | [phase-8-categories-and-observability.md](docs/plan/phase-8-categories-and-observability.md) |
 
-**Content source of truth:** [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md) (trunk, AI Developer, AI Engineer, Summit) and [docs/AI Forward Deployed Engineer.md](docs/AI%20Forward%20Deployed%20Engineer.md) (the AI FDE path, its comparison stars, timeline and ladder rung). All topics, durations, projects, comparison stars and timelines come from them. Don't invent roadmap content. Short explanatory "bites" for topics are the only authored additions.
+**Content source of truth:** [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md) (trunk, AI Developer, AI Engineer, Summit) and [docs/AI Forward Deployed Engineer.md](docs/AI%20Forward%20Deployed%20Engineer.md) (the AI FDE path, its comparison stars, timeline and ladder rung). All topics, durations, projects, comparison stars and timelines come from them. Don't invent roadmap content. Lists marked **➕ Addition** in the AI Developer/Engineer doc (and its Phase 10, AI Observability) were added in Phase 8 from a ten-part roadmap infographic series; new topics go into the doc first, marked the same way. Short explanatory "bites" for topics and the category cards (how topics are grouped, with an emoji and a one-line blurb) are the only authored additions.
 
 ## Locked decisions
 - **Theme:** floating island village in a pastel cartoon sky. Islands are joined by plank/rope bridges.
@@ -45,7 +46,7 @@ The project is built in phases, **one phase per Claude Code session**.
 ## World map (stable IDs, used everywhere)
 The layout mirrors the roadmap's shape: a trunk, then a fork, then two paths that converge.
 
-The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 green) branches to −X, the Engineer path (🔵 blue) to +X, and the AI FDE path (🔴 coral) zig-zags down the middle corridor (x ≈ 0). All three converge at the Summit further along −Z. The FDE also walks the Developer's LLM → Agents islands (`sharedPhases`), so it has no duplicated content.
+The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 green) branches to −X, the Engineer path (🔵 blue) to +X, and the AI FDE path (🔴 coral) zig-zags down the middle corridor (x ≈ 0). All three converge at the Summit further along −Z; the Developer path's last island (the Watchtower) sits just past it, at −X/−Z, and bridges into it from behind. The FDE also walks the Developer's LLM → Agents islands (`sharedPhases`), so it has no duplicated content.
 
 | `PhaseId` | Track | Doc section | Landmark | Mini-game id (final) |
 |---|---|---|---|---|
@@ -60,6 +61,7 @@ The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 
 | `dev-agent-hq` | developer | Dev P7 Agents + Research agent | Control tower | `sort-bins` (tool router) |
 | `dev-app-factory` | developer | Dev P8 App Engineering + AI SaaS | Factory | `pipeline-order` (SaaS stack) |
 | `dev-shield-fort` | developer | Dev P9 Evaluation & Security | Fort | `injection-defense` |
+| `dev-watchtower` | developer | Dev P10 AI Observability (➕ addition) | Lookout tower + spyglass + floating live trace | `sort-bins` (Trace, Metric or Log?) |
 | `eng-neural-garden` | engineer | Eng P4 Deep Learning + Image classifier | Glowing neuron trees | `perceptron` |
 | `eng-transformer-tower` | engineer | Eng P5 Transformers | Tall tower | `attention-beams` |
 | `eng-model-forge` | engineer | Eng P6 LLMs & Foundation Models | Forge | `fit-the-gpu` |
@@ -115,7 +117,7 @@ export type Track = 'meta' | 'common' | PathId;
 // UI never hardcodes 'developer' | 'engineer': loop over CAREER_PATHS / PATH_IDS (README has the new-path checklist).
 export type PhaseId = 'harbor' | 'code-village' | /* ...all ids in the table above */ 'summit';
 export interface Topic { id: string; label: string; bite: string }            // bite = 1–2 sentence plain-English explanation
-export interface TopicGroup { title: string; topics: Topic[] }
+export interface TopicGroup { title: string; emoji?: string; blurb?: string; topics: Topic[] }  // a category card (Phase 8)
 export interface Project { id: string; title: string; pipeline: string[] }    // pipeline steps in doc order
 export interface Phase {
   id: PhaseId; track: Track; docPhase?: number; title: string; subtitle: string;
@@ -178,6 +180,7 @@ export interface MiniGameProps<C = unknown> {
 - **Mobile parity.** Every interaction needs a touch path: the Interact button, panels with big tap targets, no hover-only UI. Overlays must not scroll horizontally at 375px width.
 - **Performance budget:** ~60 fps on a mid laptop. Clamp dpr to [1, 1.75] and use drei `PerformanceMonitor` to drop quality. Instance repeated props (trees, rocks, gems). Use one shadow-casting directional light.
 - **Landmarks:** static parts go through `Static` / `mergeParts` (one draw + one outline per landmark). Materials that animate (opacity, colour) live at module scope in the landmark file: the React Compiler lint rule forbids mutating values returned by hooks. Small moving details go inside `<Near>`, and captions hide beyond 60 m.
+- **Category cards:** every `TopicGroup` has an emoji and a blurb (the `g(emoji, title, blurb, ...topics)` helper). `TopicGroupView` (`components/ui/roadmapParts.tsx`) draws each as a card tinted from `CATEGORY_TINTS` in group order; the island guide shows them two-up from `sm`. Group titles must be unique within a phase (React keys). Regrouping never changes gem ids.
 - **Palette:** pastel, defined once in `lib/palette.ts`. Developer = green family, Engineer = blue family, FDE = coral, Common = warm yellow/orange, Meta = lavender.
 - **HUD stack on phones:** the island pill (title, subtitle, track) is 3 lines; `.hud-compass`, `.hud-toast` and `.hud-tracker` in `globals.css` are offset below it. Change those offsets if the pill's height changes.
 - **File writing:** use the Write/Edit tools, never shell heredocs (they mis-parse on this Windows machine).

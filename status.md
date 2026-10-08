@@ -2,8 +2,8 @@
 
 > Update this file at the end of every session. See the session workflow in [CLAUDE.md](CLAUDE.md).
 
-**Next up:** All seven planned phases are done. Candidates for later work are under "Known issues" and in the Phase 7 handoff notes: a real-device pass (iOS Safari / Android), and a content review of the authored FDE roadmap (`docs/AI Forward Deployed Engineer.md`) by someone who works as an FDE.
-**Last updated:** 2026-10-07 (Phase 7 session)
+**Next up:** All eight phases are done. Candidates for later work are under "Known issues" and in the handoff notes: a real-device pass (iOS Safari / Android), a content review of the authored FDE roadmap (`docs/AI Forward Deployed Engineer.md`) by someone who works as an FDE, and a review of the Phase 8 additions (the "➕ Addition" lists in `docs/AI Engineer-Developer.md`).
+**Last updated:** 2026-10-08 (Phase 8 session)
 
 ## Phase overview
 | # | Phase | Status | Session date |
@@ -15,6 +15,7 @@
 | 5 | [Polish, Engagement & Finale](docs/plan/phase-5-polish-engagement-and-finale.md) | ✅ Done | 2026-10-06 |
 | 6 | [Third-Person Explorer, Keyboard Steering & Full Roadmap](docs/plan/phase-6-third-person-and-roadmap.md) | ✅ Done | 2026-10-07 |
 | 7 | [HUD Subtitle + AI Forward Deployed Engineer Path](docs/plan/phase-7-fde-path.md) | ✅ Done | 2026-10-07 |
+| 8 | [Category Cards, Roadmap Additions & the Watchtower](docs/plan/phase-8-categories-and-observability.md) | ✅ Done | 2026-10-08 |
 
 Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done with carry-overs
 
@@ -96,6 +97,14 @@ Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done wi
 - [x] 6. Six Challenges on the existing engines; Fork personality quiz re-authored for 3 paths (per-path weights)
 - [x] 7. UI touch-ups for 3 paths (finale ladder, short labels, Harbor branches, job-ready grid, README)
 - [x] 8. Acceptance verified; tsc, lint and build pass; docs updated
+
+### Phase 8: Category Cards, Roadmap Additions & the Watchtower
+- [x] Gap analysis of the ten infographics against the roadmap; user decisions recorded in the plan file
+- [x] Doc: 32 topics added as "➕ Addition" lists + Dev Phase 10 (AI Observability)
+- [x] Data: `TopicGroup.emoji` / `blurb`; every phase regrouped into category cards; 32 new topics + the Watchtower phase (11 topics)
+- [x] UI: `TopicGroupView` cards (guide two-up, Roadmap list), print + SEO headings
+- [x] World: Watchtower island + bridges, `watchtower` landmark, "Trace, Metric or Log?" Challenge, job-ready mapping
+- [x] Acceptance verified; tsc, lint and build pass; docs updated
 
 ## Decisions log
 Record any deviation from the plan or from the CLAUDE.md contracts here (date, decision, reason).
@@ -253,6 +262,11 @@ Record any deviation from the plan or from the CLAUDE.md contracts here (date, d
 - 2026-10-07 (Phase 7): **UI.** Finale rung notes come from the registry: a path's rung = definition + quote, its `ladderBranches` = "Grows out of the … path" + goal (the Phase 5 hand-picked notes for AI Apps / ML/DL / AI Systems are gone). Rung rows wrap 2 per row on phones. Short labels ("AI FDE") on the Roadmap picker, Passport columns, Harbor branches, signpost arms and certificate chips. The phone HUD stack (`.hud-compass`, `.hud-toast`, `.hud-tracker`, the tutorial gem card) moved down 16 px for the pill's subtitle line.
 - 2026-10-07 (Phase 7): **Draw calls.** Worst view (Harbor, whole world, High) is 371 draws (Phase 6: 311), and the Fork looking down the FDE corridor is 324. Both hold 60 fps (worst frame 17 ms). Each new landmark is 4–7 draws from afar, in line with the existing ones.
 
+- 2026-10-08 (Phase 8): **Roadmap additions** (user decisions: add to the doc first, marked as additions; a trimmed core of about 30; observability as a new island; category cards). Source: a ten-part "AI Developer / AI Engineer Roadmap" infographic series (01–10) the user shared. Only topics the roadmap didn't already cover were added. Examples rather than concepts went into bites instead: tool types (APIs, Database, Browser, Code, Files) in the tool-calling bite, compression in the context-engineering bite, handoffs in the LLM-tracing bite. Also skipped: NLP basics (too vague), WebSockets, Redis, FastAPI (tools, not concepts; FastAPI already sits in project pipelines), Multi-query RAG and Self-RAG (close to query expansion and agentic / corrective RAG), separate MCP client / server gems (the MCP primitives bite names both).
+- 2026-10-08 (Phase 8): **The Watchtower is a Developer-track island** (Dev P10, after Shield Fort). The Developer path had no observability at all, while the Engineer path has MLOps monitoring (it gains one "LLM tracing" gem) and the FDE has Proving Grounds. A shared or convergence island wasn't possible without changing `sharedPhases` (shared phases come before a path's own). `ROADMAP_SHAPE`, the comparison table, the Developer timeline and its final skill set are the original doc's and stay unchanged; the job-ready meter maps the Watchtower to the last Developer step (Production AI Applications).
+- 2026-10-08 (Phase 8): **Layout.** Watchtower at (−50, 6, −428), radius 11, just past the Summit on the −X side. Bridges: Shield Fort → Watchtower 22.1 m, Watchtower → Summit 24.1 m (existing bridges are 11–33 m). Shield Fort no longer bridges straight to the Summit. The new bridge arrives at the Summit from the −X/−Z side, so the **Summit's landmark moved** about 3.6 m, from offset (−3.4, −8.3) to (0, −9) (straight −Z). Its mentor, pedestal, dock, gems and the finale's orbit centre follow it automatically; gem ids are unchanged.
+- 2026-10-08 (Phase 8): **Contract changes (additive; no store version bump):** `TopicGroup.emoji?` and `TopicGroup.blurb?`; the `g()` helper is now `g(emoji, title, blurb, ...topics)`. New `CATEGORY_TINTS` (`lib/palette.ts`) and `categoryTint()` (`roadmapParts.tsx`). `LandmarkType` gains `'watchtower'`, and `PHASE_IDS` gains `'dev-watchtower'` (after `dev-shield-fort`). `toolsTitle()` returns "Platforms" for the Watchtower (the infographic's word).
+- 2026-10-08 (Phase 8): **Regrouping.** Every topic keeps its id, so saved gems still count. Groups that came from the doc's own headings (Math, ML Meadow, Deep Archive, Security Citadel, the FDE islands) keep their titles. Single-list islands were split into categories modelled on the infographics. Code Village moved JSON, REST APIs, HTTP and API design into "Web & APIs", and virtual environments and logging into "Dev engineering". Returning players' islands that gained topics drop below 100% until the new gems are found.
 ## Handoff notes
 Each session appends a short block: what was built, key files, anything half-done, and tips for the next session.
 
@@ -510,6 +524,25 @@ Each session appends a short block: what was built, key files, anything half-don
 - Still no real-device test (iOS Safari / Android).
 - The FDE path has no `BUILD_PROJECTS` entries ("What to build" stays the original doc's 8-project ladder). Its six phase projects show on their islands, in the Roadmap and in the job-ready meter.
 
+### Phase 8 session (2026-10-08)
+**What exists**
+- **Doc:** `docs/AI Engineer-Developer.md` has an additions note at the top, "➕ Addition" lists under 11 phases, and a new "AI Developer — Phase 10 (➕ Addition): AI Observability".
+- **Content:** 32 new topics + the Watchtower phase (11 topics). Totals: 27 islands, 28 bridges, 377 gems. Every group has an emoji and a blurb. Mentor lines: Shield Fort and App Factory gained one line each; the Watchtower's mentor is Argus.
+- **UI:** `TopicGroupView` (`components/ui/roadmapParts.tsx`) draws category cards (tinted header with emoji, title, blurb and gems found per category). The island guide's Topics tab shows them in a 2-column grid from `sm`; the Roadmap tab uses the list variant; print and the SEO pages put the emoji and blurb in the group heading (`.print-blurb`).
+- **World:** `components/world/landmarks/Watchtower.tsx` (merged tower + roof, sweeping spyglass, pulsing lamp, floating "Live trace" board whose 4 spans fill in turn), registered in `landmarks/index.ts` (plinth cylinder + tower box colliders).
+- **Challenge:** `dev-watchtower` sort-bins "Trace, Metric or Log?" (3 bins, 9 items, untimed).
+
+**Verification** (scripts in this session's scratchpad: `check.ts` via tsx (imports the real modules so their dev checks run), `p8-shots.mjs`, `p8-landmark.mjs`, `p8-bridges.mjs`; Playwright + local Chrome against `next start`)
+- `check.ts`: 27 phases / 27 Challenges / 377 gems, all placed; every island's pedestal and dock placed; no group is missing an emoji or blurb; no duplicate group titles; job-ready for a fresh Developer still reads 9–12 months.
+- Walking from mid-deck on both new bridges lands on the Watchtower and the Summit, grounded throughout.
+- Screenshots reviewed: the Watchtower guide (cards, bite popout), RAG Library and Agent HQ cards, Passport → Roadmap list cards, the Challenge intro, the landmark from three spots, a gem card for a new topic. No horizontal overflow at 375 px. No page errors.
+- `tsc`, `npm run lint` and `npm run build` are clean.
+
+**Not done / tips**
+- The older Playwright suites (`t-all`, `p6-*`, `p7-*`) were not re-run; their island / pedestal counts (26) need bumping to 27.
+- The additions come from infographics, not the original author. They're worth a review like the FDE doc.
+- Group titles double as React keys, so keep them unique within a phase.
+
 ## Known issues
 - Sim stars are generous by design where a meter is live (rank-it NDCG, perceptron accuracy, curve-fit bars): players can hill-climb. Stars mostly reward speed, first-try accuracy or efficiency.
 - Drift-watch needs about 15–30 s of watching. There is Pause but no fast-forward.
@@ -535,3 +568,5 @@ Each session appends a short block: what was built, key files, anything half-don
 - Printing uses the browser dialog. It was verified with Chrome's `page.pdf()` only, not every browser's print engine. The ☑ / ☐ glyphs come from the system font.
 - The ENTRY_POINT_NOTE fallback outcome of the Fork quiz ("Start as a Developer, grow into an Engineer") is the original doc's advice and doesn't mention the FDE path.
 - 3D speech bubbles (drei `Html`) whose anchor is off to the side sit at negative screen x on phones. They're clipped by `overflow: hidden` and never scroll the page, but a naive "element outside the viewport" probe will flag them.
+- The Python category emoji (🐍) and others render as monochrome glyphs in headless Chrome, like the HUD emoji. Normal browsers show colour emoji.
+- The Watchtower sits past the Summit, so the Developer path doubles back into the Summit from behind (−Z). The compass and lit bridges guide it; it reads fine in play.
