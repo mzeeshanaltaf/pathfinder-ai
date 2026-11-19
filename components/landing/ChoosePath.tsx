@@ -114,7 +114,7 @@ export default function ChoosePath({ paths, quiz, trunk }: { paths: LandingPath[
                   </q>
                 </button>
                 {open && (
-                  <div id={`${uid}-${p.id}`} className="grid items-start gap-5 px-6 pb-6 lg:grid-cols-2">
+                  <div id={`${uid}-${p.id}`} className="grid items-start gap-5 px-6 pb-2 lg:grid-cols-2">
                     <Image
                       src={pShot.src}
                       alt={pShot.alt}
@@ -146,6 +146,23 @@ export default function ChoosePath({ paths, quiz, trunk }: { paths: LandingPath[
                     </dl>
                   </div>
                 )}
+                {/* Outside the header button (a link can't sit inside a button), pinned to the card's foot. */}
+                <div className="mt-auto px-6 pb-5">
+                  <Link
+                    href={p.href}
+                    className={`inline-block rounded-lg py-2.5 text-[15px] font-semibold underline decoration-[1.5px] underline-offset-4 hover:decoration-2 ${focusRing}`}
+                    style={{ color: INK, textDecorationColor: p.colors.dark }}
+                    data-umami-event="read-roadmap"
+                    data-umami-event-path={p.id}
+                  >
+                    {p.shortLabel} roadmap
+                    {/* Inline-block: not underlined, and the no-break space keeps it on the last word's line. */}
+                    {' '}
+                    <span aria-hidden className="inline-block">
+                      →
+                    </span>
+                  </Link>
+                </div>
               </div>
             );
           })}

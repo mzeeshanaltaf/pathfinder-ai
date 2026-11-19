@@ -23,7 +23,7 @@ Your **Skill Passport** gathers all of this in one place:
 - your achievements
 - a certificate once you reach the Summit
 
-Every island is open from the start. The compass, lit bridges and a "next stop" suggestion guide you, but nothing is locked. The content comes from [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md) and [docs/AI Forward Deployed Engineer.md](docs/AI%20Forward%20Deployed%20Engineer.md). Lists marked **➕ Addition** in the first doc, and its Phase 10 (AI Observability), were added later from a ten-part AI Developer / AI Engineer roadmap infographic series.
+Every island is open from the start. The compass, lit bridges and a "next stop" suggestion guide you, but nothing is locked. The content follows these roadmaps, each also published as a page: [AI Developer](https://pathfinder.zeeshanai.cloud/roadmaps/ai-developer), [AI Engineer](https://pathfinder.zeeshanai.cloud/roadmaps/ai-engineer) and [AI Forward Deployed Engineer](https://pathfinder.zeeshanai.cloud/roadmaps/ai-forward-deployed-engineer). Topics marked **➕ Addition** in the AI Developer / AI Engineer source, and the Developer path's AI Observability phase (the Watchtower), were added later from a ten-part AI Developer / AI Engineer roadmap infographic series.
 
 ## Run it
 
@@ -104,7 +104,7 @@ data/                roadmap.ts (content + CAREER_PATHS registry), world.ts (isl
 lib/                 progress.ts (suggested next, job-ready, achievements, streak), audio.ts,
                      certificate.ts, landmarkKit.ts, materials.ts, worldLayout.ts, palette…
 store/               progress.ts (persisted, versioned), ui.ts
-docs/                roadmap source docs + per-phase plans; status.md tracks progress
+docs/                roadmap source docs + per-phase plans (local only, git-ignored); status.md tracks progress
 ```
 
 ## Adding a roadmap or a new career path
