@@ -573,6 +573,18 @@ Each session appends a short block: what was built, key files, anything half-don
 - The landing screenshots are static. Retake them if the world's look changes a lot.
 - The OG image and the global metadata are unchanged.
 
+### SEO audit fixes (2026-11-19)
+**What exists**
+- `lib/seo.ts` now holds the per-path search copy (`roadmapTitle`, `roadmapDescription`; overrides in `ROADMAP_SEO`, fallback from `label` + `excellentAt` for new paths), `AUTHOR`, `SOURCE_REPO`, `CONTENT_UPDATED` (sitemap lastmod + byline date: **bump it when roadmap content changes**), `READING_VIEWPORT` (zoomable; the root layout keeps the game's locked viewport) and `formatDate`.
+- `lib/shareCard.tsx`: one share-card renderer. `app/opengraph-image.tsx` uses it, `app/roadmaps/[path]/opengraph-image.tsx` + `twitter-image.tsx` draw a card per path in its track colour, and `app/about/` re-uses the site card. A page that sets its own `openGraph` loses the root image, so it needs its own image files.
+- Roadmap pages: zoomable viewport, new titles (≤ 60 chars, FDE leads with "AI Forward Deployed Engineer (FDE)"), written descriptions (≤ 160), author byline + updated date + link to `/about`, a "What these mean" `<details>` per category card with every topic's bite, and a fuller `Course` schema (author, offers, hasCourseInstance with courseWorkload from the timeline's upper bound).
+- `app/about/page.tsx`: who builds it, where the roadmaps come from, data/privacy, feedback via GitHub issues. Linked from the landing footer and every roadmap byline. In the sitemap.
+- Landing JSON-LD is now a `@graph`: WebSite, Organization (logo = `/apple-icon`) and WebApplication.
+- `app/manifest.ts`, `app/apple-icon.tsx` (180 px PNG of the logo), sitemap `lastModified`, HSTS header in `next.config.ts`.
+
+**On the VPS (not in this repo)**
+- HTTP → HTTPS is a **301** via `/data/coolify/proxy/dynamic/pathfinder-https-301.yaml` (Traefik file provider, hot-reloaded). Coolify's own `redirect-to-https@docker` (302) is defined identically by every app's labels, so changing it for one app would conflict; the custom router (priority 1000, `noop@internal`) outranks it for this host only. Delete the file to go back to the 302.
+
 ## Known issues
 - Sim stars are generous by design where a meter is live (rank-it NDCG, perceptron accuracy, curve-fit bars): players can hill-climb. Stars mostly reward speed, first-try accuracy or efficiency.
 - Drift-watch needs about 15–30 s of watching. There is Pause but no fast-forward.

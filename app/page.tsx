@@ -1,4 +1,3 @@
-import type { Viewport } from 'next';
 import { Instrument_Sans } from 'next/font/google';
 import Link from 'next/link';
 import ChoosePath from '@/components/landing/ChoosePath';
@@ -6,31 +5,51 @@ import ContinueJourney from '@/components/landing/ContinueJourney';
 import Logo from '@/components/ui/Logo';
 import { CAREER_PATHS } from '@/data/roadmap';
 import { LANDING_STATS, islandTitles, landingPaths, landingQuiz, landingTrunk } from '@/lib/landing';
-import { SEO_DESCRIPTION, SITE_NAME, SITE_URL, roadmapHref } from '@/lib/seo';
+import { AUTHOR, READING_VIEWPORT, SEO_DESCRIPTION, SITE_NAME, SITE_URL, SOURCE_REPO, roadmapHref } from '@/lib/seo';
 
 const instrument = Instrument_Sans({ subsets: ['latin'], display: 'swap' });
 
 // The game locks zoom; a reading page must not.
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
-  themeColor: '#ffffff',
-};
+export const viewport = READING_VIEWPORT;
+
+const ORG_ID = `${SITE_URL}/#organization`;
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: SITE_NAME,
-  url: SITE_URL,
-  description: SEO_DESCRIPTION,
-  applicationCategory: 'EducationalApplication',
-  genre: 'Education',
-  operatingSystem: 'Any (modern web browser)',
-  inLanguage: 'en',
-  isAccessibleForFree: true,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      name: SITE_NAME,
+      url: `${SITE_URL}/`,
+      description: SEO_DESCRIPTION,
+      inLanguage: 'en',
+      publisher: { '@id': ORG_ID },
+    },
+    {
+      '@type': 'Organization',
+      '@id': ORG_ID,
+      name: SITE_NAME,
+      url: `${SITE_URL}/`,
+      logo: `${SITE_URL}/apple-icon`,
+      slogan: 'Find your path into AI.',
+      founder: { '@type': 'Person', name: AUTHOR.name, url: AUTHOR.url, sameAs: [AUTHOR.github] },
+      sameAs: [SOURCE_REPO],
+    },
+    {
+      '@type': 'WebApplication',
+      name: SITE_NAME,
+      url: `${SITE_URL}/play`,
+      description: SEO_DESCRIPTION,
+      applicationCategory: 'EducationalApplication',
+      genre: 'Education',
+      operatingSystem: 'Any (modern web browser)',
+      inLanguage: 'en',
+      isAccessibleForFree: true,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      publisher: { '@id': ORG_ID },
+    },
+  ],
 };
 
 const focusRing = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#8b74cf]';
@@ -176,12 +195,15 @@ export default function LandingPage() {
           <span>
             {SITE_NAME} · Find your path into AI. Free, no account, saved on your device.
           </span>
-          <nav aria-label="Roadmaps" className="flex flex-wrap gap-x-4 gap-y-1">
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-4 gap-y-1">
             {CAREER_PATHS.map((p) => (
               <Link key={p.id} href={roadmapHref(p)} className={`rounded underline-offset-4 hover:underline ${focusRing}`}>
                 {p.label} roadmap
               </Link>
             ))}
+            <Link href="/about" className={`rounded underline-offset-4 hover:underline ${focusRing}`}>
+              About
+            </Link>
           </nav>
         </footer>
       </div>

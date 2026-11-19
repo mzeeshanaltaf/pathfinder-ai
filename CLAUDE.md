@@ -82,7 +82,10 @@ The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 
 ## Directory structure (target)
 ```
 app/                 layout.tsx, page.tsx (landing page, server-rendered), play/page.tsx (the game: GameLoader, ssr:false),
-                     roadmaps/[path] (static SEO pages), globals.css
+                     roadmaps/[path] (static SEO pages + per-path share images), about (author, sources, privacy),
+                     manifest.ts, apple-icon.tsx, globals.css
+lib/seo.ts           site URL, per-path titles/descriptions, AUTHOR, CONTENT_UPDATED (bump on content changes), READING_VIEWPORT
+lib/shareCard.tsx    the share-card renderer behind every opengraph-image / twitter-image
 components/landing/  ChoosePath (path panels + Fork quiz + route, client), ContinueJourney (returning players), shots.ts
 lib/landing.ts       server-side landing view models derived from the registry (paths, trunk, stats, short Fork quiz)
 assets/landing/      in-game screenshots for the landing page (static imports)

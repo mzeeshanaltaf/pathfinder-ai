@@ -1,37 +1,46 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { CAREER_PATHS, COMPARISON, getPhase, shortPathLabel, trackPhases, type CareerPath } from '@/data/roadmap';
+import { CAREER_PATHS, COMPARISON, getPhase, shortPathLabel, trackPhases } from '@/data/roadmap';
 import { playHref } from '@/lib/playLinks';
-import { SITE_NAME, SITE_URL, pathSlug, roadmapHref } from '@/lib/seo';
+import {
+  AUTHOR,
+  CONTENT_UPDATED,
+  READING_VIEWPORT,
+  SITE_NAME,
+  SITE_URL,
+  formatDate,
+  pathSlug,
+  roadmapDescription,
+  roadmapHref,
+  roadmapTitle,
+  timelineDuration,
+} from '@/lib/seo';
 
 const bySlug = (slug: string) => CAREER_PATHS.find((p) => pathSlug(p.label) === slug);
 
 export const dynamicParams = false;
 
+// The root layout locks zoom for the game; a reading page must not.
+export const viewport = READING_VIEWPORT;
+
 export function generateStaticParams() {
   return CAREER_PATHS.map((p) => ({ path: pathSlug(p.label) }));
 }
 
-/** Keeps meta descriptions inside the ~160 character snippet limit, cutting on a word boundary. */
-function clip(text: string, max = 158) {
-  if (text.length <= max) return text;
-  return text.slice(0, max - 1).replace(/\s+\S*$/, '') + '…';
-}
-
-const descriptionFor = (p: CareerPath) => clip(`${p.label} roadmap: skills, projects and a ${p.timeline.total} timeline. ${p.definition}`);
-
 export async function generateMetadata({ params }: PageProps<'/roadmaps/[path]'>): Promise<Metadata> {
   const path = bySlug((await params).path);
   if (!path) return {};
-  const title = `${shortPathLabel(path)} Roadmap: Skills, Projects & Timeline | ${SITE_NAME}`;
-  const description = descriptionFor(path);
+  const title = roadmapTitle(path);
+  const description = roadmapDescription(path);
   const url = `/roadmaps/${pathSlug(path.label)}`;
+  // The share images come from opengraph-image.tsx / twitter-image.tsx next to this page.
   return {
     title,
     description,
     alternates: { canonical: url },
-    openGraph: { title, description, url, siteName: SITE_NAME, type: 'article', locale: 'en_US' },
+    authors: [{ name: AUTHOR.name, url: AUTHOR.url }],
+    openGraph: { title, description, url, siteName: SITE_NAME, type: 'article', locale: 'en_US', modifiedTime: CONTENT_UPDATED },
     twitter: { card: 'summary_large_image', title, description },
   };
 }
@@ -58,10 +67,20 @@ export default async function RoadmapPage({ params }: PageProps<'/roadmaps/[path
       '@context': 'https://schema.org',
       '@type': 'Course',
       name: `${path.label} roadmap`,
-      description: descriptionFor(path),
+      description: roadmapDescription(path),
       url: `${SITE_URL}/roadmaps/${slug}`,
+      inLanguage: 'en',
+      dateModified: CONTENT_UPDATED,
+      teaches: path.excellentAt,
       provider: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+      author: { '@type': 'Person', name: AUTHOR.name, url: AUTHOR.url },
       isAccessibleForFree: true,
+      offers: { '@type': 'Offer', category: 'Free', price: 0, priceCurrency: 'USD' },
+      hasCourseInstance: {
+        '@type': 'CourseInstance',
+        courseMode: 'Online',
+        courseWorkload: timelineDuration(path.timeline.total),
+      },
     },
   ];
 
@@ -78,6 +97,16 @@ export default async function RoadmapPage({ params }: PageProps<'/roadmaps/[path
         <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
           {path.emoji} {path.label} Roadmap
         </h1>
+        <p className="mt-2 text-sm font-semibold text-[#3d3452]/70">
+          By{' '}
+          <a href={AUTHOR.url} className="underline" rel="author">
+            {AUTHOR.name}
+          </a>{' '}
+          · Updated <time dateTime={CONTENT_UPDATED}>{formatDate(CONTENT_UPDATED)}</time> ·{' '}
+          <Link href="/about" className="underline">
+            How this roadmap was made
+          </Link>
+        </p>
         <p className="mt-3 text-lg">{path.definition}</p>
         <p className="mt-1 text-lg">
           <strong>Goal:</strong> {path.goal}
@@ -213,6 +242,19 @@ function PhaseBlock({ phase }: { phase: ReturnType<typeof getPhase> }) {
             {g.blurb && <span className="font-semibold text-[#3d3452]/70">: {g.blurb}</span>}
           </h4>
           <p className="text-sm">{g.topics.map((t) => t.label).join(' · ')}</p>
+          <details className="group mt-1 text-sm">
+            <summary className="cursor-pointer font-semibold text-[#8b74cf] underline-offset-4 hover:underline">
+              What these mean
+            </summary>
+            <dl className="mt-2 space-y-1.5 border-l-[3px] border-[#ddd2fa] pl-3">
+              {g.topics.map((t) => (
+                <div key={t.id}>
+                  <dt className="inline font-bold">{t.label}: </dt>
+                  <dd className="inline">{t.bite}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
         </div>
       ))}
       {phase.project && (
