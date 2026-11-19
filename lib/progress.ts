@@ -73,23 +73,32 @@ export function pathScore(p: Pick<ProgressData, 'gems' | 'badges'>, track: PathT
   return PATH_PHASES[track].reduce((n, id) => n + (p.badges[id] ? 10 : 0) + gemFraction(p, id), 0);
 }
 
-/** Paths by progress, most first; ties keep the default order (Developer first, as the doc recommends). */
-export function pathsByProgress(p: Pick<ProgressData, 'gems' | 'badges'>): PathTrack[] {
-  return [...PATH_TRACKS].sort((a, b) => pathScore(p, b) - pathScore(p, a));
+/** Progress plus the path the player picked before playing, if any. */
+type PathProgress = Pick<ProgressData, 'gems' | 'badges'> & Partial<Pick<ProgressData, 'chosenPath'>>;
+
+/**
+ * Paths by progress, most first. Ties go to the path the player chose (landing page), then keep
+ * the default order (Developer first, as the doc recommends).
+ */
+export function pathsByProgress(p: PathProgress): PathTrack[] {
+  const chosen = p.chosenPath && PATH_TRACKS.includes(p.chosenPath) ? p.chosenPath : null;
+  const order = chosen ? [chosen, ...PATH_TRACKS.filter((t) => t !== chosen)] : [...PATH_TRACKS];
+  // Array.prototype.sort is stable, so equal scores keep `order`.
+  return order.sort((a, b) => pathScore(p, b) - pathScore(p, a));
 }
 
 /** The path the player leans towards. */
-export const preferredPath = (p: Pick<ProgressData, 'gems' | 'badges'>): PathTrack => pathsByProgress(p)[0];
+export const preferredPath = (p: PathProgress): PathTrack => pathsByProgress(p)[0];
 
 export const pathComplete = (p: Pick<ProgressData, 'badges'>, track: PathTrack) =>
   PATH_PHASES[track].every((id) => !!p.badges[id]);
 
 /**
  * Suggested next island: the first trunk phase without a badge; then the next phase on the
- * path with the most progress (Developer by default); then the Summit; then the other paths.
- * Null once every badge is earned.
+ * path with the most progress (the chosen path, else Developer, on a tie); then the Summit; then
+ * the other paths. Null once every badge is earned.
  */
-export function suggestedNext(p: Pick<ProgressData, 'gems' | 'badges'>): PhaseId | null {
+export function suggestedNext(p: PathProgress): PhaseId | null {
   for (const id of TRUNK) if (!p.badges[id]) return id;
   const [first, ...others] = pathsByProgress(p);
   const next = (track: PathTrack) => PATH_PHASES[track].find((id) => !p.badges[id]) ?? null;
@@ -143,13 +152,13 @@ const TIMELINE_PHASES: Record<PathTrack, PhaseId[][]> = {
 /** "Production AI: Complete SaaS" has no island of its own; it belongs to the final step of every path. */
 const FINAL_STEP_EXTRA_PROJECTS = BUILD_PROJECTS.filter((b) => !b.phaseId).map((b) => b.projectId);
 
-/** "Months 1–2" → 2, "Month 5" → 1, "Months 16–18" → 3. */
+/** "Months 1–2" → 2, "Month 5" → 1, "Months 13–14" → 2. */
 function monthsIn(when: string): number {
   const m = when.match(/(\d+)\s*[–-]\s*(\d+)/);
   return m ? Number(m[2]) - Number(m[1]) + 1 : 1;
 }
 
-/** "~9–12 months" → [9, 12]. */
+/** "~6–8 months" → [6, 8]. */
 function totalRange(total: string): [number, number] {
   const m = total.match(/(\d+)\s*[–-]\s*(\d+)/);
   return m ? [Number(m[1]), Number(m[2])] : [12, 12];
@@ -167,7 +176,7 @@ export interface JobReadyEstimate {
   track: PathTrack;
   /** 0–1 overall readiness. */
   ready: number;
-  /** Months remaining, scaled to the doc's range (e.g. ~9–12 months for a fresh start). */
+  /** Months remaining, scaled to the doc's range (e.g. ~6–8 months for a fresh Developer). */
   monthsLeft: [number, number];
   steps: JobReadyStep[];
 }

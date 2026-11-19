@@ -128,7 +128,7 @@ This establishes the foundation needed for everything that follows.
 
 # Phase 2 — Mathematics for AI
 
-**Duration: 1–2 months**
+**Duration: 2–4 weeks**
 
 Don't try to become a mathematician.
 
@@ -199,7 +199,7 @@ Most importantly:
 
 # Phase 3 — Machine Learning Fundamentals
 
-**Duration: 2 months**
+**Duration: 2–4 weeks**
 
 Now introduce actual ML.
 
@@ -300,7 +300,7 @@ They don't necessarily need to train foundation models or deeply understand GPU 
 
 ## LLM Fundamentals
 
-**Duration: 1 month**
+**Duration: 1–2 weeks**
 
 Learn:
 
@@ -337,7 +337,7 @@ Don't focus on memorizing SDKs. Understand the concepts.
 
 ## Prompt Engineering
 
-**Duration: 2–3 weeks**
+**Duration: 1–2 weeks**
 
 Learn:
 
@@ -384,7 +384,7 @@ Response
 
 ## RAG
 
-**Duration: 1–2 months**
+**Duration: 2–8 weeks**
 
 This should be one of the developer's most important skills.
 
@@ -463,7 +463,7 @@ Answer + Citations
 
 ## AI Agents
 
-**Duration: 1–2 months**
+**Duration: ~1 month**
 
 Learn:
 
@@ -521,7 +521,7 @@ Search     Agent
 
 ## AI Application Engineering
 
-**Duration: 1–2 months**
+**Duration: ~1 month**
 
 Learn:
 
@@ -702,7 +702,7 @@ Their goal is:
 
 ## Deep Learning
 
-**Duration: 2–3 months**
+**Duration: ~2 months**
 
 Learn:
 
@@ -757,7 +757,7 @@ Inference API
 
 ## Transformers
 
-**Duration: 1–2 months**
+**Duration: ~1 month**
 
 This is a critical stage.
 
@@ -1145,25 +1145,25 @@ For someone starting with **basic software engineering knowledge**:
 
 ### AI Developer
 
-**~9–12 months**
+**~6–8 months**
 
 ```text
-Months 1–2
+Month 1
 Python + SQL + APIs
        ↓
-Months 3–4
+Month 2
 ML Fundamentals
        ↓
-Month 5
+Month 3
 LLMs + Prompting
        ↓
-Months 6–7
+Months 4–5
 RAG
        ↓
-Months 8–9
+Month 6
 Agents
        ↓
-Months 10–12
+Months 7–8
 Production AI Applications
 ```
 
@@ -1173,7 +1173,7 @@ With consistent project work, they should be capable of applying for **AI Develo
 
 ### AI Engineer
 
-**~12–18 months**
+**~12–14 months**
 
 ```text
 Months 1–2
@@ -1182,22 +1182,22 @@ Software + Python
 Months 3–4
 Math + ML
        ↓
-Months 5–7
+Months 5–6
 Deep Learning + PyTorch
        ↓
-Months 8–9
+Months 7–8
 Transformers + LLMs
        ↓
-Months 10–11
+Month 9
 RAG + Agents
        ↓
-Months 12–13
+Month 10
 Fine-tuning + Model Optimization
        ↓
-Months 14–15
+Months 11–12
 MLOps + Model Serving
        ↓
-Months 16–18
+Months 13–14
 Production AI Systems
 ```
 

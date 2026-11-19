@@ -2,8 +2,8 @@
 
 > Update this file at the end of every session. See the session workflow in [CLAUDE.md](CLAUDE.md).
 
-**Next up:** All eight phases are done. Candidates for later work are under "Known issues" and in the handoff notes: a real-device pass (iOS Safari / Android), a content review of the authored FDE roadmap (`docs/AI Forward Deployed Engineer.md`) by someone who works as an FDE, and a review of the Phase 8 additions (the "➕ Addition" lists in `docs/AI Engineer-Developer.md`).
-**Last updated:** 2026-10-08 (Phase 8 session)
+**Next up:** All eight phases are done, and a landing page now sits at `/` with the game at `/play` (2026-11-19 session, see its handoff notes). Candidates for later work are under "Known issues" and in the handoff notes: a real-device pass (iOS Safari / Android), a content review of the authored FDE roadmap (`docs/AI Forward Deployed Engineer.md`) by someone who works as an FDE, and a review of the Phase 8 additions (the "➕ Addition" lists in `docs/AI Engineer-Developer.md`).
+**Last updated:** 2026-11-19 (landing page session)
 
 ## Phase overview
 | # | Phase | Status | Session date |
@@ -16,6 +16,7 @@
 | 6 | [Third-Person Explorer, Keyboard Steering & Full Roadmap](docs/plan/phase-6-third-person-and-roadmap.md) | ✅ Done | 2026-10-07 |
 | 7 | [HUD Subtitle + AI Forward Deployed Engineer Path](docs/plan/phase-7-fde-path.md) | ✅ Done | 2026-10-07 |
 | 8 | [Category Cards, Roadmap Additions & the Watchtower](docs/plan/phase-8-categories-and-observability.md) | ✅ Done | 2026-10-08 |
+| 9 | [Landing Page (directions → Choose Your Path)](docs/plan/phase-9-landing-page-directions.md) | ✅ Done | 2026-11-19 |
 
 Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⚠️ Done with carry-overs
 
@@ -267,6 +268,22 @@ Record any deviation from the plan or from the CLAUDE.md contracts here (date, d
 - 2026-10-08 (Phase 8): **Layout.** Watchtower at (−50, 6, −428), radius 11, just past the Summit on the −X side. Bridges: Shield Fort → Watchtower 22.1 m, Watchtower → Summit 24.1 m (existing bridges are 11–33 m). Shield Fort no longer bridges straight to the Summit. The new bridge arrives at the Summit from the −X/−Z side, so the **Summit's landmark moved** about 3.6 m, from offset (−3.4, −8.3) to (0, −9) (straight −Z). Its mentor, pedestal, dock, gems and the finale's orbit centre follow it automatically; gem ids are unchanged.
 - 2026-10-08 (Phase 8): **Contract changes (additive; no store version bump):** `TopicGroup.emoji?` and `TopicGroup.blurb?`; the `g()` helper is now `g(emoji, title, blurb, ...topics)`. New `CATEGORY_TINTS` (`lib/palette.ts`) and `categoryTint()` (`roadmapParts.tsx`). `LandmarkType` gains `'watchtower'`, and `PHASE_IDS` gains `'dev-watchtower'` (after `dev-shield-fort`). `toolsTitle()` returns "Platforms" for the Watchtower (the infographic's word).
 - 2026-10-08 (Phase 8): **Regrouping.** Every topic keeps its id, so saved gems still count. Groups that came from the doc's own headings (Math, ML Meadow, Deep Archive, Security Citadel, the FDE islands) keep their titles. Single-list islands were split into categories modelled on the infographics. Code Village moved JSON, REST APIs, HTTP and API design into "Web & APIs", and virtual environments and logging into "Dev engineering". Returning players' islands that gained topics drop below 100% until the new gems are found.
+- 2026-11-19 (landing page): **Landing at `/`, game at `/play`.** The user compared six landing directions on a Design canvas (Journey, Field Guide, Transit Map, Night Sky Bento, Sticker Book, Choose Your Path) and picked **Choose Your Path**. `/play` is `noindex, follow`, with canonical `/play`; the sitemap still lists `/` and the roadmap pages. The roadmap pages' "Walk this roadmap in 3D" button now goes to `/play` (the breadcrumb still goes home). The old sr-only outline on `/` was removed, because the landing page is real crawlable content and the roadmap pages carry the detail.
+  - **Short Fork quiz:** the landing page asks the first 3 Fork questions where every path owns an option (today: "What excites you most?", "A new model…", "Which project sounds the most fun?"). The game's threshold (≥ 5 of 12) is scaled to ⌈5 × 6 / 12⌉ = 3 of 6, so two matching answers win. A clear leader switches the path panels and the route. With no leader after all three answers, it shows the game's `meta` outcome, with its emoji stripped.
+  - **Scroll lock:** `globals.css` locks `html, body` for the game. Pages marked `.site-page` lift it with `html:has(.site-page)`, which is unlayered so it beats the body's `h-full overflow-hidden` utilities. The roadmap pages keep their old `fixed inset-0 overflow-y-auto` wrapper. The landing page also overrides the viewport so users can pinch-zoom (the game still can't).
+  - **Storage key:** the progress key moved to `lib/storageKeys.ts` (same value, so there is no migration). `store/progress.ts` imports it.
+- 2026-11-19 (landing page, follow-up): **New timelines (user decision).** AI Developer ~6–8 months, AI Engineer ~12–14, AI FDE ~8–10. The docs were changed first, then `CAREER_PATHS`. Each path keeps its step count (`TIMELINE_PHASES` and its dev check are unchanged), with months redistributed so the last step ends at the new upper bound:
+  - Developer: 1, 2, 3, 4–5, 6, 7–8.
+  - Engineer: 1–2, 3–4, 5–6, 7–8, 9, 10, 11–12, 13–14.
+  - FDE: one month per step, 1–10.
+  - The Fork quiz's last explanation quotes the new totals.
+  - **Island durations were shortened to match** (doc + data). Each island takes the time its own path's timeline gives it, and the shared trunk uses ranges that cover the Developer/FDE pace and the Engineer pace:
+    - Code Village 1–2 months (unchanged), Math Mountain 2–4 weeks, ML Meadow 2–4 weeks.
+    - LLM Lighthouse 1–2 weeks, Prompt Workshop 1–2 weeks, RAG Library 2–8 weeks (FDE fast, Developer months 4–5), Agent HQ ~1 month, App Factory ~1 month.
+    - Neural Garden ~2 months, Transformer Tower ~1 month.
+    - The FDE islands stay ~1 month. Islands the doc never gave a duration still have none.
+- 2026-11-19 (landing page, follow-up): **Chosen path → game.** New persisted `chosenPath: PathId | null`. It is additive: `merge` fills it from the defaults and drops unknown ids, so there is no version bump. `/play?path=<PathId>` sets it, is stripped from the URL with `replaceState`, and shows a notice ("AI Engineer path chosen") once the player is exploring. Invalid values are ignored. It only breaks ties in `pathsByProgress`, so after the trunk the compass, minimap, Welcome back card, Roadmap tab and Passport lean to it until another path has more badges or gems. Links that pass it: the landing quiz's "Start on the … path" (when a path leads), the landing route's "Start on the … path", and the roadmap pages' "Walk this roadmap in 3D". The in-game **Fork quiz sets it too** when its result is a path (the tie / low-score fallback keeps any earlier choice), and its result screen says the compass now leads along that path.
+
 ## Handoff notes
 Each session appends a short block: what was built, key files, anything half-done, and tips for the next session.
 
@@ -542,6 +559,19 @@ Each session appends a short block: what was built, key files, anything half-don
 - The older Playwright suites (`t-all`, `p6-*`, `p7-*`) were not re-run; their island / pedestal counts (26) need bumping to 27.
 - The additions come from infographics, not the original author. They're worth a review like the FDE doc.
 - Group titles double as React keys, so keep them unique within a phase.
+
+### Landing page session (2026-11-19)
+**What exists**
+- `app/page.tsx`: the landing page (server component, Instrument Sans). Header (logo + Play), hero (headline, Start exploring, and "Continue from <island>" for returning players, else "Take the path quiz"), `ChoosePath`, three feature notes (gem and challenge counts come from the data), a dark final CTA, and a footer with roadmap links. WebApplication JSON-LD moved here.
+- `components/landing/ChoosePath.tsx` (client): expandable panels, one per `CAREER_PATHS` entry, coloured from `TRACK_COLORS`; the short Fork quiz with per-path point bars; the route (Harbor → trunk → Fork → the path's shared and own islands → Summit) with a screenshot and the timeline. All three follow one selection.
+- `components/landing/ContinueJourney.tsx`, `components/landing/shots.ts` (screenshots per path + fallback), `lib/landing.ts` (view models), `assets/landing/*.jpg` (4 in-game screenshots taken from the dev server).
+- `app/play/page.tsx`: the game (`GameLoader`).
+
+**Verification:** Playwright + local Chrome against `next start`. Desktop 1440 full page, the quiz switching to the AI Engineer path, phone 375 full page with a seeded returning player ("Continue from RAG Library"), and `/play` loading the game (title "Play | Pathfinder AI", robots `noindex, follow`). No console errors, no horizontal overflow at 375 px. `tsc`, `npm run lint` and `npm run build` are clean.
+
+**Not done / tips**
+- The landing screenshots are static. Retake them if the world's look changes a lot.
+- The OG image and the global metadata are unchanged.
 
 ## Known issues
 - Sim stars are generous by design where a meter is live (rank-it NDCG, perceptron accuracy, curve-fit bars): players can hill-climb. Stars mostly reward speed, first-try accuracy or efficiency.

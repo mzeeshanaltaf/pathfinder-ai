@@ -29,13 +29,13 @@ Every island is open from the start. The compass, lit bridges and a "next stop" 
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3000 (landing page), /play (the game)
 npm run build      # production build
 npm run start      # serve the production build
 npm run lint
 ```
 
-Requires Node 20+. Nothing is fetched at runtime: there's no backend and no accounts. All art is procedural, and progress is saved in `localStorage`. To set the canonical, sitemap, robots and Open Graph URLs when deploying, set `NEXT_PUBLIC_SITE_URL` (build time, no trailing slash). SEO: the home page ships a server-rendered outline of the roadmaps, and each career path gets a static page at `/roadmaps/<slug>` (generated from `CAREER_PATHS`, see `lib/seo.ts`). In the game, those pages are linked from the intro's career cards, the Welcome back card and the Passport's Roadmap tab.
+Requires Node 20+. Nothing is fetched at runtime: there's no backend and no accounts. All art is procedural, and progress is saved in `localStorage`. To set the canonical, sitemap, robots and Open Graph URLs when deploying, set `NEXT_PUBLIC_SITE_URL` (build time, no trailing slash). SEO: the home page (`/`) is a server-rendered landing page built from the roadmap registry: a panel per career path, a short version of the Fork quiz, and the chosen path's route and timeline. The game itself runs at `/play` (not indexed). A link can hand the game a chosen path (`/play?path=engineer`, built with `playHref` in `lib/playLinks.ts`): the compass then leans toward that path after the trunk, as it does after a clear result in the Fork quiz. Each career path also gets a static page at `/roadmaps/<slug>` (generated from `CAREER_PATHS`, see `lib/seo.ts`). In the game, those pages are linked from the intro's career cards, the Welcome back card and the Passport's Roadmap tab.
 
 ## Controls
 
@@ -86,7 +86,9 @@ Next.js 16 (App Router, TypeScript, Tailwind 4) · `@react-three/fiber` · `@rea
 ## Project layout
 
 ```
-app/                 layout (metadata), page (client-only game), icon.svg, opengraph-image.tsx
+app/                 layout (metadata), page (landing), play/page (client-only game), roadmaps/[path] (SEO pages),
+                     icon.svg, opengraph-image.tsx
+components/landing/  landing page: ChoosePath (path panels, Fork quiz, route), ContinueJourney, screenshots (shots.ts)
 components/Game.tsx  Canvas, physics, lights, sky, directors + every HTML overlay
 components/world/    islands, bridges (+ LitBridges), signs, scenery, gems, mentors, pedestals,
                      balloon docks + BalloonTravel, Finale (fireworks + fly-around), clouds
@@ -126,6 +128,7 @@ The world is data-driven. Career paths live in one registry, and TypeScript poin
 4. **Landmarks** (`components/world/landmarks/`): reuse a `LandmarkType`, or add a component and register it in `landmarks/index.ts`.
 5. **`data/minigames.ts`**: a Challenge per new phase. `MINIGAMES` is a `Record<PhaseId, …>`, so the compiler asks. The Fork's personality quiz scores each path separately: give the new path an option in each question (`weight: { newPath: 2 }`). Its outcome is generated from the registry, and a dev check requires one.
 6. **`lib/progress.ts`**: map each timeline step to islands in `TIMELINE_PHASES`. It is a `Record<PathId, …>`, and a dev check compares the step count.
+7. **Landing page** (optional): add an in-game screenshot to `assets/landing/` and an entry in `PATH_SHOTS` (`components/landing/shots.ts`). Without one, the path's panel uses the view across the trunk. Its panel, quiz option, route and timeline come from the registry automatically.
 
 Everything else picks the path up from the registry: the compass, the job-ready meter, achievements, the Passport columns, the Roadmap tab, the Fork comparison, the Summit tabs, the onboarding cards, the finale ladder, the certificate and the balloons.
 

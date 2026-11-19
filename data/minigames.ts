@@ -269,7 +269,7 @@ export const MINIGAMES: Record<PhaseId, MiniGameDef> = {
             { text: 'A mix of everything' },
           ],
           explain:
-            'About 90% of FDE job postings stress direct client work, often with travel. Timelines: roughly 9–12 months (Developer), 12–18 (Engineer), 10–12 (FDE).',
+            'About 90% of FDE job postings stress direct client work, often with travel. Timelines: roughly 6–8 months (Developer), 12–14 (Engineer), 8–10 (FDE).',
         },
       ],
       outcomes: [

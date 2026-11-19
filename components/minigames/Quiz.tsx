@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { getPhase, type PathId } from '@/data/roadmap';
+import { CAREER_PATH_BY_ID, getPhase, isPathTrack, type PathId } from '@/data/roadmap';
 import { pickOutcome, quizWeights, type QuizConfig, type QuizOutcome } from '@/data/minigames';
 import { INK } from '@/components/ui/kit';
 import { TRACK_COLORS } from '@/lib/palette';
+import { useProgress } from '@/store/progress';
 import { shuffle, starsForAccuracy } from './complete';
 import { Feedback, GameButton, ProgressDots } from './kit';
 import type { MiniGameProps } from './types';
@@ -49,7 +50,11 @@ export default function Quiz({ phaseId, config, onComplete }: MiniGameProps<Quiz
       return;
     }
     if (personality) {
-      setOutcome(pickOutcome(config.outcomes ?? [], totals));
+      const result = pickOutcome(config.outcomes ?? [], totals);
+      // A clear path result steers the compass (same as picking a path on the landing page). The
+      // fallback outcome keeps whatever the player chose before.
+      if (isPathTrack(result.track)) useProgress.getState().setChosenPath(result.track);
+      setOutcome(result);
       return;
     }
     const acc = results.filter(Boolean).length / questions.length;
@@ -69,6 +74,7 @@ export default function Quiz({ phaseId, config, onComplete }: MiniGameProps<Quiz
           <p className="mt-2 text-sm font-semibold">{outcome.text}</p>
         </div>
         <p className="max-w-md text-sm font-semibold">
+          {isPathTrack(outcome.track) && `🧭 The compass now leads along the ${CAREER_PATH_BY_ID[outcome.track].pathLabel}. `}
           Whatever you got: you don&apos;t have to choose now. Every path shares the same foundation, and you can explore every island.
         </p>
         <GameButton onClick={() => onComplete({ score: 100, stars: 3 })} color="#7fd99a">

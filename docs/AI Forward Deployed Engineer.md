@@ -444,20 +444,20 @@ The AI FDE is excellent at:
 
 # Timeline
 
-**~10–12 months**
+**~8–10 months**
 
 | When        | What                              |
 | ----------- | --------------------------------- |
-| Months 1–2  | Python + SQL + APIs               |
-| Month 3     | ML Fundamentals                   |
-| Months 4–5  | LLMs + Prompting + RAG            |
-| Month 6     | Agents + MCP                      |
-| Month 7     | Customer Discovery                |
-| Month 8     | Enterprise Integration            |
-| Month 9     | Deployment & Cloud                |
-| Month 10    | Field Evals & Observability       |
-| Month 11    | Enterprise Security & Compliance  |
-| Month 12    | Go-live + case-study portfolio    |
+| Month 1     | Python + SQL + APIs               |
+| Month 2     | ML Fundamentals                   |
+| Month 3     | LLMs + Prompting + RAG            |
+| Month 4     | Agents + MCP                      |
+| Month 5     | Customer Discovery                |
+| Month 6     | Enterprise Integration            |
+| Month 7     | Deployment & Cloud                |
+| Month 8     | Field Evals & Observability       |
+| Month 9     | Enterprise Security & Compliance  |
+| Month 10    | Go-live + case-study portfolio    |
 
 With 2–3 deployed case studies (with postmortems) in your portfolio: ready to apply for AI Forward Deployed Engineer / AI Solutions Engineer roles.
 

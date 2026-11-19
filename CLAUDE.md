@@ -29,6 +29,7 @@ The project is built in phases, **one phase per Claude Code session**.
 | 6 | [phase-6-third-person-and-roadmap.md](docs/plan/phase-6-third-person-and-roadmap.md) |
 | 7 | [phase-7-fde-path.md](docs/plan/phase-7-fde-path.md) |
 | 8 | [phase-8-categories-and-observability.md](docs/plan/phase-8-categories-and-observability.md) |
+| 9 | [phase-9-landing-page-directions.md](docs/plan/phase-9-landing-page-directions.md) (directions; the chosen one, Choose Your Path, is built at `/`) |
 
 **Content source of truth:** [docs/AI Engineer-Developer.md](docs/AI%20Engineer-Developer.md) (trunk, AI Developer, AI Engineer, Summit) and [docs/AI Forward Deployed Engineer.md](docs/AI%20Forward%20Deployed%20Engineer.md) (the AI FDE path, its comparison stars, timeline and ladder rung). All topics, durations, projects, comparison stars and timelines come from them. Don't invent roadmap content. Lists marked **➕ Addition** in the AI Developer/Engineer doc (and its Phase 10, AI Observability) were added in Phase 8 from a ten-part roadmap infographic series; new topics go into the doc first, marked the same way. Short explanatory "bites" for topics and the category cards (how topics are grouped, with an emoji and a one-line blurb) are the only authored additions.
 
@@ -80,7 +81,11 @@ The trunk runs along −Z from the Harbor to the Fork. The Developer path (🟢 
 
 ## Directory structure (target)
 ```
-app/                 layout.tsx, page.tsx (dynamic import, ssr:false), globals.css
+app/                 layout.tsx, page.tsx (landing page, server-rendered), play/page.tsx (the game: GameLoader, ssr:false),
+                     roadmaps/[path] (static SEO pages), globals.css
+components/landing/  ChoosePath (path panels + Fork quiz + route, client), ContinueJourney (returning players), shots.ts
+lib/landing.ts       server-side landing view models derived from the registry (paths, trunk, stats, short Fork quiz)
+assets/landing/      in-game screenshots for the landing page (static imports)
 components/Game.tsx  Canvas + Physics + lights + sky + World + Player; HUD mounted outside Canvas
 components/world/    Island, Bridge (+ LitBridges), Landmark (wrapper), landmarks/* (one file per type + kit.tsx + index.ts registry),
                      SkillGem, Mentor, ChallengePedestal, Balloons (docks) + BalloonTravel, Finale, Clouds
@@ -142,6 +147,9 @@ streak: { count: number; lastVisitDate: string; best: number }; onboardingDone: 
 settings: { muted: boolean; sensitivity: number; invertY: boolean; quality: 'auto'|'low'|'high' };
 achievements: Record<string, string>;  // id → ISO date unlocked (definitions in lib/progress.ts)
 playerName: string; byteHat: string; finaleSeen: boolean;
+chosenPath: PathId | null;  // picked before playing (/play?path=<PathId>, see lib/playLinks.ts) or by a clear Fork quiz
+                            // result; breaks ties in pathsByProgress, so the compass follows it until real progress
+                            // on another path leads
 
 // store/ui.ts (not persisted; there is no pointerLocked: pointer lock was removed in Phase 6)
 mode: 'explore' | 'panel' | 'minigame' | 'passport' | 'menu' | 'cinematic';  // cinematic: Player skips its camera rig
@@ -174,7 +182,8 @@ export interface MiniGameProps<C = unknown> {
 ```
 
 ## Conventions & gotchas
-- **SSR off for the game.** `app/page.tsx` is a client component that loads `components/Game` via `next/dynamic(..., { ssr: false })`. The game uses `window`, WASM (rapier) and localStorage. Skipping this causes hydration mismatch and dead UI.
+- **SSR off for the game.** The game lives at `/play`: `app/play/page.tsx` renders `components/GameLoader`, a client component that loads `components/Game` via `next/dynamic(..., { ssr: false })`. The game uses `window`, WASM (rapier) and localStorage. Skipping this causes hydration mismatch and dead UI. Every "play" link points to `/play` (built with `playHref(path?)` from `lib/playLinks.ts`; links that know a path pass it as `?path=<PathId>`, which `SessionManager` stores as `chosenPath`, strips from the URL and announces with a notice); `/` is the landing page.
+- **Landing page (`/`).** A server component in the "Choose Your Path" design (Instrument Sans, white, track colours from `TRACK_COLORS`). All content comes from the registry through `lib/landing.ts`, which also builds a short Fork quiz from `MINIGAMES.fork` (the first questions where every path owns an option, with the game's winning threshold scaled down). Only plain view models cross to the client, so `data/roadmap.ts` and `data/minigames.ts` stay out of its bundle. Scrolling pages carry `.site-page`, which lifts the game's `html, body` scroll/zoom lock in `globals.css`. "Continue from …" reads the progress key from `lib/storageKeys.ts` via `useSyncExternalStore`, so it never mismatches on hydration. CTAs carry `data-umami-event` attributes (`start-exploring`, `continue-journey`).
 - **Input gating.** Player movement and turning only run while `ui.mode === 'explore'`. Opening any panel switches the mode; closing it (`resumeExplore()` / `closeOverlay()`) returns to explore. There is no pointer lock to manage.
 - **No React state in `useFrame`.** Use refs for per-frame values. Write to zustand only on discrete events (gem collected, entered island radius).
 - **Mobile parity.** Every interaction needs a touch path: the Interact button, panels with big tap targets, no hover-only UI. Overlays must not scroll horizontally at 375px width.

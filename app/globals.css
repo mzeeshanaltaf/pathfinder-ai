@@ -22,6 +22,22 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Scrolling site pages (the landing page, marked .site-page) undo the game's full-viewport lock
+   above, so they scroll natively, zoom, and let the phone's address bar collapse. Unlayered, so it
+   beats the h-full / overflow-hidden utilities on <body>. */
+html:has(.site-page),
+html:has(.site-page) body {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+  overscroll-behavior: auto;
+  touch-action: auto;
+}
+html:has(.site-page) body {
+  background: #ffffff;
+  overflow-x: clip;
+}
+
 /* Tailwind v4's preflight gives buttons the default arrow; show the hand on anything clickable.
    In the base layer so utilities like disabled:cursor-not-allowed still win. */
 @layer base {

@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import type { PhaseId } from '@/data/roadmap';
+import { PATH_IDS, type PathId, type PhaseId } from '@/data/roadmap';
 import { DEFAULT_SPAWN_ISLAND, ISLAND_BY_ID } from '@/data/world';
 import { localDateKey, nextStreak } from '@/lib/progress';
+import { PROGRESS_STORAGE_KEY } from '@/lib/storageKeys';
 
 export interface Badge {
   stars: 1 | 2 | 3;
@@ -35,6 +36,11 @@ export interface ProgressData {
   byteHat: string;
   /** Phase 5: the Summit celebration has played once. */
   finaleSeen: boolean;
+  /**
+   * Path the player picked before playing (landing page → `/play?path=…`). It breaks ties in
+   * `pathsByProgress`, so the compass follows it until real progress on another path pulls ahead.
+   */
+  chosenPath: PathId | null;
 }
 
 interface ProgressActions {
@@ -53,6 +59,7 @@ interface ProgressActions {
   setByteHat: (id: string) => void;
   completeOnboarding: () => void;
   setFinaleSeen: () => void;
+  setChosenPath: (path: PathId | null) => void;
   /** Wipe everything except settings. */
   resetProgress: () => void;
 }
@@ -75,6 +82,7 @@ const defaults = (): ProgressData => ({
   playerName: '',
   byteHat: 'none',
   finaleSeen: false,
+  chosenPath: null,
 });
 
 export const useProgress = create<ProgressState>()(
@@ -118,10 +126,11 @@ export const useProgress = create<ProgressState>()(
       setByteHat: (byteHat) => set({ byteHat }),
       completeOnboarding: () => set({ onboardingDone: true }),
       setFinaleSeen: () => set({ finaleSeen: true }),
+      setChosenPath: (chosenPath) => set({ chosenPath }),
       resetProgress: () => set({ ...defaults(), settings: get().settings }),
     }),
     {
-      name: 'pathfinder-ai-progress',
+      name: PROGRESS_STORAGE_KEY,
       version: PROGRESS_VERSION,
       storage: createJSONStorage(() => localStorage),
       // v1 → v2 only added fields; `merge` fills them from the defaults. The best streak starts at the current one.
@@ -140,6 +149,7 @@ export const useProgress = create<ProgressState>()(
         };
         // Guard against stale ids (e.g. a renamed island) in saved data.
         if (!ISLAND_BY_ID[merged.lastIsland]) merged.lastIsland = DEFAULT_SPAWN_ISLAND;
+        if (merged.chosenPath && !PATH_IDS.includes(merged.chosenPath)) merged.chosenPath = null;
         return merged;
       },
       partialize: (s): ProgressData => ({
@@ -156,6 +166,7 @@ export const useProgress = create<ProgressState>()(
         playerName: s.playerName,
         byteHat: s.byteHat,
         finaleSeen: s.finaleSeen,
+        chosenPath: s.chosenPath,
       }),
     },
   ),

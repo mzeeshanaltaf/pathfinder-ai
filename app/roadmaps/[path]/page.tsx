@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CAREER_PATHS, COMPARISON, getPhase, shortPathLabel, trackPhases, type CareerPath } from '@/data/roadmap';
+import { playHref } from '@/lib/playLinks';
 import { SITE_NAME, SITE_URL, pathSlug, roadmapHref } from '@/lib/seo';
 
 const bySlug = (slug: string) => CAREER_PATHS.find((p) => pathSlug(p.label) === slug);
@@ -82,7 +83,7 @@ export default async function RoadmapPage({ params }: PageProps<'/roadmaps/[path
           <strong>Goal:</strong> {path.goal}
         </p>
         <Link
-          href="/"
+          href={playHref(path.id)}
           className="mt-5 inline-block rounded-full border-4 border-[#3d3452] bg-[#8b74cf] px-6 py-3 text-lg font-extrabold text-white"
         >
           Walk this roadmap in 3D →
